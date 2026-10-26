@@ -1,0 +1,33 @@
+services:
+  # Servidor Backend: Motor SEIR-VQ en Python
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: cortafuegos-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - cortafuegos-net
+
+  # Servidor Frontend: Nginx sirviendo React + Tailwind y proxy reverso a /api/
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: cortafuegos-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - cortafuegos-net
+
+networks:
+  cortafuegos-net:
+    driver: bridge
