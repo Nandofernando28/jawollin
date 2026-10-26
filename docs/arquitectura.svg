@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 430" width="100%" height="auto" style="font-family: 'Segoe UI', system-ui, sans-serif; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#ea580c"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- AWS Cloud Outer Box -->
+  <rect x="185" y="18" width="815" height="394" rx="12" fill="#ffffff" stroke="#ff9900" stroke-width="2.2" stroke-dasharray="6,4"/>
+  <rect x="200" y="8" width="290" height="24" rx="4" fill="#ff9900"/>
+  <text x="345" y="24" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">AWS Cloud · Región us-east-1 (100% Serverless)</text>
+
+  <!-- Public Zone Box -->
+  <rect x="205" y="48" width="175" height="235" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="292" y="68" font-size="11" font-weight="bold" fill="#1d4ed8" text-anchor="middle">ZONA PÚBLICA (HTTPS)</text>
+
+  <!-- User Node -->
+  <rect x="20" y="125" width="135" height="90" rx="8" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
+  <text x="87" y="152" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">👨‍⚖️ Jurado / Alcalde</text>
+  <text x="87" y="172" font-size="10.5" fill="#cbd5e1" text-anchor="middle">Navegador Web</text>
+  <text x="87" y="190" font-size="9.5" fill="#38bdf8" text-anchor="middle">(Mapa + Sliders + Seed)</text>
+
+  <!-- Amplify / CloudFront -->
+  <rect x="218" y="82" width="148" height="82" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.8"/>
+  <text x="292" y="104" font-size="11" font-weight="bold" fill="#1e40af" text-anchor="middle">AWS Amplify /</text>
+  <text x="292" y="120" font-size="11" font-weight="bold" fill="#1e40af" text-anchor="middle">CloudFront + S3</text>
+  <text x="292" y="138" font-size="9.5" fill="#475569" text-anchor="middle">Frontend React + Deck.gl</text>
+  <text x="292" y="152" font-size="9" fill="#059669" font-weight="bold" text-anchor="middle">URL Pública Oficial</text>
+
+  <!-- API Gateway -->
+  <rect x="218" y="185" width="148" height="80" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.8"/>
+  <text x="292" y="208" font-size="11" font-weight="bold" fill="#1e40af" text-anchor="middle">Amazon API Gateway</text>
+  <text x="292" y="224" font-size="10" fill="#475569" text-anchor="middle">(HTTP API REST)</text>
+  <text x="292" y="242" font-size="9" fill="#64748b" text-anchor="middle">POST /simulate</text>
+  <text x="292" y="255" font-size="9" fill="#64748b" text-anchor="middle">POST /mayor-report</text>
+
+  <!-- Lambda Orchestrator -->
+  <rect x="425" y="160" width="175" height="110" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="512" y="184" font-size="12" font-weight="bold" fill="#c2410c" text-anchor="middle">AWS Lambda</text>
+  <text x="512" y="200" font-size="11" font-weight="bold" fill="#9a3412" text-anchor="middle">Orquestador Principal</text>
+  <text x="512" y="218" font-size="9.5" fill="#475569" text-anchor="middle">• Valida Seed y Parámetros</text>
+  <text x="512" y="233" font-size="9.5" fill="#475569" text-anchor="middle">• Consulta Caché Determinista</text>
+  <text x="512" y="248" font-size="9.5" fill="#475569" text-anchor="middle">• Agrega P10, P50, P90</text>
+  <text x="512" y="262" font-size="9" fill="#ea580c" font-weight="bold" text-anchor="middle">IAM Rol: Mínimo Privilegio</text>
+
+  <!-- Step Functions + Parallel Workers -->
+  <rect x="655" y="38" width="325" height="145" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="817" y="58" font-size="11.5" font-weight="bold" fill="#15803d" text-anchor="middle">AWS Step Functions (Express Workflow - Map)</text>
+  <text x="817" y="74" font-size="9.5" fill="#166534" text-anchor="middle">Paralelismo Masivo Monte Carlo (1,000+ corridas en &lt; 4 seg)</text>
+
+  <rect x="670" y="86" width="92" height="82" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="716" y="106" font-size="10" font-weight="bold" fill="#15803d" text-anchor="middle">Lambda Worker 1</text>
+  <text x="716" y="122" font-size="8.5" fill="#475569" text-anchor="middle">Sin Intervención</text>
+  <text x="716" y="136" font-size="8.5" fill="#475569" text-anchor="middle">NumPy SEIR-VQ</text>
+  <text x="716" y="152" font-size="8" fill="#059669" font-weight="bold" text-anchor="middle">Seed + i</text>
+
+  <rect x="771" y="86" width="92" height="82" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="817" y="106" font-size="10" font-weight="bold" fill="#15803d" text-anchor="middle">Lambda Worker 2</text>
+  <text x="817" y="122" font-size="8.5" fill="#475569" text-anchor="middle">Línea Base Azar</text>
+  <text x="817" y="136" font-size="8.5" fill="#475569" text-anchor="middle">NumPy SEIR-VQ</text>
+  <text x="817" y="152" font-size="8" fill="#059669" font-weight="bold" text-anchor="middle">Seed + i</text>
+
+  <rect x="872" y="86" width="94" height="82" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="919" y="106" font-size="10" font-weight="bold" fill="#15803d" text-anchor="middle">Lambda Worker N</text>
+  <text x="919" y="122" font-size="8.5" fill="#475569" text-anchor="middle">Escudo Manta</text>
+  <text x="919" y="136" font-size="8.5" fill="#475569" text-anchor="middle">(Optimizador ROI)</text>
+  <text x="919" y="152" font-size="8" fill="#059669" font-weight="bold" text-anchor="middle">Seed + i</text>
+
+  <!-- DynamoDB & S3 -->
+  <rect x="655" y="200" width="155" height="90" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+  <text x="732" y="222" font-size="11" font-weight="bold" fill="#1d4ed8" text-anchor="middle">Amazon DynamoDB</text>
+  <text x="732" y="238" font-size="9.5" fill="#475569" text-anchor="middle">Modo On-Demand</text>
+  <text x="732" y="254" font-size="9" fill="#334155" text-anchor="middle">PK: Hash(Seed + Params)</text>
+  <text x="732" y="270" font-size="8.5" fill="#2563eb" font-weight="bold" text-anchor="middle">Reproducibilidad &lt;15ms</text>
+
+  <rect x="825" y="200" width="155" height="90" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="1.8"/>
+  <text x="902" y="222" font-size="11" font-weight="bold" fill="#047857" text-anchor="middle">Amazon S3</text>
+  <text x="902" y="238" font-size="9.5" fill="#475569" text-anchor="middle">Bucket de Resultados</text>
+  <text x="902" y="254" font-size="9" fill="#334155" text-anchor="middle">Series Día a Día (JSON)</text>
+  <text x="902" y="270" font-size="8.5" fill="#059669" font-weight="bold" text-anchor="middle">Animación Mapa Manta</text>
+
+  <!-- Amazon Bedrock -->
+  <rect x="655" y="308" width="325" height="86" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.8"/>
+  <text x="817" y="330" font-size="11.5" font-weight="bold" fill="#6d28d9" text-anchor="middle">Amazon Bedrock (Claude 3 Haiku / Amazon Nova Micro)</text>
+  <text x="817" y="348" font-size="9.5" fill="#475569" text-anchor="middle">Genera en lenguaje simple el "Boletín Oficial de Emergencia para el Alcalde de Manta"</text>
+  <text x="817" y="365" font-size="9" fill="#6d28d9" font-weight="bold" text-anchor="middle">Explica qué parroquias priorizar, qué Hubs cerrar y cuántas vidas se salvan</text>
+
+  <!-- Governance: CloudWatch + AWS Budgets -->
+  <rect x="205" y="308" width="395" height="86" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="402" y="330" font-size="11.5" font-weight="bold" fill="#b91c1c" text-anchor="middle">🛡️ Gobernanza, Seguridad y Monitoreo</text>
+  <text x="402" y="348" font-size="9.5" fill="#334155" text-anchor="middle">• AWS Budgets: Límite $5.00 USD con alerta temprana al 50% y 80% (Captura en README)</text>
+  <text x="402" y="364" font-size="9.5" fill="#334155" text-anchor="middle">• Amazon CloudWatch: Logs de ejecución y métricas de latencia en el Brote Sorpresa</text>
+  <text x="402" y="380" font-size="9.5" fill="#334155" text-anchor="middle">• AWS SAM (infra/template.yaml): Despliegue reproducible sin llaves en el código</text>
+
+  <!-- Arrows -->
+  <line x1="155" y1="150" x2="214" y2="125" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="155" y1="185" x2="214" y2="220" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="366" y1="225" x2="421" y2="215" stroke="#ea580c" stroke-width="2.2" marker-end="url(#arrow-orange)"/>
+  <line x1="600" y1="185" x2="651" y2="115" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arrow-green)"/>
+  <line x1="600" y1="215" x2="651" y2="240" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="600" y1="245" x2="651" y2="345" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

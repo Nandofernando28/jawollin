@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 540" width="100%" height="auto" style="font-family: 'Segoe UI', system-ui, sans-serif; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px;">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#334155"/>
+    </marker>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Step 1: Inicio del Dia -->
+  <rect x="30" y="20" width="270" height="58" rx="29" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="165" y="45" font-size="11.5" font-weight="bold" fill="#ffffff" text-anchor="middle">🌅 1. Inicio del Día t (Semilla Fija)</text>
+  <text x="165" y="63" font-size="9.5" fill="#38bdf8" text-anchor="middle">Recibir Presupuesto Diario $ + Dosis + Brigadas</text>
+
+  <!-- Step 2: Escaneo -->
+  <rect x="360" y="20" width="290" height="58" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="2"/>
+  <text x="505" y="44" font-size="11" font-weight="bold" fill="#1d4ed8" text-anchor="middle">🔍 2. Escaneo Epidemiológico de Manta</text>
+  <text x="505" y="62" font-size="9.5" fill="#475569" text-anchor="middle">Detectar casos activos (🔴) y foco en Hubs/Barrios</text>
+
+  <!-- Step 3: Calculo ROI -->
+  <rect x="710" y="20" width="280" height="58" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="850" y="44" font-size="11" font-weight="bold" fill="#1e3a8a" text-anchor="middle">🧮 3. Evaluar ROI Marginal por Dólar</text>
+  <text x="850" y="62" font-size="9.5" fill="#334155" text-anchor="middle">¿Qué acción evita más contagios hoy por cada $1?</text>
+
+  <line x1="300" y1="49" x2="355" y2="49" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="650" y1="49" x2="705" y2="49" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Three Defense Columns -->
+  <!-- Defense 1: Hub Firewall -->
+  <rect x="30" y="118" width="300" height="215" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <rect x="45" y="106" width="270" height="24" rx="5" fill="#ea580c"/>
+  <text x="180" y="122" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">DEFENSA 1 (LA RED): CORTAFUEGOS EN HUBS</text>
+  <text x="180" y="150" font-size="10" font-weight="bold" fill="#9a3412" text-anchor="middle">¿Hub Crítico supera umbral o faltan vacunas?</text>
+  <text x="45" y="172" font-size="9.5" fill="#334155">• Evalúa ULEAM, Mercado Tarqui, Mercado Central,</text>
+  <text x="53" y="186" font-size="9.5" fill="#334155">Empacadoras y Terminal Terrestre.</text>
+  <text x="45" y="206" font-size="9.5" fill="#334155">• <tspan font-weight="bold">Acción:</tspan> Cierre quirúrgico temporal o Fumigación</text>
+  <text x="53" y="220" font-size="9.5" fill="#334155">intensiva del Hub con mayor riesgo esperado.</text>
+  <rect x="45" y="236" width="270" height="45" rx="6" fill="#ffedd5" stroke="#f97316" stroke-width="1.2"/>
+  <text x="180" y="255" font-size="9.5" font-weight="bold" fill="#c2410c" text-anchor="middle">Efecto Directo contra el Contagio:</text>
+  <text x="180" y="271" font-size="9" fill="#9a3412" text-anchor="middle">Reduce 80%–95% el peso de aristas diurnas w_ij^(D)</text>
+  <text x="180" y="318" font-size="9" font-weight="bold" fill="#ea580c" text-anchor="middle">🔥 Clave cuando la plaga es hiper-contagiosa</text>
+
+  <!-- Defense 2: Brigada de Contencion -->
+  <rect x="360" y="118" width="300" height="215" rx="10" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="375" y="106" width="270" height="24" rx="5" fill="#7c3aed"/>
+  <text x="510" y="122" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">DEFENSA 2 (LA LANZA): BRIGADA / ANTÍDOTO</text>
+  <text x="510" y="150" font-size="10" font-weight="bold" fill="#5b21b6" text-anchor="middle">¿Hay 🔴 Zombies superpropagadores activos?</text>
+  <text x="375" y="172" font-size="9.5" fill="#334155">• Identifica a los nodos 🔴 Zombies con mayor</text>
+  <text x="383" y="186" font-size="9.5" fill="#334155">cantidad de vecinos 🟢 Sanos expuestos hoy.</text>
+  <text x="375" y="206" font-size="9.5" fill="#334155">• <tspan font-weight="bold">Acción:</tspan> Despliega brigada de contención para</text>
+  <text x="383" y="220" font-size="9.5" fill="#334155">aislarlos (🟣) o aplicar antídoto directo (🔵).</text>
+  <rect x="375" y="236" width="270" height="45" rx="6" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="1.2"/>
+  <text x="510" y="255" font-size="9.5" font-weight="bold" fill="#6d28d9" text-anchor="middle">Efecto Directo contra el Contagio:</text>
+  <text x="510" y="271" font-size="9" fill="#5b21b6" text-anchor="middle">Anula I(S_j = 🔴) = 0 en la fuente de mordeduras</text>
+  <text x="510" y="318" font-size="9" font-weight="bold" fill="#7c3aed" text-anchor="middle">🔥 Clave si la vacuna pierde eficacia en Brote Sorpresa</text>
+
+  <!-- Defense 3: Ring + Bridge Vaccination -->
+  <rect x="690" y="118" width="300" height="215" rx="10" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
+  <rect x="705" y="106" width="270" height="24" rx="5" fill="#059669"/>
+  <text x="840" y="122" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">DEFENSA 3 (EL ESCUDO): VACUNA ANILLO+PUENTE</text>
+  <text x="840" y="150" font-size="10" font-weight="bold" fill="#065f46" text-anchor="middle">🎯 Filtro Estricto: SOLO Nodos 🟢 Sanos</text>
+  <text x="705" y="170" font-size="9.2" fill="#dc2626" font-weight="bold">• PROHIBIDO vacunar 🟡 Mordidos, 🔴 Zombies o 🔵</text>
+  <text x="705" y="188" font-size="9.5" fill="#334155">• Calcula Score(i) combinando:</text>
+  <text x="715" y="203" font-size="9.2" fill="#334155">1. Cercanía al brote (Anillo a 1 o 2 saltos)</text>
+  <text x="715" y="217" font-size="9.2" fill="#334155">2. Centralidad Puente (choferes, comerciantes)</text>
+  <rect x="705" y="236" width="270" height="45" rx="6" fill="#d1fae5" stroke="#10b981" stroke-width="1.2"/>
+  <text x="840" y="255" font-size="9.5" font-weight="bold" fill="#047857" text-anchor="middle">Efecto Directo contra el Contagio:</text>
+  <text x="840" y="271" font-size="9" fill="#065f46" text-anchor="middle">Pasa Top-K 🟢 Sanos a 🔵 Inmune (prob = η_vac)</text>
+  <text x="840" y="318" font-size="9" font-weight="bold" fill="#059669" text-anchor="middle">🔥 Crea un muro inmunológico alrededor del foco</text>
+
+  <!-- Arrows from Step 3 to Defenses -->
+  <path d="M 850 78 L 850 92 L 180 92 L 180 102" fill="none" stroke="#334155" stroke-width="1.8" marker-end="url(#arr)"/>
+  <path d="M 850 78 L 850 92 L 510 92 L 510 102" fill="none" stroke="#334155" stroke-width="1.8" marker-end="url(#arr)"/>
+  <path d="M 850 78 L 850 102" fill="none" stroke="#334155" stroke-width="1.8" marker-end="url(#arr)"/>
+
+  <!-- Step 4: Simulacion Dia y Noche -->
+  <rect x="120" y="368" width="780" height="68" rx="10" fill="#ffffff" stroke="#0891b2" stroke-width="2"/>
+  <text x="510" y="392" font-size="11.5" font-weight="bold" fill="#0e7490" text-anchor="middle">☀️ / 🌙 4. Ejecución de la Dinámica de Transmisión del Día t (Sobre la Red ya Protegida)</text>
+  <text x="510" y="411" font-size="9.8" fill="#334155" text-anchor="middle">Fase Diurna: Contagio en Hubs abiertos y Buses  |  Fase Nocturna: Contagio en Hogares y Barrios</text>
+  <text x="510" y="427" font-size="9.5" fill="#0f172a" font-weight="bold" text-anchor="middle">Transiciones Estocásticas:   🟢 Sano → 🟡 Mordido (prob. λ_i)   |   🟡 Mordido → 🔴 Zombie (fin incubación)   |   🔴 Zombie → 🔵 Exorcizado</text>
+
+  <line x1="180" y1="333" x2="280" y2="364" stroke="#059669" stroke-width="2" marker-end="url(#arr-g)"/>
+  <line x1="510" y1="333" x2="510" y2="364" stroke="#059669" stroke-width="2" marker-end="url(#arr-g)"/>
+  <line x1="840" y1="333" x2="740" y2="364" stroke="#059669" stroke-width="2" marker-end="url(#arr-g)"/>
+
+  <!-- Step 5: Registro y Loop -->
+  <rect x="250" y="462" width="520" height="56" rx="28" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+  <text x="510" y="486" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">📈 5. Registrar Métricas del Día t y Evaluar Fin de Simulación (t = t + 1)</text>
+  <text x="510" y="504" font-size="9.5" fill="#6ee7b7" text-anchor="middle">Reportar Promedios, Rangos (P10–P90), Presupuesto Usado y Vidas Salvadas a AWS</text>
+
+  <line x1="510" y1="436" x2="510" y2="458" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+</svg>

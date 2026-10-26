@@ -1,0 +1,293 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  spookython-cortafuegos-manta
+  Infraestructura 100% Serverless para Operacion Cortafuegos Manta (Track B - La Plaga Zombie).
+  Incluye: Amazon API Gateway (HTTP API) + AWS Step Functions (Express Workflow con Map State) +
+  AWS Lambda (Python NumPy/NetworkX ARM64) + Amazon DynamoDB (On-Demand) + Amazon S3 + AWS Budget ($5).
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dev
+      - prod
+    Description: Entorno de despliegue (dev o prod)
+
+  AlertEmail:
+    Type: String
+    Default: ""
+    Description: >
+      (Opcional) Correo electronico del equipo para recibir alertas del AWS Budget ($5.00 USD).
+      Si se deja vacio, no se crea el recurso AWS::Budgets::Budget desde CloudFormation.
+
+  BedrockModelId:
+    Type: String
+    Default: amazon.nova-micro-v1:0
+    Description: ID del modelo en Amazon Bedrock para el Informe del Alcalde (ej. amazon.nova-micro-v1:0 o anthropic.claude-3-haiku-20240307-v1:0)
+
+Conditions:
+  HasAlertEmail: !Not [!Equals [!Ref AlertEmail, ""]]
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures:
+      - arm64
+    MemorySize: 1024
+    Timeout: 29
+    Tracing: Active
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref EnvironmentName
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+        POWERTOOLS_SERVICE_NAME: cortafuegos-manta
+
+Resources:
+  # ============================================================================
+  # 1. AMAZON API GATEWAY (HTTP API) - ZONA PUBLICA
+  # ============================================================================
+  CortafuegosHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref EnvironmentName
+      Description: HTTP API para Operacion Cortafuegos Manta (SpookyThon 2026)
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Requested-With
+        MaxAge: 86400
+
+  # ============================================================================
+  # 2. AMAZON DYNAMODB (ON-DEMAND) - REPRODUCIBILIDAD Y CACHE POR SEMILLA
+  # ============================================================================
+  SimulationsCacheTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "cortafuegos-manta-simulations-${EnvironmentName}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: sim_hash
+          AttributeType: S
+      KeySchema:
+        - AttributeName: sim_hash
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Project
+          Value: SpookyThon2026-TrackB
+
+  # ============================================================================
+  # 3. AMAZON S3 - SERIES TEMPORALES GEOGRAFICAS PARA EL MAPA ANIMADO
+  # ============================================================================
+  SimulationResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "cortafuegos-manta-results-${AWS::AccountId}-${EnvironmentName}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - HEAD
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3600
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireSimulationArtifactsAfter14Days
+            Status: Enabled
+            ExpirationInDays: 14
+
+  # ============================================================================
+  # 4. AWS LAMBDA WORKER - MOTOR EPIDEMIOLOGICO MONTE CARLO (NUMPY + NETWORKX)
+  # ============================================================================
+  MonteCarloWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cortafuegos-manta-worker-${EnvironmentName}"
+      Description: Ejecuta un lote de corridas Monte Carlo del modelo SEIR-VQ en la red multicapa de Manta
+      CodeUri: ../src/
+      Handler: handlers.worker.lambda_handler
+      MemorySize: 1536
+      Timeout: 25
+
+  # ============================================================================
+  # 5. AWS STEP FUNCTIONS (EXPRESS WORKFLOW CON MAP STATE)
+  # ============================================================================
+  MonteCarloStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/cortafuegos-manta-mc-${EnvironmentName}"
+      RetentionInDays: 7
+
+  MonteCarloExpressStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub "cortafuegos-manta-monte-carlo-${EnvironmentName}"
+      Type: EXPRESS
+      DefinitionUri: statemachine/monte_carlo_express.asl.json
+      DefinitionSubstitutions:
+        MonteCarloWorkerFunctionArn: !GetAtt MonteCarloWorkerFunction.Arn
+      Logging:
+        Level: ERROR
+        IncludeExecutionData: false
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt MonteCarloStateMachineLogGroup.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref MonteCarloWorkerFunction
+        - CloudWatchLogsFullAccess
+
+  # ============================================================================
+  # 6. AWS LAMBDA ORQUESTADOR PRINCIPAL (API + CACHE + S3 + STEP FUNCTIONS)
+  # ============================================================================
+  OrchestratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cortafuegos-manta-orchestrator-${EnvironmentName}"
+      Description: Orquesta simulaciones Monte Carlo, gestiona cache determinista en DynamoDB y guarda JSON en S3
+      CodeUri: ../src/
+      Handler: handlers.orchestrator.lambda_handler
+      MemorySize: 1536
+      Timeout: 29
+      Environment:
+        Variables:
+          SIMULATIONS_TABLE_NAME: !Ref SimulationsCacheTable
+          RESULTS_BUCKET_NAME: !Ref SimulationResultsBucket
+          STATE_MACHINE_ARN: !Ref MonteCarloExpressStateMachine
+          WORKER_FUNCTION_NAME: !Ref MonteCarloWorkerFunction
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SimulationsCacheTable
+        - S3CrudPolicy:
+            BucketName: !Ref SimulationResultsBucket
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt MonteCarloExpressStateMachine.Name
+        - LambdaInvokePolicy:
+            FunctionName: !Ref MonteCarloWorkerFunction
+        - Statement:
+            - Effect: Allow
+              Action:
+                - states:StartSyncExecution
+              Resource: !Ref MonteCarloExpressStateMachine
+      Events:
+        SimulatePostEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CortafuegosHttpApi
+            Path: /simulate
+            Method: POST
+        GetSimulationEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CortafuegosHttpApi
+            Path: /simulations/{simHash}
+            Method: GET
+        HealthCheckEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CortafuegosHttpApi
+            Path: /health
+            Method: GET
+
+  # ============================================================================
+  # 7. AWS LAMBDA - INFORME EJECUTIVO PARA EL ALCALDE (AMAZON BEDROCK)
+  # ============================================================================
+  MayorReportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "cortafuegos-manta-mayor-report-${EnvironmentName}"
+      Description: Genera el Boletin Oficial de Emergencia para el Alcalde de Manta en lenguaje simple
+      CodeUri: ../src/
+      Handler: handlers.mayor_report.lambda_handler
+      MemorySize: 512
+      Timeout: 25
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          SIMULATIONS_TABLE_NAME: !Ref SimulationsCacheTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SimulationsCacheTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
+      Events:
+        MayorReportPostEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CortafuegosHttpApi
+            Path: /mayor-report
+            Method: POST
+
+  # ============================================================================
+  # 8. AWS BUDGET ($5.00 USD) - REGLA OBLIGATORIA DEL RETO
+  # ============================================================================
+  SpookyThonCostBudget:
+    Type: AWS::Budgets::Budget
+    Condition: HasAlertEmail
+    Properties:
+      Budget:
+        BudgetName: !Sub "spookython-cortafuegos-manta-budget-${EnvironmentName}"
+        BudgetLimit:
+          Amount: 5.0
+          Unit: USD
+        TimeUnit: MONTHLY
+        BudgetType: COST
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 50
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref AlertEmail
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref AlertEmail
+
+Outputs:
+  HttpApiUrl:
+    Description: URL publica del Amazon API Gateway (HTTP API) para configurar en VITE_API_URL
+    Value: !Sub "https://${CortafuegosHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}"
+  StateMachineArn:
+    Description: ARN del AWS Step Functions Express Workflow (Monte Carlo Map)
+    Value: !Ref MonteCarloExpressStateMachine
+  SimulationsTableName:
+    Description: Tabla Amazon DynamoDB On-Demand para cache reproducible por semilla
+    Value: !Ref SimulationsCacheTable
+  ResultsBucketName:
+    Description: Bucket Amazon S3 para series temporales del mapa animado
+    Value: !Ref SimulationResultsBucket

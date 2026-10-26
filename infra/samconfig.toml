@@ -1,0 +1,27 @@
+version = 0.1
+
+[default.global.parameters]
+stack_name = "spookython-cortafuegos-manta"
+region = "us-east-1"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.validate.parameters]
+lint = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+resolve_s3 = true
+s3_prefix = "spookython-cortafuegos-manta"
+region = "us-east-1"
+parameter_overrides = "EnvironmentName=\"prod\" BedrockModelId=\"amazon.nova-micro-v1:0\""
+image_repositories = []
+
+[default.sync.parameters]
+watch = true
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"

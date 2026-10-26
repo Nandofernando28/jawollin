@@ -1,0 +1,45 @@
+{
+  "Comment": "Operacion Cortafuegos Manta - Motor Monte Carlo en Paralelo (Express Workflow con Map State)",
+  "StartAt": "RunMonteCarloBatchesInParallel",
+  "States": {
+    "RunMonteCarloBatchesInParallel": {
+      "Type": "Map",
+      "Comment": "Ejecuta lotes de simulaciones SEIR-VQ en paralelo usando semillas deterministas base_seed + run_id",
+      "ItemsPath": "$.batches",
+      "MaxConcurrency": 40,
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "ExecuteBatchWorker",
+        "States": {
+          "ExecuteBatchWorker": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "FunctionName": "${MonteCarloWorkerFunctionArn}",
+              "Payload.$": "$"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.batchResults",
+      "End": true
+    }
+  }
+}
