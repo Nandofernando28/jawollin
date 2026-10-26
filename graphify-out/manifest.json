@@ -1,0 +1,188 @@
+{
+  "amplify.yml": {
+    "mtime": 1793040220.2686381,
+    "seen": 1793052695.9271557,
+    "ast_hash": "96638ca71f1bf1757d77f73d46811b00",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1793041409.3477297,
+    "seen": 1793052695.9271634,
+    "ast_hash": "87581903485e81001eb602da93a33b7c",
+    "semantic_hash": ""
+  },
+  "frontend/package.json": {
+    "mtime": 1793040220.2831936,
+    "seen": 1793052695.9271667,
+    "ast_hash": "c83951a5535d0450b4ebdf28fb1c2abb",
+    "semantic_hash": ""
+  },
+  "frontend/src/App.tsx": {
+    "mtime": 1793047842.450425,
+    "seen": 1793052695.9271684,
+    "ast_hash": "31f2f357f232d85ba985751e90cef517",
+    "semantic_hash": ""
+  },
+  "frontend/src/main.tsx": {
+    "mtime": 1793047842.4509766,
+    "seen": 1793052695.9271698,
+    "ast_hash": "baa6e3bb52880fd2e56acdc7e750c863",
+    "semantic_hash": ""
+  },
+  "frontend/src/types/simulation.ts": {
+    "mtime": 1793047842.4520519,
+    "seen": 1793052695.9271708,
+    "ast_hash": "cff24ea4c0ab23ecda20b83edbda6efc",
+    "semantic_hash": ""
+  },
+  "frontend/src/vite-env.d.ts": {
+    "mtime": 1793040220.2896752,
+    "seen": 1793052695.9271722,
+    "ast_hash": "8f68c27c3fc38817b2726b20e2d4f1ee",
+    "semantic_hash": ""
+  },
+  "frontend/tsconfig.json": {
+    "mtime": 1793040220.2896752,
+    "seen": 1793052695.9271734,
+    "ast_hash": "7fc935805675c009ef5efe0bfdd5f8be",
+    "semantic_hash": ""
+  },
+  "frontend/vite.config.ts": {
+    "mtime": 1793040220.2896752,
+    "seen": 1793052695.9271743,
+    "ast_hash": "e30f64c4d8f57fa5dd82992a3e1591c4",
+    "semantic_hash": ""
+  },
+  "infra/statemachine/monte_carlo_express.asl.json": {
+    "mtime": 1793040220.29794,
+    "seen": 1793052695.9271755,
+    "ast_hash": "8b92311dbb64f70d981cf8d9d0d392c5",
+    "semantic_hash": ""
+  },
+  "scripts/deploy-aws.ps1": {
+    "mtime": 1793040220.301861,
+    "seen": 1793052695.9271762,
+    "ast_hash": "9dacdb74682e8e24f80feb66f706d13c",
+    "semantic_hash": ""
+  },
+  "scripts/setup-aws-account.ps1": {
+    "mtime": 1793040220.302907,
+    "seen": 1793052695.9271777,
+    "ast_hash": "3e2a7f7b10a93d0176981fe8681aa673",
+    "semantic_hash": ""
+  },
+  "src/engine/__init__.py": {
+    "mtime": 1793047842.4527194,
+    "seen": 1793052695.927179,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "src/engine/graph_manta.py": {
+    "mtime": 1793047842.4538274,
+    "seen": 1793052695.92718,
+    "ast_hash": "69554d3033513115d439e5734162996f",
+    "semantic_hash": ""
+  },
+  "src/engine/simulator.py": {
+    "mtime": 1793047842.4543557,
+    "seen": 1793052695.927181,
+    "ast_hash": "8880aafb7533f9dc44e2f15fae2efba1",
+    "semantic_hash": ""
+  },
+  "src/handlers/__init__.py": {
+    "mtime": 1793047842.4563465,
+    "seen": 1793052695.9271822,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "src/handlers/mayor_report.py": {
+    "mtime": 1793047842.4576383,
+    "seen": 1793052695.9271832,
+    "ast_hash": "dd06063d5c942bbb07ea061e3e21dff6",
+    "semantic_hash": ""
+  },
+  "src/handlers/orchestrator.py": {
+    "mtime": 1793047842.4586465,
+    "seen": 1793052695.9271839,
+    "ast_hash": "4accff999ee72851239240472313caaf",
+    "semantic_hash": ""
+  },
+  "src/handlers/worker.py": {
+    "mtime": 1793047842.45951,
+    "seen": 1793052695.9271848,
+    "ast_hash": "f8b2ddc6d433cb3a79f3efa7b6abdf40",
+    "semantic_hash": ""
+  },
+  "src/local_server.py": {
+    "mtime": 1793047842.4614828,
+    "seen": 1793052695.927186,
+    "ast_hash": "fda19833228ab10f034394a9be9bf439",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1793040220.2078705,
+    "seen": 1793052695.9271872,
+    "ast_hash": "c6117c8b4710a73d42d8b9305e99c1bc",
+    "semantic_hash": ""
+  },
+  "Rules/DESIGN.md": {
+    "mtime": 1793052552.853039,
+    "seen": 1793052695.9271884,
+    "ast_hash": "e7cb8c17064307737bbd494ba1dc34c8",
+    "semantic_hash": ""
+  },
+  "Rules/create-prd.md": {
+    "mtime": 1793047842.4488428,
+    "seen": 1793052695.92719,
+    "ast_hash": "5f170e12a212283a8c950e8534f2bd65",
+    "semantic_hash": ""
+  },
+  "Rules/generate-tasks.md": {
+    "mtime": 1793047842.4493678,
+    "seen": 1793052695.9271913,
+    "ast_hash": "c6d9e11c94ceb903fd045a6db8f99d29",
+    "semantic_hash": ""
+  },
+  "docs/costos.md": {
+    "mtime": 1793040220.2730277,
+    "seen": 1793052695.9271922,
+    "ast_hash": "cd04bca1b20187363d3086936dac7440",
+    "semantic_hash": ""
+  },
+  "frontend/index.html": {
+    "mtime": 1793040220.2781703,
+    "seen": 1793052695.9271932,
+    "ast_hash": "cd952eaa234b1b4ee2ad5625fc2c4761",
+    "semantic_hash": ""
+  },
+  "src/requirements.txt": {
+    "mtime": 1793040220.315832,
+    "seen": 1793052695.9271944,
+    "ast_hash": "c8b05a40f2b5b77867b9258e497ae9c5",
+    "semantic_hash": ""
+  },
+  "tasks/prd-operacion-cortafuegos-manta.md": {
+    "mtime": 1793049147.3238356,
+    "seen": 1793052695.9271955,
+    "ast_hash": "a82d1c15fa08924be46a6b20e3a00e03",
+    "semantic_hash": ""
+  },
+  "docs/arquitectura.svg": {
+    "mtime": 1793040220.2686381,
+    "seen": 1793052695.9271967,
+    "ast_hash": "5f730d64267ac0aa3b819d9746190bad",
+    "semantic_hash": ""
+  },
+  "docs/flujo_defensas.svg": {
+    "mtime": 1793040220.2730277,
+    "seen": 1793052695.9271977,
+    "ast_hash": "6cea3127a77d25d87bda17b163515515",
+    "semantic_hash": ""
+  },
+  "docs/mapa_mental.svg": {
+    "mtime": 1793040220.2761648,
+    "seen": 1793052695.9271986,
+    "ast_hash": "ec4687d832aeeb37f5d6700084e8b4ad",
+    "semantic_hash": ""
+  }
+}
