@@ -58,6 +58,7 @@ export const MantaMap: React.FC<MantaMapProps> = ({
 }) => {
   const maxDay = result?.params.days ?? 30;
   const mapRef = useRef<L.Map | null>(null);
+  const dayPercent = (currentDay / maxDay) * 100;
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -137,7 +138,10 @@ export const MantaMap: React.FC<MantaMapProps> = ({
             step={1}
             value={currentDay}
             onChange={(e) => onDayChange?.(Number(e.target.value))}
-            className="w-full accent-[#167e6c]"
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-lg"
+            style={{
+              background: `linear-gradient(to right, #167e6c 0%, #167e6c ${dayPercent}%, #e3e4e8 ${dayPercent}%, #e3e4e8 100%)`,
+            }}
             aria-label="Control de dias"
           />
           <div className="mt-2 flex items-center justify-between text-[10px] text-[#7c7f88]">

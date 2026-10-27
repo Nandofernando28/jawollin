@@ -443,20 +443,22 @@ export default function App() {
             Configure el escenario inicial de propagacion antes de iniciar el motor de simulacion.
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-3 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               type="button"
               onClick={() => applyScenarioPreset('standard')}
-              className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-3 py-2 text-[11px] font-medium text-[#111a4a] transition hover:bg-[#eef5f3]"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-4 py-2.5 text-center text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
             >
-              Cargar Escenario Estandar (COVID-19 base)
+              <ShieldCheck className="h-4 w-4 text-[#167e6c]" />
+              <span>Cargar Escenario Estandar (COVID-19 base)</span>
             </button>
             <button
               type="button"
               onClick={() => applyScenarioPreset('supercontagion')}
-              className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-3 py-2 text-[11px] font-medium text-[#111a4a] transition hover:bg-[#eef5f3]"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-4 py-2.5 text-center text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
             >
-              Cargar Variante de Alta Transmisibilidad
+              <Biohazard className="h-4 w-4 text-[#ec652b]" />
+              <span>Cargar Variante de Alta Transmisibilidad</span>
             </button>
           </div>
 
@@ -667,62 +669,75 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f6f6f8] text-[#111a4a]">
-      <header className="sticky top-0 z-40 border-b border-[#e3e4e8] bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex h-[62px] max-w-[1200px] items-center justify-between gap-4 px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] text-[#111a4a]">
-              <ShieldCheck className="h-4 w-4" />
+      <header className="sticky top-0 z-40 border-b border-[#e3e4e8] bg-white/90 px-6 py-2.5 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#111a4a] font-mono text-xs font-bold text-white shadow-sm">
+                M
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h1 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#111a4a]">
+                    Manta Epidemic Console
+                  </h1>
+                  <span className="rounded border border-[#167e6c]/20 bg-[#167e6c]/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#167e6c]">
+                    Track B
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7c7f88]">
+                  Hubs intervenidos: <span className="font-semibold text-[#111a4a]">{intervenedHubs.length}/5</span>
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-[#111a4a]">
-                Manta Epidemic Containment Console
-              </p>
-              <p className="text-[11px] text-[#7c7f88]">Hubs aislados: {intervenedHubs.length}/5</p>
+
+            <div className="hidden items-center rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-1 text-xs md:flex">
+              <div className="flex items-center gap-1 border-r border-[#e3e4e8] px-2 font-mono text-[11px] text-[#7c7f88]">
+                <Hash className="h-3.5 w-3.5 text-[#167e6c]" />
+                <span>Seed {seed}</span>
+              </div>
+              <div className="flex items-center gap-1 px-2">
+                <AlertTriangle className="h-3.5 w-3.5 text-[#ec652b]" />
+                <select
+                  value={selectedPreset}
+                  onChange={(event) => setSelectedPreset(event.target.value as CrisisPreset)}
+                  className="cursor-pointer bg-transparent text-xs font-medium text-[#111a4a] outline-none"
+                >
+                  <option value="standard">Brote Estandar (COVID base)</option>
+                  <option value="supercontagion">Variante Supercontagio (2x)</option>
+                  <option value="budget_cut">Corte Presupuestario (-50%)</option>
+                  <option value="terminal_focus">Foco Critico en Terminal</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-2 rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-2 py-1.5 text-[10px] font-medium text-[#3b3e47] lg:flex">
-              <Cpu className="h-3.5 w-3.5 text-[#167e6c]" />
-              Seed {seed}
-            </div>
-            <label className="hidden items-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-2.5 py-1.5 text-[10px] font-medium text-[#3b3e47] md:flex">
-              <BellRing className="h-3.5 w-3.5 text-[#111a4a]" />
-              <select
-                value={selectedPreset}
-                onChange={(event) => setSelectedPreset(event.target.value as CrisisPreset)}
-                className="bg-transparent pr-1 text-[#111a4a] outline-none"
-              >
-                {Object.entries(PRESET_META).map(([key, meta]) => (
-                  <option key={key} value={key}>
-                    {meta.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="flex items-center space-x-2.5">
             <button
               type="button"
               onClick={() => setIsConfigured(false)}
-              className="relative z-30 inline-flex items-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-3 py-2 text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] px-3 py-1.5 text-xs font-medium text-[#3b3e47] transition hover:bg-[#f6f6f8]"
             >
-              <SlidersHorizontal className="h-4 w-4 text-[#111a4a]" />
-              Ajustar Parametros
+              <SlidersHorizontal className="h-3.5 w-3.5 text-[#111a4a]" />
+              <span>Parametros</span>
             </button>
+
             <button
               type="button"
               onClick={() => setReportOpen(true)}
-              className="relative z-30 inline-flex items-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-3 py-2 text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] px-3 py-1.5 text-xs font-medium text-[#3b3e47] transition hover:bg-[#f6f6f8]"
             >
-              <FileText className="h-4 w-4 text-[#111a4a]" />
-              Informe Alcaldia
+              <FileText className="h-3.5 w-3.5 text-[#167e6c]" />
+              <span>Informe</span>
             </button>
+
             <button
               type="button"
               onClick={handleMaxAlert}
-              className="relative z-30 inline-flex items-center gap-2 rounded-lg bg-[#ec652b] px-3 py-2 text-[11px] font-medium text-white shadow-sm transition hover:bg-[#dc5725]"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#ec652b] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#d8561f]"
             >
               <BellRing className="h-3.5 w-3.5" />
-              Maxima Alerta
+              <span>Maxima Alerta</span>
             </button>
           </div>
         </div>
