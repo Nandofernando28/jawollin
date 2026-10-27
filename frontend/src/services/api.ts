@@ -29,7 +29,8 @@ import type {
 // Configuración de endpoints
 // ============================================================================
 
-const AWS_API_URL = (import.meta.env.VITE_AWS_API_URL ?? '').replace(/\/$/, '');
+// Acepta VITE_API_URL (documentada en .env.example) y VITE_AWS_API_URL (nombre antiguo).
+const AWS_API_URL = (import.meta.env.VITE_API_URL ?? import.meta.env.VITE_AWS_API_URL ?? '').replace(/\/$/, '');
 const LOCAL_API_URL = 'http://localhost:8000';
 
 function getBaseUrl(mode: BackendMode): string {
@@ -275,24 +276,36 @@ export async function runSimulation(
   params: SimulationParams,
   mode: BackendMode,
 ): Promise<SimulationResponse> {
-  const base = getBaseUrl(mode);
-  try {
-    const res = await fetchWithTimeout(
-      `${base}/simulate`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      },
-      9000,
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-    const data = (await res.json()) as SimulationResponse;
-    return { ...data, backend_mode: mode };
-  } catch (err) {
-    console.warn(`[api] Fallback mock activado (${mode} falló):`, err);
-    return buildMockResponse(params);
+  // Contingencia del reto: si AWS no responde (o no está configurada), se intenta el servidor
+  // local; solo si ambos fallan se usa el mock determinista. La UI recibe `data_source` y
+  // `fallback_from` para mostrar de forma explícita de dónde vienen los datos.
+  const attempts: BackendMode[] = mode === 'aws' ? ['aws', 'local'] : ['local'];
+  for (const attempt of attempts) {
+    if (attempt === 'aws' && !AWS_API_URL) continue;
+    try {
+      const res = await fetchWithTimeout(
+        `${getBaseUrl(attempt)}/simulate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params),
+        },
+        60000,
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const data = (await res.json()) as SimulationResponse;
+      return {
+        ...data,
+        backend_mode: attempt,
+        data_source: 'backend',
+        fallback_from: attempt !== mode ? mode : undefined,
+      };
+    } catch (err) {
+      console.warn(`[api] Backend '${attempt}' no disponible:`, err);
+    }
   }
+  console.warn('[api] Sin backend disponible: se usa el mock determinista.');
+  return { ...buildMockResponse(params), data_source: 'mock', fallback_from: mode };
 }
 
 /** Genera el Boletín para el Alcalde via Amazon Bedrock (con fallback heurístico) */
@@ -307,14 +320,15 @@ export async function generateMayorReport(
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ simulation_result: simulationResult }),
+        // El handler del backend lee `simulation` (o `sim_hash` para buscarlo en caché).
+        body: JSON.stringify({ simulation: simulationResult, sim_hash: simulationResult.sim_hash }),
       },
-      12000,
+      30000,
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as MayorReportResponse;
   } catch (err) {
-    console.warn('[api] Usando boletín heurístico de respaldo:', err);
+    console.warn('[api] Usando boletín heurístico de respaldo (cliente):', err);
     return buildHeuristicReport(simulationResult);
   }
 }

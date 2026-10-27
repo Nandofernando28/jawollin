@@ -11,6 +11,7 @@ import {
   Server,
   Cloud,
   Activity,
+  SlidersHorizontal,
 } from 'lucide-react';
 import type { BackendMode } from '../types/simulation';
 
@@ -24,6 +25,7 @@ interface HeaderProps {
   onReset: () => void;
   onReport: () => void;
   onModeChange: (m: BackendMode) => void;
+  onOpenSetup?: () => void;
 }
 
 export function Header({
@@ -36,6 +38,7 @@ export function Header({
   onReset,
   onReport,
   onModeChange,
+  onOpenSetup,
 }: HeaderProps) {
   const healthDot =
     backendHealthy === null ? 'bg-[#c6c9cf]' : backendHealthy ? 'bg-[#167e6c] animate-pulse' : 'bg-[#ec652b]';
@@ -85,6 +88,17 @@ export function Header({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          {onOpenSetup && (
+            <button
+              onClick={onOpenSetup}
+              className="flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] bg-white px-3 py-1.5 text-[12px] font-medium text-[#3b3e47] transition-colors hover:bg-[#f6f6f8]"
+              title="Ajustar parámetros y Brotes Sorpresa"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5 text-[#ec652b]" />
+              <span className="hidden sm:inline">Parámetros</span>
+            </button>
+          )}
+
           <button
             onClick={onReset}
             className="flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] bg-white px-3 py-1.5 text-[12px] font-medium text-[#3b3e47] transition-colors hover:bg-[#f6f6f8]"

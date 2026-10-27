@@ -266,6 +266,22 @@ class MayorReportTests(HandlersTestBase):
         self.assertEqual(response["statusCode"], 404)
         self.assertIn("Access-Control-Allow-Origin", response["headers"])
 
+    def test_frontend_contract_accepts_simulation_and_simulation_result_keys(self):
+        """El frontend envia {simulation, sim_hash}; el alias legado {simulation_result} tambien funciona."""
+        sim_res = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])
+        os.environ["USE_BEDROCK"] = "false"
+        payloads = {
+            "simulation+sim_hash": {"simulation": sim_res, "sim_hash": sim_res["sim_hash"]},
+            "simulation_result (alias)": {"simulation_result": sim_res},
+        }
+        for name, payload in payloads.items():
+            with self.subTest(payload=name):
+                response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", payload))
+                self.assertEqual(response["statusCode"], 200, name)
+                body = json.loads(response["body"])
+                self.assertEqual(body["generated_by"], "heuristic-coe-fallback")
+                self.assertTrue(body["headline"])
+
     def test_heuristic_fallback_contains_all_required_keys_and_manta_names(self):
         # 1. Crear una simulaci?n real y almacenarla en la cach?
         sim_res = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])

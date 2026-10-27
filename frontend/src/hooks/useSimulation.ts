@@ -92,11 +92,6 @@ export function useSimulation(): UseSimulationReturn {
     [params, backendMode],
   );
 
-  // Ejecutar simulacion inicial automaticamente al montar la vista
-  useEffect(() => {
-    execute();
-  }, [execute]);
-
   const applyPreset = useCallback(
     (preset: SurprisePreset) => {
       setParams((prev) => {
@@ -164,9 +159,6 @@ export function useSimulation(): UseSimulationReturn {
   }, [result, backendMode]);
 
   const closeReport = useCallback(() => setShowReport(false), []);
-
-  // Simular en el arranque
-  useEffect(() => { execute(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     params, setParams,

@@ -517,7 +517,8 @@ def lambda_handler(event: Dict[str, Any], context: Any = None) -> Dict[str, Any]
         return _build_http_response(400, {"error": "body_invalido", "message": str(exc)})
 
     # 2. Localizar datos de la simulación
-    sim_data = body.get("simulation")
+    # 'simulation_result' se acepta como alias: fue el nombre usado por el primer cliente frontend.
+    sim_data = body.get("simulation") or body.get("simulation_result")
     sim_hash = body.get("sim_hash")
 
     if not sim_data:

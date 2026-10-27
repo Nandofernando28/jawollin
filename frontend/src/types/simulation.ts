@@ -211,6 +211,11 @@ export interface SimulationResponse {
   backend_mode: BackendMode;
   timestamp: string;
 
+  /** Origen real de los datos: respuesta del backend o mock local de contingencia. */
+  data_source?: 'backend' | 'mock';
+  /** Modo solicitado originalmente cuando hubo que conmutar (ej. 'aws' -> 'local'). */
+  fallback_from?: BackendMode;
+
   params: SimulationParams;
   summary_kpis: SummaryKPIs;
 
