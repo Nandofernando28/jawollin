@@ -133,6 +133,12 @@ Resources:
       Handler: handlers.worker.lambda_handler
       MemorySize: 1536
       Timeout: 25
+      Environment:
+        Variables:
+          RESULTS_BUCKET_NAME: !Ref SimulationResultsBucket
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref SimulationResultsBucket
 
   # ============================================================================
   # 5. AWS STEP FUNCTIONS (EXPRESS WORKFLOW CON MAP STATE)
