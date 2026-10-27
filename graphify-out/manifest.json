@@ -12,27 +12,27 @@
     "semantic_hash": ""
   },
   "frontend/package.json": {
-    "mtime": 1793040220.2831936,
-    "seen": 1793052695.9271667,
-    "ast_hash": "c83951a5535d0450b4ebdf28fb1c2abb",
+    "mtime": 1793136919.5531573,
+    "seen": 1793137624.89984,
+    "ast_hash": "d3faeff3085cf7ef9d53d1171c99212c",
     "semantic_hash": ""
   },
   "frontend/src/App.tsx": {
-    "mtime": 1793047842.450425,
-    "seen": 1793052695.9271684,
-    "ast_hash": "31f2f357f232d85ba985751e90cef517",
+    "mtime": 1793136919.5558121,
+    "seen": 1793137624.899845,
+    "ast_hash": "4eed3e82cd96fb5c0e6e4caf776bd6d4",
     "semantic_hash": ""
   },
   "frontend/src/main.tsx": {
-    "mtime": 1793047842.4509766,
-    "seen": 1793052695.9271698,
-    "ast_hash": "baa6e3bb52880fd2e56acdc7e750c863",
+    "mtime": 1793136919.5705197,
+    "seen": 1793137624.8998795,
+    "ast_hash": "a33a2f433fc53ed4f78e162c7dfb3b4a",
     "semantic_hash": ""
   },
   "frontend/src/types/simulation.ts": {
-    "mtime": 1793047842.4520519,
-    "seen": 1793052695.9271708,
-    "ast_hash": "cff24ea4c0ab23ecda20b83edbda6efc",
+    "mtime": 1793073959.3887901,
+    "seen": 1793119325.954785,
+    "ast_hash": "954d22466a7c004dec1663f8244f4df7",
     "semantic_hash": ""
   },
   "frontend/src/vite-env.d.ts": {
@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "frontend/vite.config.ts": {
-    "mtime": 1793040220.2896752,
-    "seen": 1793052695.9271743,
-    "ast_hash": "e30f64c4d8f57fa5dd82992a3e1591c4",
+    "mtime": 1793136919.5725367,
+    "seen": 1793137624.901006,
+    "ast_hash": "0e697f1a4c3b86669220681b7d14451a",
     "semantic_hash": ""
   },
   "infra/statemachine/monte_carlo_express.asl.json": {
@@ -78,51 +78,51 @@
     "semantic_hash": ""
   },
   "src/engine/graph_manta.py": {
-    "mtime": 1793047842.4538274,
-    "seen": 1793052695.92718,
-    "ast_hash": "69554d3033513115d439e5734162996f",
+    "mtime": 1793125146.1851225,
+    "seen": 1793137624.9055026,
+    "ast_hash": "272ba848e5ca658f92dff08edbee4d29",
     "semantic_hash": ""
   },
   "src/engine/simulator.py": {
-    "mtime": 1793047842.4543557,
-    "seen": 1793052695.927181,
-    "ast_hash": "8880aafb7533f9dc44e2f15fae2efba1",
+    "mtime": 1793125146.1859207,
+    "seen": 1793137624.9055052,
+    "ast_hash": "c49e183cb244a819c0a5882eb2bfe9c6",
     "semantic_hash": ""
   },
   "src/handlers/__init__.py": {
-    "mtime": 1793047842.4563465,
-    "seen": 1793052695.9271822,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "mtime": 1793125104.3216166,
+    "seen": 1793137624.9055073,
+    "ast_hash": "d58fca79cfaa8fa94dd7ce27880dc06b",
     "semantic_hash": ""
   },
   "src/handlers/mayor_report.py": {
-    "mtime": 1793047842.4576383,
-    "seen": 1793052695.9271832,
-    "ast_hash": "dd06063d5c942bbb07ea061e3e21dff6",
+    "mtime": 1793136264.226305,
+    "seen": 1793137624.9055095,
+    "ast_hash": "d5befc8129fd5c2a6d95223bc5f3c517",
     "semantic_hash": ""
   },
   "src/handlers/orchestrator.py": {
-    "mtime": 1793047842.4586465,
-    "seen": 1793052695.9271839,
-    "ast_hash": "4accff999ee72851239240472313caaf",
+    "mtime": 1793125104.3227158,
+    "seen": 1793137624.9055116,
+    "ast_hash": "884327bc2f417ad2d0671d71db2f5fbf",
     "semantic_hash": ""
   },
   "src/handlers/worker.py": {
-    "mtime": 1793047842.45951,
-    "seen": 1793052695.9271848,
-    "ast_hash": "f8b2ddc6d433cb3a79f3efa7b6abdf40",
+    "mtime": 1793125104.323413,
+    "seen": 1793137624.9055138,
+    "ast_hash": "a16fcb525786ad6e280e7ebc917deff7",
     "semantic_hash": ""
   },
   "src/local_server.py": {
-    "mtime": 1793047842.4614828,
-    "seen": 1793052695.927186,
-    "ast_hash": "fda19833228ab10f034394a9be9bf439",
+    "mtime": 1793125104.324554,
+    "seen": 1793137624.9055161,
+    "ast_hash": "c26638eb07184345c0e15e15d2c4f70b",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793040220.2078705,
-    "seen": 1793052695.9271872,
-    "ast_hash": "c6117c8b4710a73d42d8b9305e99c1bc",
+    "mtime": 1793127202.6661215,
+    "seen": 1793137624.9061372,
+    "ast_hash": "c8b9368c9d95e119293ee4eb03e06469",
     "semantic_hash": ""
   },
   "Rules/DESIGN.md": {
@@ -174,51 +174,51 @@
     "semantic_hash": ""
   },
   "docs/flujo_defensas.svg": {
-    "mtime": 1793040220.2730277,
-    "seen": 1793052695.9271977,
+    "mtime": 1793074431.3215728,
+    "seen": 1793119325.9573753,
     "ast_hash": "6cea3127a77d25d87bda17b163515515",
     "semantic_hash": ""
   },
   "docs/mapa_mental.svg": {
-    "mtime": 1793040220.2761648,
-    "seen": 1793052695.9271986,
+    "mtime": 1793074430.6143384,
+    "seen": 1793119325.9573767,
     "ast_hash": "ec4687d832aeeb37f5d6700084e8b4ad",
     "semantic_hash": ""
   },
   "tasks/plan-equipo-3-integrantes.md": {
-    "mtime": 1793053888.6309228,
-    "seen": 1793072396.6864405,
-    "ast_hash": "8d3a682bed658e50160fff0cb6b24d56",
+    "mtime": 1793136264.2273192,
+    "seen": 1793137624.907906,
+    "ast_hash": "f4ed06446a0ccd23ed6990cd8af3c0dd",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-1-red-multicapa-manta.md": {
-    "mtime": 1793053089.8987186,
-    "seen": 1793072396.6866903,
-    "ast_hash": "3c79913886a927e7dd0803e9c9c4d9ab",
+    "mtime": 1793116537.9331315,
+    "seen": 1793119325.9568796,
+    "ast_hash": "f0b7afc8c259a39e2d9f6730146a9198",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-2-motor-seir-escudo-manta.md": {
-    "mtime": 1793053149.625949,
-    "seen": 1793072396.6866934,
-    "ast_hash": "319463a87e27f558c5e716ff08c35d29",
+    "mtime": 1793116537.9342928,
+    "seen": 1793119325.956881,
+    "ast_hash": "b1e3d179ed2ea10cc3f212a72b7d55c6",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-3-backend-serverless-hibrido.md": {
-    "mtime": 1793053205.5893917,
-    "seen": 1793072396.6866963,
-    "ast_hash": "48a3903bf842b4f852f5757ee082f24c",
+    "mtime": 1793125104.3271523,
+    "seen": 1793137624.9086552,
+    "ast_hash": "2a21f700de2f80a1248333c69a301640",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-4-boletin-alcalde-bedrock.md": {
-    "mtime": 1793053254.5644164,
-    "seen": 1793072396.6866984,
-    "ast_hash": "3f722b9ea5ed998f6388468d7036dcf9",
+    "mtime": 1793136264.2283144,
+    "seen": 1793137624.9086585,
+    "ast_hash": "7c5c17430b07bbec7297de453b646649",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-5-cartografia-manta-contratos-ts.md": {
-    "mtime": 1793053256.023658,
-    "seen": 1793072396.686701,
-    "ast_hash": "e56ccf1854c81e42c0ee175201d8055c",
+    "mtime": 1793073962.185125,
+    "seen": 1793119325.957078,
+    "ast_hash": "deed2b18833687bddb32adfde7497e45",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-6-interfaz-react-centro-control.md": {
@@ -234,9 +234,129 @@
     "semantic_hash": ""
   },
   "tasks/tasks-operacion-cortafuegos-manta.md": {
-    "mtime": 1793053947.3941798,
-    "seen": 1793072396.6867077,
-    "ast_hash": "326f5ff09ebb8d528b5a8cd40721e851",
+    "mtime": 1793074646.9723077,
+    "seen": 1793119325.9572818,
+    "ast_hash": "338bed7e9a8edcf20926a9067dbf201a",
+    "semantic_hash": ""
+  },
+  "tests/__init__.py": {
+    "mtime": 1793116537.9377086,
+    "seen": 1793119325.9559958,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "tests/test_graph_manta.py": {
+    "mtime": 1793116537.9388735,
+    "seen": 1793119325.9559977,
+    "ast_hash": "71a5d00002c5fb9d329360dbdcbf9ca8",
+    "semantic_hash": ""
+  },
+  "tests/test_simulator.py": {
+    "mtime": 1793116537.9395602,
+    "seen": 1793119325.9559991,
+    "ast_hash": "a6a2ceec58511dc8f998a438c49dda3f",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1793077517.2368107,
+    "seen": 1793119325.9560018,
+    "ast_hash": "40b83870c77ee2810705d5a7cee80807",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/ControlPanel.tsx": {
+    "mtime": 1793136919.5584505,
+    "seen": 1793137624.899849,
+    "ast_hash": "383fc0c8d78f6a3d20b9cb4f5f898579",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/EpidemicCharts.tsx": {
+    "mtime": 1793136919.5604644,
+    "seen": 1793137624.8998513,
+    "ast_hash": "4417841761022bc112e26111b23ba4f4",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/Header.tsx": {
+    "mtime": 1793136919.5634725,
+    "seen": 1793137624.8998537,
+    "ast_hash": "55ff5e1204c3c272cdb873f72be30cb4",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/KpiCards.tsx": {
+    "mtime": 1793136919.5649827,
+    "seen": 1793137624.8998559,
+    "ast_hash": "915b775a66f92485d2776ab88d6063ed",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/MantaMap.tsx": {
+    "mtime": 1793136919.5674796,
+    "seen": 1793137624.8998632,
+    "ast_hash": "a074ceda0a9991392eb3889fd35d6935",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/MayorReportModal.tsx": {
+    "mtime": 1793125146.163964,
+    "seen": 1793137624.8998652,
+    "ast_hash": "7a9259c47f823d5ae4bd8d9fb0b94463",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/SkeletonLoader.tsx": {
+    "mtime": 1793125146.1659765,
+    "seen": 1793137624.8998704,
+    "ast_hash": "6c031d7c43e5a2c312fb64e2f3068351",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/Tooltip.tsx": {
+    "mtime": 1793125146.1679087,
+    "seen": 1793137624.899873,
+    "ast_hash": "85ea1edd3c361f27a87ac31555e3923a",
+    "semantic_hash": ""
+  },
+  "frontend/src/data/mantaGeo.ts": {
+    "mtime": 1793136813.7955506,
+    "seen": 1793137624.8998754,
+    "ast_hash": "d0a03f3b0095adfb3d51ffe0f18aca3e",
+    "semantic_hash": ""
+  },
+  "frontend/src/hooks/useSimulation.ts": {
+    "mtime": 1793125146.171919,
+    "seen": 1793137624.899877,
+    "ast_hash": "4a2edd1c6d1d4f32465d65ce13c9594e",
+    "semantic_hash": ""
+  },
+  "frontend/src/services/api.ts": {
+    "mtime": 1793125146.175929,
+    "seen": 1793137624.8998811,
+    "ast_hash": "18685afdff598a63fff66a9b9ec06ba4",
+    "semantic_hash": ""
+  },
+  "scripts/calibrar.py": {
+    "mtime": 1793125146.175929,
+    "seen": 1793137624.904382,
+    "ast_hash": "9b0e11055aac492282600e84be053113",
+    "semantic_hash": ""
+  },
+  "scripts/estimar_r0.py": {
+    "mtime": 1793125146.1779342,
+    "seen": 1793137624.9051125,
+    "ast_hash": "87797f11fbd28f90e57c9d11bf24c9c3",
+    "semantic_hash": ""
+  },
+  "scripts/extract_manta_geojson.py": {
+    "mtime": 1793125146.1799455,
+    "seen": 1793137624.9051166,
+    "ast_hash": "401966f658485a95ac46402dede8e3aa",
+    "semantic_hash": ""
+  },
+  "tests/test_handlers.py": {
+    "mtime": 1793136264.231319,
+    "seen": 1793137624.90582,
+    "ast_hash": "f685383eb47ee0ab2ea1c708a4c50bf4",
+    "semantic_hash": ""
+  },
+  "docs/calibracion.md": {
+    "mtime": 1793125146.1262157,
+    "seen": 1793137624.9069433,
+    "ast_hash": "c001bc6fcbe2952f5c36e01dcf790c38",
     "semantic_hash": ""
   }
 }
