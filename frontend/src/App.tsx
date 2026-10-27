@@ -627,19 +627,23 @@ export default function App() {
                             onClick={() => setSetupPolicy(item.id as Policy)}
                             className={`flex w-full items-center justify-between rounded-lg border p-2.5 text-left transition ${
                               isSelected
-                                ? 'border-[#111a4a] bg-[#111a4a] text-white shadow-sm'
+                                ? 'border-[#167e6c] bg-[#167e6c]/10 text-[#111a4a] shadow-sm ring-1 ring-[#167e6c]/20'
                                 : 'border-[#e3e4e8] bg-white text-[#3b3e47] hover:bg-[#f6f6f8]'
                             }`}
                           >
                             <div>
-                              <span className="block text-[11px] font-mono font-semibold tracking-wide">{item.label}</span>
-                              <span className={`mt-0.5 block text-[10px] ${isSelected ? 'text-white/80' : 'text-[#7c7f88]'}`}>
-                                {item.desc}
+                              <span
+                                className={`block text-[11px] font-mono font-semibold tracking-wide ${
+                                  isSelected ? 'text-[#167e6c]' : 'text-[#111a4a]'
+                                }`}
+                              >
+                                {item.label}
                               </span>
+                              <span className="mt-0.5 block text-[10px] text-[#7c7f88]">{item.desc}</span>
                             </div>
                             <div
-                              className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
-                                isSelected ? 'border-white bg-[#167e6c]' : 'border-[#cbcccf]'
+                              className={`flex h-4 w-4 items-center justify-center rounded-full border transition ${
+                                isSelected ? 'border-[#167e6c] bg-[#167e6c]' : 'border-[#cbcccf] bg-white'
                               }`}
                             >
                               {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
@@ -691,25 +695,6 @@ export default function App() {
               </div>
             </div>
 
-            <div className="hidden items-center rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-1 text-xs md:flex">
-              <div className="flex items-center gap-1 border-r border-[#e3e4e8] px-2 font-mono text-[11px] text-[#7c7f88]">
-                <Hash className="h-3.5 w-3.5 text-[#167e6c]" />
-                <span>Seed {seed}</span>
-              </div>
-              <div className="flex items-center gap-1 px-2">
-                <AlertTriangle className="h-3.5 w-3.5 text-[#ec652b]" />
-                <select
-                  value={selectedPreset}
-                  onChange={(event) => setSelectedPreset(event.target.value as CrisisPreset)}
-                  className="cursor-pointer bg-transparent text-xs font-medium text-[#111a4a] outline-none"
-                >
-                  <option value="standard">Brote Estandar (COVID base)</option>
-                  <option value="supercontagion">Variante Supercontagio (2x)</option>
-                  <option value="budget_cut">Corte Presupuestario (-50%)</option>
-                  <option value="terminal_focus">Foco Critico en Terminal</option>
-                </select>
-              </div>
-            </div>
           </div>
 
           <div className="flex items-center space-x-2.5">
@@ -1092,17 +1077,6 @@ export default function App() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#edf9f6] text-[#167e6c]">
                       <Cpu className="h-4 w-4" />
                     </div>
-                  </div>
-
-                  <div className="mb-4 flex items-center gap-2 rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-2.5">
-                    <Dices className="h-4 w-4 text-[#111a4a]" />
-                    <span className="text-[10px] uppercase tracking-[0.14em] text-[#7c7f88]">Seed</span>
-                    <input
-                      type="number"
-                      value={seed}
-                      onChange={(event) => setSeed(Number(event.target.value) || 0)}
-                      className="w-20 bg-transparent text-right text-sm font-medium text-[#111a4a] outline-none"
-                    />
                   </div>
 
                   <button
