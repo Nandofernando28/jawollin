@@ -11,7 +11,6 @@ import {
   FileText,
   FlaskConical,
   Gauge,
-  Hash,
   HeartPulse,
   MapPin,
   Pause,
@@ -40,10 +39,10 @@ const POLICY_META: Record<Policy, { label: string; reduction: number; pressure: 
 };
 
 const PRESET_META: Record<CrisisPreset, { label: string; multiplier: number; note: string }> = {
-  standard: { label: 'Brote Estandar', multiplier: 0.0, note: 'Riesgo endemico estable en la ciudad' },
-  supercontagion: { label: 'Variante Supercontagio (2x)', multiplier: 0.2, note: 'Riesgo de transmision acelerado' },
-  budget_cut: { label: 'Corte Presupuestario (50%)', multiplier: -0.08, note: 'Recursos reducidos y respuesta lenta' },
-  terminal_focus: { label: 'Foco en Terminal', multiplier: 0.1, note: 'Flujo de buses y pasajeros elevando la presion' },
+  standard: { label: 'Brote Estandar', multiplier: 0.0, note: 'Riesgo endemico estable' },
+  supercontagion: { label: 'Variante Supercontagio (2x)', multiplier: 0.2, note: 'Transmision acelerada' },
+  budget_cut: { label: 'Corte Presupuestario (50%)', multiplier: -0.08, note: 'Recursos reducidos' },
+  terminal_focus: { label: 'Foco en Terminal', multiplier: 0.1, note: 'Presion alta por transito' },
 };
 
 const DEFAULT_HUB_STATE: HubToggleState = {
@@ -55,6 +54,13 @@ const DEFAULT_HUB_STATE: HubToggleState = {
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const formatCompact = (value: number) => {
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}K`;
+  }
+  return value.toFixed(0);
+};
 
 const buildLinePath = (values: number[], width: number, height: number, padding: number) => {
   const minValue = Math.min(...values);
@@ -79,13 +85,6 @@ const polarPoint = (cx: number, cy: number, radius: number, angle: number) => {
   };
 };
 
-const formatCompact = (value: number) => {
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}K`;
-  }
-  return value.toFixed(0);
-};
-
 export default function App() {
   const [currentDay, setCurrentDay] = useState(14);
   const [playing, setPlaying] = useState(false);
@@ -106,9 +105,7 @@ export default function App() {
   );
 
   useEffect(() => {
-    if (!playing) {
-      return undefined;
-    }
+    if (!playing) return undefined;
 
     const intervalMs = speed === 1 ? 1300 : speed === 2 ? 800 : 500;
     const timer = window.setInterval(() => {
@@ -159,7 +156,10 @@ export default function App() {
       );
 
       const randomValue = Math.max(16, Math.round(baseValue * (1 - randomReduction)));
-      const strategicValue = Math.max(8, Math.round(baseValue * (1 - strategicReduction * (0.66 + (day / TOTAL_DAYS) * 0.45))));
+      const strategicValue = Math.max(
+        8,
+        Math.round(baseValue * (1 - strategicReduction * (0.66 + (day / TOTAL_DAYS) * 0.45))),
+      );
 
       base.push(baseValue);
       random.push(randomValue);
@@ -170,7 +170,6 @@ export default function App() {
   }, [effectiveReduction, intervenedHubs.length, policySummary.pressure, presetSummary.multiplier, seed, selectedPreset]);
 
   const currentBaseValue = baseCurve[currentDay - 1] ?? baseCurve[0];
-  const currentRandomValue = randomCurve[currentDay - 1] ?? randomCurve[0];
   const currentStrategicValue = strategicCurve[currentDay - 1] ?? strategicCurve[0];
 
   const cumulativeAvoided = useMemo(() => {
@@ -230,9 +229,18 @@ export default function App() {
   }, [currentDay, intervenedHubs.length, policy, selectedPreset]);
 
   const budgetPercent = clamp((budgetSpent / budgetAvailable) * 100, 18, 100);
-  const dosageAvailable = Math.max(180, 420 - currentDay * 5 - intervenedHubs.length * 18 + (selectedPreset === 'budget_cut' ? -80 : 20));
-  const brigadesAvailable = Math.max(6, 16 - currentDay / 2 + intervenedHubs.length + (selectedPreset === 'budget_cut' ? -4 : 2));
-  const testKits = Math.max(80, 260 - currentDay * 4 + intervenedHubs.length * 12 + (selectedPreset === 'budget_cut' ? -30 : 14));
+  const dosageAvailable = Math.max(
+    180,
+    420 - currentDay * 5 - intervenedHubs.length * 18 + (selectedPreset === 'budget_cut' ? -80 : 20),
+  );
+  const brigadesAvailable = Math.max(
+    6,
+    16 - currentDay / 2 + intervenedHubs.length + (selectedPreset === 'budget_cut' ? -4 : 2),
+  );
+  const testKits = Math.max(
+    80,
+    260 - currentDay * 4 + intervenedHubs.length * 12 + (selectedPreset === 'budget_cut' ? -30 : 14),
+  );
 
   const seirState = useMemo(() => {
     const baseShare = Math.max(0.18, 0.76 - currentDay * 0.0035 - effectiveReduction * 0.32);
@@ -272,8 +280,6 @@ export default function App() {
   const rValue = clamp(2.8 - effectiveReduction * 2.4, 0.7, 2.8);
   const radialCircumference = 2 * Math.PI * 52;
   const radialDashOffset = radialCircumference - (rValue / 2.8) * radialCircumference;
-  const radialAngle = (rValue / 2.8) * 270 - 135;
-  const radialPoint = polarPoint(84, 84, 52, (radialAngle * Math.PI) / 180);
 
   const statCards = [
     {
@@ -315,6 +321,17 @@ export default function App() {
       ...prev,
       [hubId]: !prev[hubId],
     }));
+  };
+
+  const handleMaxAlert = () => {
+    setAlertOpen(true);
+    setHubState({
+      tarqui: true,
+      uleam: true,
+      terminal: true,
+      mercado_central: true,
+      empacadoras: true,
+    });
   };
 
   const gaussianPoints = useMemo(() => {
@@ -381,15 +398,15 @@ export default function App() {
             <button
               type="button"
               onClick={() => setReportOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-3 py-2 text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
+              className="relative z-30 inline-flex items-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-3 py-2 text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
             >
               <FileText className="h-4 w-4 text-[#111a4a]" />
               Informe Alcaldia
             </button>
             <button
               type="button"
-              onClick={() => setAlertOpen((current) => !current)}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#ec652b] px-3 py-2 text-[11px] font-medium text-white shadow-sm transition hover:bg-[#dc5725]"
+              onClick={handleMaxAlert}
+              className="relative z-30 inline-flex items-center gap-2 rounded-lg bg-[#ec652b] px-3 py-2 text-[11px] font-medium text-white shadow-sm transition hover:bg-[#dc5725]"
             >
               <BellRing className="h-3.5 w-3.5" />
               Maxima Alerta
@@ -433,8 +450,7 @@ export default function App() {
               <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7c7f88]">Diagnostico</p>
                 <p className="mt-2 text-sm">
-                  El foco de Tarqui sigue siendo el nodo principal, pero la estrategia {policySummary.label.toLowerCase()} logra
-                  reducir la presion epidemiologica en el conjunto de la ciudad.
+                  El foco de Tarqui sigue siendo el punto principal, pero la estrategia {policySummary.label.toLowerCase()} reduce la presion epidemiologica del conjunto de la ciudad.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
@@ -483,7 +499,7 @@ export default function App() {
             ))}
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-[#e3e4e8] bg-white p-2 shadow-sm">
+          <section className="relative z-10 isolate overflow-hidden rounded-lg border border-[#e3e4e8] bg-white p-2 shadow-sm">
             <MantaMap
               result={{ params: { days: TOTAL_DAYS } }}
               currentDay={currentDay}
@@ -581,10 +597,7 @@ export default function App() {
                       <span className="font-mono text-[#111a4a]">${formatCompact(budgetSpent)} / $80,000</span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-[#edf0f3]">
-                      <div
-                        className="h-full rounded-full bg-[#111a4a]"
-                        style={{ width: `${budgetPercent}%` }}
-                      />
+                      <div className="h-full rounded-full bg-[#111a4a]" style={{ width: `${budgetPercent}%` }} />
                     </div>
                   </div>
 
@@ -609,6 +622,62 @@ export default function App() {
                         <span className="text-[11px] uppercase tracking-[0.14em]">Kits</span>
                       </div>
                       <p className="mt-2 font-mono text-xl font-semibold text-[#111a4a]">{Math.round(testKits)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#e3e4e8] bg-white p-5 shadow-sm lg:min-h-[330px]">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">EFICIENCIA EPIDEMIOLOGICA</p>
+                    <h2 className="mt-2 flex items-center gap-2 text-xl font-semibold text-[#111a4a]">
+                      Indice de Transmision Rt
+                      <TrendingDown className="h-4 w-4 text-[#167e6c]" />
+                    </h2>
+                  </div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#edf9f6] text-[#167e6c]">
+                    <TrendingDown className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-4">
+                    <div className="flex items-end justify-between gap-3">
+                      <div>
+                        <p className={`font-mono text-4xl font-semibold ${rValue < 1 ? 'text-[#167e6c]' : 'text-[#ec652b]'}`}>
+                          {rValue.toFixed(2)}
+                        </p>
+                        <p className={`mt-2 text-[10px] font-medium uppercase tracking-[0.14em] ${rValue < 1 ? 'text-[#167e6c]' : 'text-[#ec652b]'}`}>
+                          {rValue < 1 ? 'RITMO DE TRANSMISION CONTROLADO' : 'BROTE EN EXPANSION ACELERADA'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-[#7c7f88]">Estado</p>
+                        <p className="mt-1 font-mono text-sm font-semibold text-[#111a4a]">{rValue < 1 ? 'OK' : 'ALERTA'}</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-[11px] text-[#3b3e47]">Umbral critico de propagacion: 1.00</p>
+                  </div>
+
+                  <div className="rounded-lg border border-[#e3e4e8] bg-white p-3">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-[#3b3e47]">Costo promedio por contagio evitado: $12.40 USD</p>
+                    <div className="mt-4 space-y-3">
+                      {[
+                        { label: 'Antidotos y vacunas', value: 50, color: '#167e6c' },
+                        { label: 'Brigadas de campo', value: 32, color: '#111a4a' },
+                        { label: 'Kits de monitoreo', value: 18, color: '#ec652b' },
+                      ].map((item) => (
+                        <div key={item.label}>
+                          <div className="mb-1 flex items-center justify-between text-[11px] text-[#3b3e47]">
+                            <span>{item.label}</span>
+                            <span className="font-mono text-[#111a4a]">{item.value}%</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-[#edf0f3]">
+                            <div className="h-full rounded-full" style={{ width: `${item.value}%`, backgroundColor: item.color }} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
