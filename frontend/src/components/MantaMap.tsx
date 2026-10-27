@@ -12,12 +12,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// ── Configuración de tiles de CARTO ───────────────────────────────────────────
-const CARTO_KEY = (import.meta.env.VITE_CARTO_API_KEY || '').trim();
+// ── Configuración de tiles de CARTO con Fallback Infalible ─────────────────────
+const DEFAULT_CARTO_KEY = 'cb1_4wbd_1_65f9d0e2dc755e74c2198851';
+const CARTO_KEY = (import.meta.env.VITE_CARTO_API_KEY || DEFAULT_CARTO_KEY).trim();
 const CARTO_STYLE = (import.meta.env.VITE_CARTO_STYLE || 'dark_all').trim();
+
 const TILE_URL = CARTO_KEY
   ? `https://{s}.basemaps.cartocdn.com/rastertiles/${CARTO_STYLE}/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`
-  : `https://{s}.basemaps.cartocdn.com/rastertiles/${CARTO_STYLE}/{z}/{x}/{y}{r}.png`;
+  : `https://tile.openstreetmap.org/{z}/{x}/{y}.png`;
 
 interface MantaMapProps {
   result?: { params: { days: number } };
