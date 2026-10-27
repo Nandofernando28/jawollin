@@ -12,6 +12,7 @@ interface MantaMapProps {
   playbackSpeed?: 1 | 2 | 5;
   intervenedHubs?: string[];
   zombiesPerParroquia?: Record<string, number>;
+  initialHub?: string;
   onDayChange?: (d: number) => void;
   onTogglePlay?: () => void;
   onResetDay?: () => void;
@@ -51,6 +52,7 @@ export const MantaMap: React.FC<MantaMapProps> = ({
   playbackSpeed = 1,
   intervenedHubs = [],
   zombiesPerParroquia = {},
+  initialHub,
   onDayChange,
   onTogglePlay,
   onResetDay,
@@ -58,7 +60,8 @@ export const MantaMap: React.FC<MantaMapProps> = ({
 }) => {
   const maxDay = result?.params.days ?? 30;
   const mapRef = useRef<L.Map | null>(null);
-  const dayPercent = (currentDay / maxDay) * 100;
+  const dayPercent = (currentDay / 30) * 100;
+  const focusHub = MANTA_HUBS.find((hub) => hub.id === (initialHub || 'tarqui'));
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -183,8 +186,23 @@ export const MantaMap: React.FC<MantaMapProps> = ({
 
         <GeoJSON key={`geojson-day-${currentDay}`} data={MANTA_PARROQUIAS_GEO as any} style={parishStyle} />
 
+        {focusHub && (
+          <Circle
+            center={focusHub.coords}
+            radius={900}
+            pathOptions={{
+              color: '#ec652b',
+              fillColor: '#ec652b',
+              fillOpacity: 0.12,
+              weight: 2,
+              dashArray: '8 10',
+            }}
+          />
+        )}
+
         {MANTA_HUBS.map((hub) => {
           const isIntervened = intervenedHubs.includes(hub.id);
+          const isInitialHub = focusHub?.id === hub.id;
           return (
             <React.Fragment key={hub.id}>
               <Circle
@@ -194,16 +212,34 @@ export const MantaMap: React.FC<MantaMapProps> = ({
                   color: isIntervened ? '#1e4199' : '#ec652b',
                   fillColor: isIntervened ? '#9ad0ff' : '#f9b692',
                   fillOpacity: isIntervened ? 0.2 : 0.22,
-                  weight: 1.2,
+                  weight: isInitialHub ? 2.5 : 1.2,
                 }}
               />
-              <Marker position={hub.coords} icon={buildHubIcon(isIntervened)}>
+              <Marker
+                position={hub.coords}
+                icon={
+                  isInitialHub
+                    ? L.divIcon({
+                        className: 'hub-pin focus-hub',
+                        html: `
+                          <span style="position:relative;display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;border:3px solid #ffffff;background:#ec652b;box-shadow:0 0 0 7px rgba(236,101,43,0.20),0 0 0 14px rgba(236,101,43,0.08),0 12px 24px rgba(236,101,43,0.30);">
+                            <span style="position:absolute;inset:-2px;border-radius:9999px;border:2px solid rgba(236,101,43,0.6);animation:ping 1.8s ease-out infinite;"></span>
+                            <span style="width:10px;height:10px;border-radius:9999px;background:white;display:block;"></span>
+                          </span>
+                        `,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15],
+                        popupAnchor: [0, -18],
+                      })
+                    : buildHubIcon(isIntervened)
+                }
+              >
                 <Popup>
                   <div className="p-1 text-[#111a4a]">
                     <h4 className="text-sm font-semibold">{hub.name}</h4>
                     <p className="mt-1 text-xs text-[#3b3e47]">{hub.description}</p>
                     <div className="mt-2 text-xs font-semibold text-[#167e6c]">
-                      {isIntervened ? 'Cortafuegos activo' : 'Foco activo'}
+                      {isIntervened ? 'Cortafuegos activo' : isInitialHub ? 'Foco inicial activo' : 'Foco activo'}
                     </div>
                   </div>
                 </Popup>
