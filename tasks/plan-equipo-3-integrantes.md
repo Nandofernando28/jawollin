@@ -46,8 +46,8 @@ Para cumplir con la regla de la competencia (*"Repositorio público con un histo
   - [x] **Tarea 3.1 – 4.2:** Implementar la invocación a Step Functions (`StartSyncExecution`) con fallback directo y el enrutador HTTP (`GET /health`, `POST /simulate`, `GET /simulations/{simHash}`).
   - [x] **Tarea 5.1 – 5.3:** Implementar el servidor híbrido local multihilo en `src/local_server.py` (`localhost:8000`) con CORS habilitado.
 - **Plan Fase 4 ([tasks-fase-4-boletin-alcalde-bedrock.md](./tasks-fase-4-boletin-alcalde-bedrock.md)):**
-  - [ ] **Tarea 1.1 – 2.2:** Implementar en `src/handlers/mayor_report.py` el extractor de contexto ejecutivo y la integración con **Amazon Bedrock** (`amazon.nova-micro-v1:0` / Claude 3 Haiku).
-  - [ ] **Tarea 3.1 – 5.2:** Implementar el generador heurístico determinista de respaldo (3 secciones oficiales para el Alcalde de Manta) y las pruebas de integración en `tests/test_handlers.py`.
+  - [x] **Tarea 1.1 – 2.2:** Implementar en `src/handlers/mayor_report.py` el extractor de contexto ejecutivo y la integración con **Amazon Bedrock** (`amazon.nova-micro-v1:0` / Claude 3 Haiku).
+  - [x] **Tarea 3.1 – 5.2:** Implementar el generador heurístico determinista de respaldo (3 secciones oficiales para el Alcalde de Manta) y las pruebas de integración en `tests/test_handlers.py`.
 - **En Fase 7 ([tasks-fase-7-verificacion-despliegue-entregables.md](./tasks-fase-7-verificacion-despliegue-entregables.md)):**
   - [ ] Ejecutar el despliegue en AWS (`scripts/deploy-aws.ps1`), configurar el **AWS Budget de $5.00 USD** con su captura para el repositorio y verificar `docs/costos.md`.
 

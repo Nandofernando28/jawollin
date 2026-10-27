@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 
 from src.engine.simulator import normalize_simulation_params, run_monte_carlo_ensemble
-from src.handlers import orchestrator, worker
+from src.handlers import mayor_report, orchestrator, worker
 
 SMALL = {"seed": 11, "monte_carlo_runs": 3, "n_nodes": 300}
 ENV_KEYS = ["SIMULATIONS_TABLE_NAME", "RESULTS_BUCKET_NAME", "STATE_MACHINE_ARN"]
@@ -34,6 +34,8 @@ class HandlersTestBase(unittest.TestCase):
         orchestrator._S3_CLIENT = None
         orchestrator._DDB_TABLE = None
         worker._S3_CLIENT = None
+        mayor_report._BEDROCK_CLIENT = None
+        mayor_report._BEDROCK_CLIENT = None
 
     def tearDown(self):
         for key, value in self._saved_env.items():
@@ -243,6 +245,140 @@ class DistributedExecutionTests(HandlersTestBase):
             orchestrator._SFN_CLIENT = failure
             result = orchestrator.execute_distributed_or_local_ensemble(params)
             self.assertEqual(json.dumps(result, sort_keys=True), json.dumps(local, sort_keys=True))
+
+
+
+
+class MayorReportTests(HandlersTestBase):
+    def test_options_preflight(self):
+        response = mayor_report.lambda_handler(_v2("OPTIONS", "/mayor-report"))
+        self.assertEqual(response["statusCode"], 200)
+        self.assertEqual(response["headers"]["Access-Control-Allow-Origin"], "*")
+        self.assertIn("POST", response["headers"]["Access-Control-Allow-Methods"])
+
+    def test_invalid_json_body_is_400(self):
+        response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", "{invalid"))
+        self.assertEqual(response["statusCode"], 400)
+        self.assertIn("Access-Control-Allow-Origin", response["headers"])
+
+    def test_unknown_sim_hash_is_404(self):
+        response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"sim_hash": "cf-inexistente"}))
+        self.assertEqual(response["statusCode"], 404)
+        self.assertIn("Access-Control-Allow-Origin", response["headers"])
+
+    def test_heuristic_fallback_contains_all_required_keys_and_manta_names(self):
+        # 1. Crear una simulaci?n real y almacenarla en la cach?
+        sim_res = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])
+        sim_hash = sim_res["sim_hash"]
+
+        # 2. Deshabilitar Bedrock para forzar la ruta del generador heur?stico oficial
+        os.environ["USE_BEDROCK"] = "false"
+        response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"sim_hash": sim_hash}))
+        self.assertEqual(response["statusCode"], 200)
+        self.assertEqual(response["headers"]["Access-Control-Allow-Origin"], "*")
+
+        body = json.loads(response["body"])
+        self.assertEqual(body["sim_hash"], sim_hash)
+        self.assertEqual(body["generated_by"], "heuristic-coe-fallback")
+        self.assertEqual(body["model_id"], "heuristic-coe-manta-v1")
+        self.assertIn("created_at", body)
+
+        # Claves exigidas por el plan y el contrato TypeScript
+        required_keys = [
+            "headline",
+            "situacion_critica",
+            "directivas_operativas",
+            "balance_recursos",
+            "action_items",
+            "metrics_summary",
+            "metrics_snapshot",
+            "generated_by",
+        ]
+        for key in required_keys:
+            self.assertIn(key, body, f"Falta la clave requerida: {key}")
+
+        # Verificar presencia de nombres reales de Manta
+        combined_text = f"{body['situacion_critica']} {body['directivas_operativas']} {body['balance_recursos']}"
+        manta_locations = ["Tarqui", "Manta", "Hospital", "COE"]
+        found_any = any(loc in combined_text for loc in manta_locations)
+        self.assertTrue(found_any, "El reporte debe mencionar lugares e instituciones reales de Manta")
+
+        # Verificar prioridades v?lidas de las acciones
+        self.assertGreaterEqual(len(body["action_items"]), 3)
+        valid_priorities = {"CRITICA", "ALTA", "MEDIA"}
+        for item in body["action_items"]:
+            self.assertIn(item["priority"], valid_priorities)
+            self.assertTrue(item["title"])
+            self.assertTrue(item["description"])
+            self.assertTrue(item["parish_or_hub"])
+
+    def test_bedrock_invocation_when_available(self):
+        sim_res = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])
+        mock_output = {
+            "headline": "DECRETO OFICIAL COE MANTA 001",
+            "situacion_critica": "Situacion critica controlada por Bedrock en Tarqui.",
+            "directivas_operativas": "Directivas operativas de cierre en ULEAM.",
+            "balance_recursos": "Balance optimo de recursos municipales.",
+            "action_items": [
+                {"title": "Cierre ULEAM", "description": "Fumigacion", "priority": "CRITICA", "parish_or_hub": "ULEAM"},
+                {"title": "Vacunacion", "description": "Anillos", "priority": "ALTA", "parish_or_hub": "Tarqui"},
+                {"title": "Brigadas", "description": "Patrullaje", "priority": "MEDIA", "parish_or_hub": "Los Esteros"},
+            ],
+        }
+
+        fake_bedrock = mock.Mock()
+        fake_bedrock.converse.return_value = {
+            "output": {"message": {"content": [{"text": json.dumps(mock_output)}]}}
+        }
+        mayor_report._BEDROCK_CLIENT = fake_bedrock
+        os.environ["USE_BEDROCK"] = "true"
+
+        response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"simulation": sim_res}))
+        self.assertEqual(response["statusCode"], 200)
+        body = json.loads(response["body"])
+        self.assertEqual(body["generated_by"], "amazon-bedrock-nova-micro")
+        self.assertEqual(body["headline"], "DECRETO OFICIAL COE MANTA 001")
+        self.assertEqual(len(body["action_items"]), 3)
+
+    def test_bedrock_throttling_falls_back_to_heuristic(self):
+        sim_res = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])
+
+        fake_bedrock = mock.Mock()
+        fake_bedrock.converse.side_effect = RuntimeError("ThrottlingException: Too many tokens per day")
+        fake_bedrock.invoke_model.side_effect = RuntimeError("ThrottlingException: Too many tokens per day")
+        mayor_report._BEDROCK_CLIENT = fake_bedrock
+        os.environ["USE_BEDROCK"] = "true"
+
+        # Debe responder con 200 OK y fallback heur?stico (CERO ERRORES 500)
+        response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"simulation": sim_res}))
+        self.assertEqual(response["statusCode"], 200)
+        body = json.loads(response["body"])
+        self.assertEqual(body["generated_by"], "heuristic-coe-fallback")
+        self.assertIn("COE", body["headline"])
+        self.assertTrue(body["situacion_critica"])
+
+    def test_surprise_outbreak_adaptive_decree(self):
+        surprise_sim = {
+            "params": {"n_nodes": 300, "vaccine_efficacy": 0.40, "start_hub": "uleam"},
+            "summary_kpis": {
+                "total_population": 300,
+                "lives_saved_vs_none": 110.0,
+                "lives_saved_vs_random": 50.0,
+                "peak_reduction_vs_none_pct": 55.0,
+                "total_budget_spent": 6000.0,
+                "cost_per_life_saved_vs_random": 120.0,
+                "total_hub_days_closed": 6.0,
+                "total_brigades_used": 15.0,
+            }
+        }
+        os.environ["USE_BEDROCK"] = "false"
+        response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"simulation": surprise_sim}))
+        self.assertEqual(response["statusCode"], 200)
+        body = json.loads(response["body"])
+        self.assertIn("004-COE", body["headline"])
+        self.assertIn("BROTE SORPRESA", body["situacion_critica"])
+        self.assertIn("40%", body["situacion_critica"])
+        self.assertIn("cierre estricto de hubs", body["directivas_operativas"])
 
 
 if __name__ == "__main__":
