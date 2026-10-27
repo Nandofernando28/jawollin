@@ -5,12 +5,14 @@ import {
   BellRing,
   Biohazard,
   Building2,
+  ChevronDown,
   Clock,
   Cpu,
   Dices,
   FileText,
   FlaskConical,
   Gauge,
+  Hash,
   HeartPulse,
   MapPin,
   Pause,
@@ -18,6 +20,7 @@ import {
   RotateCcw,
   Shield,
   ShieldCheck,
+  SlidersHorizontal,
   Syringe,
   TrendingDown,
   TrendingUp,
@@ -86,6 +89,7 @@ const polarPoint = (cx: number, cy: number, radius: number, angle: number) => {
 };
 
 export default function App() {
+  const [isConfigured, setIsConfigured] = useState<boolean>(false);
   const [currentDay, setCurrentDay] = useState(14);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<1 | 2 | 4>(2);
@@ -95,6 +99,62 @@ export default function App() {
   const [reportOpen, setReportOpen] = useState(false);
   const [seed, setSeed] = useState(42);
   const [hubState, setHubState] = useState<HubToggleState>(DEFAULT_HUB_STATE);
+  const [initialFocus, setInitialFocus] = useState<string>('tarqui');
+  const [initialR0, setInitialR0] = useState(2.6);
+  const [initialHub, setInitialHub] = useState<string>('tarqui');
+  const [budgetAssigned, setBudgetAssigned] = useState(80000);
+  const [initialDoses, setInitialDoses] = useState(300);
+  const [initialBrigades, setInitialBrigades] = useState(8);
+  const [setupSeed, setSetupSeed] = useState(42);
+  const [setupPolicy, setSetupPolicy] = useState<Policy>('strict');
+
+  const applyScenarioPreset = (preset: 'standard' | 'supercontagion') => {
+    if (preset === 'standard') {
+      setInitialFocus('tarqui');
+      setInitialHub('tarqui');
+      setInitialR0(2.6);
+      setBudgetAssigned(80000);
+      setInitialDoses(300);
+      setInitialBrigades(8);
+      setSetupSeed(42);
+      setSetupPolicy('strict');
+      setSelectedPreset('standard');
+      setPolicy('strict');
+      setSeed(42);
+      setHubState({ tarqui: true, uleam: false, terminal: true, mercado_central: true, empacadoras: false });
+      return;
+    }
+
+    setInitialFocus('terminal');
+    setInitialHub('terminal');
+    setInitialR0(4.1);
+    setBudgetAssigned(94000);
+    setInitialDoses(420);
+    setInitialBrigades(10);
+    setSetupSeed(91);
+    setSetupPolicy('aggressive');
+    setSelectedPreset('supercontagion');
+    setPolicy('aggressive');
+    setSeed(91);
+    setHubState({ tarqui: true, uleam: true, terminal: true, mercado_central: true, empacadoras: true });
+  };
+
+  const launchSimulation = () => {
+    setSeed(setupSeed);
+    setPolicy(setupPolicy);
+    setCurrentDay(14);
+    setPlaying(false);
+    setSelectedPreset('standard');
+    setHubState((prev) => ({
+      ...prev,
+      tarqui: initialFocus === 'tarqui' || prev.tarqui,
+      uleam: initialFocus === 'uleam' || prev.uleam,
+      terminal: initialFocus === 'terminal' || prev.terminal,
+      mercado_central: initialFocus === 'mercado_central' || prev.mercado_central,
+      empacadoras: initialFocus === 'empacadoras' || prev.empacadoras,
+    }));
+    setIsConfigured(true);
+  };
 
   const policySummary = POLICY_META[policy];
   const presetSummary = PRESET_META[selectedPreset];
@@ -217,7 +277,7 @@ export default function App() {
     );
   }, [currentDay, effectiveReduction, intervenedHubs]);
 
-  const budgetAvailable = 80000;
+  const budgetAvailable = budgetAssigned;
   const budgetSpent = useMemo(() => {
     const base =
       22000 +
@@ -225,20 +285,20 @@ export default function App() {
       intervenedHubs.length * 5300 +
       (policy === 'aggressive' ? 14000 : policy === 'strict' ? 9500 : 5500) +
       (selectedPreset === 'budget_cut' ? -15000 : selectedPreset === 'supercontagion' ? 10000 : 0);
-    return clamp(base, 18000, 82000);
-  }, [currentDay, intervenedHubs.length, policy, selectedPreset]);
+    return clamp(base, 18000, Math.max(18000, budgetAvailable));
+  }, [budgetAvailable, currentDay, intervenedHubs.length, policy, selectedPreset]);
 
-  const budgetPercent = clamp((budgetSpent / budgetAvailable) * 100, 18, 100);
+  const dashboardBudgetPercent = clamp((budgetSpent / Math.max(budgetAvailable, 1)) * 100, 18, 100);
   const dosageAvailable = Math.max(
-    180,
-    420 - currentDay * 5 - intervenedHubs.length * 18 + (selectedPreset === 'budget_cut' ? -80 : 20),
+    60,
+    initialDoses - currentDay * 4 - intervenedHubs.length * 16 + (selectedPreset === 'budget_cut' ? -50 : 20),
   );
   const brigadesAvailable = Math.max(
-    6,
-    16 - currentDay / 2 + intervenedHubs.length + (selectedPreset === 'budget_cut' ? -4 : 2),
+    2,
+    initialBrigades - currentDay / 2 + intervenedHubs.length + (selectedPreset === 'budget_cut' ? -2 : 1),
   );
   const testKits = Math.max(
-    80,
+    40,
     260 - currentDay * 4 + intervenedHubs.length * 12 + (selectedPreset === 'budget_cut' ? -30 : 14),
   );
 
@@ -360,6 +420,220 @@ export default function App() {
 
   const playbackSpeedForMap: 1 | 2 | 5 = speed === 4 ? 5 : speed;
 
+  if (!isConfigured) {
+    const r0Percent = ((initialR0 - 1.2) / (4.5 - 1.2)) * 100;
+    const budgetPercent = ((budgetAssigned - 20000) / (120000 - 20000)) * 100;
+
+    return (
+      <div className="min-h-screen bg-[#f6f6f8] px-4 py-10 text-[#111a4a]">
+        <div className="mx-auto max-w-2xl rounded-lg border border-[#e3e4e8] bg-white p-8 shadow-xl">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] text-[#111a4a]">
+                <SlidersHorizontal className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Configuracion</p>
+                <h1 className="mt-1 text-2xl font-semibold text-[#111a4a]">Parametros de Contencion Epidemiologica Manta</h1>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-4 text-sm text-[#3b3e47]">
+            Configure el escenario inicial de propagacion antes de iniciar el motor de simulacion.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => applyScenarioPreset('standard')}
+              className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-3 py-2 text-[11px] font-medium text-[#111a4a] transition hover:bg-[#eef5f3]"
+            >
+              Cargar Escenario Estandar (COVID-19 base)
+            </button>
+            <button
+              type="button"
+              onClick={() => applyScenarioPreset('supercontagion')}
+              className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-3 py-2 text-[11px] font-medium text-[#111a4a] transition hover:bg-[#eef5f3]"
+            >
+              Cargar Variante de Alta Transmisibilidad
+            </button>
+          </div>
+
+          <div className="mt-8 space-y-6">
+            <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Patologia</p>
+                  <h2 className="mt-2 text-lg font-semibold text-[#111a4a]">Foco Inicial</h2>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#111a4a]">
+                  <MapPin className="h-4 w-4" />
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Punto cero</span>
+                <div className="relative w-full">
+                  <select
+                    value={initialHub}
+                    onChange={(event) => setInitialHub(event.target.value)}
+                    className="w-full cursor-pointer appearance-none rounded-lg border border-[#e3e4e8] bg-white px-3 py-2.5 pr-8 text-sm text-[#111a4a] outline-none focus:border-[#111a4a]"
+                  >
+                    {MANTA_HUBS.map((hub) => (
+                      <option key={hub.id} value={hub.id}>
+                        {hub.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-[#7c7f88]">
+                    <ChevronDown className="h-4 w-4" />
+                  </div>
+                </div>
+              </label>
+
+              <div className="mt-5">
+                <div className="mb-2 flex items-center justify-between text-[11px] text-[#3b3e47]">
+                  <span>R0 inicial</span>
+                  <span className="font-mono text-[#167e6c]">{initialR0.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1.2"
+                  max="4.5"
+                  step="0.1"
+                  value={initialR0}
+                  onChange={(event) => setInitialR0(Number(event.target.value))}
+                  className="h-2 w-full cursor-pointer appearance-none rounded-lg"
+                  style={{
+                    background: `linear-gradient(to right, #167e6c 0%, #167e6c ${r0Percent}%, #e3e4e8 ${r0Percent}%, #e3e4e8 100%)`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Recursos</p>
+                    <h2 className="mt-2 text-lg font-semibold text-[#111a4a]">Presupuesto Municipal</h2>
+                  </div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#111a4a]">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-[11px] text-[#3b3e47]">
+                      <span>Presupuesto asignado</span>
+                      <span className="font-mono text-[#111a4a]">${budgetAssigned.toLocaleString()}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20000"
+                      max="120000"
+                      step="5000"
+                      value={budgetAssigned}
+                      onChange={(event) => setBudgetAssigned(Number(event.target.value))}
+                      className="h-2 w-full cursor-pointer appearance-none rounded-lg"
+                      style={{
+                        background: `linear-gradient(to right, #167e6c 0%, #167e6c ${budgetPercent}%, #e3e4e8 ${budgetPercent}%, #e3e4e8 100%)`,
+                      }}
+                    />
+                  </div>
+
+                  <label className="block">
+                    <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Dosis de vacunas COVID</span>
+                    <div className="relative">
+                      <Syringe className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#167e6c]" />
+                      <input
+                        type="number"
+                        value={initialDoses}
+                        onChange={(event) => setInitialDoses(Number(event.target.value) || 0)}
+                        className="w-full rounded-lg border border-[#e3e4e8] bg-white py-2.5 pl-10 pr-3 text-sm text-[#111a4a] outline-none"
+                      />
+                    </div>
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Brigadas de cerco epidemiologico</span>
+                    <div className="relative">
+                      <Truck className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#111a4a]" />
+                      <input
+                        type="number"
+                        value={initialBrigades}
+                        onChange={(event) => setInitialBrigades(Number(event.target.value) || 0)}
+                        className="w-full rounded-lg border border-[#e3e4e8] bg-white py-2.5 pl-10 pr-3 text-sm text-[#111a4a] outline-none"
+                      />
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Estrategia</p>
+                    <h2 className="mt-2 text-lg font-semibold text-[#111a4a]">Reproducibilidad</h2>
+                  </div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#111a4a]">
+                    <Hash className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Semilla</span>
+                    <div className="relative">
+                      <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#167e6c]" />
+                      <input
+                        type="number"
+                        value={setupSeed}
+                        onChange={(event) => setSetupSeed(Number(event.target.value) || 0)}
+                        className="w-full rounded-lg border border-[#e3e4e8] bg-white py-2.5 pl-10 pr-3 text-sm text-[#111a4a] outline-none"
+                      />
+                    </div>
+                  </label>
+
+                  <div>
+                    <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Politica inicial</p>
+                    <div className="grid w-full grid-cols-3 gap-2">
+                      {(['moderate', 'strict', 'aggressive'] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setSetupPolicy(p)}
+                          className={`w-full rounded-lg border px-1 py-2 text-center text-[10px] font-mono font-medium transition duration-150 ${
+                            setupPolicy === p
+                              ? 'border-[#111a4a] bg-[#111a4a] text-white'
+                              : 'border-[#e3e4e8] bg-white text-[#3b3e47] hover:bg-[#f6f6f8]'
+                          }`}
+                        >
+                          {p.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={launchSimulation}
+            className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#ec652b] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#dc5725]"
+          >
+            Lanzar Simulacion de Contencion
+            <Play className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f6f6f8] text-[#111a4a]">
       <header className="sticky top-0 z-40 border-b border-[#e3e4e8] bg-white/80 backdrop-blur-md">
@@ -395,6 +669,14 @@ export default function App() {
                 ))}
               </select>
             </label>
+            <button
+              type="button"
+              onClick={() => setIsConfigured(false)}
+              className="relative z-30 inline-flex items-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-3 py-2 text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
+            >
+              <SlidersHorizontal className="h-4 w-4 text-[#111a4a]" />
+              Ajustar Parametros
+            </button>
             <button
               type="button"
               onClick={() => setReportOpen(true)}
@@ -499,7 +781,7 @@ export default function App() {
             ))}
           </section>
 
-          <section className="relative z-10 isolate overflow-hidden rounded-lg border border-[#e3e4e8] bg-white p-2 shadow-sm">
+          <section className="relative z-10 isolate overflow-hidden rounded-lg border border-[#e3e4e8] bg-white shadow-sm">
             <MantaMap
               result={{ params: { days: TOTAL_DAYS } }}
               currentDay={currentDay}
@@ -597,7 +879,7 @@ export default function App() {
                       <span className="font-mono text-[#111a4a]">${formatCompact(budgetSpent)} / $80,000</span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-[#edf0f3]">
-                      <div className="h-full rounded-full bg-[#111a4a]" style={{ width: `${budgetPercent}%` }} />
+                      <div className="h-full rounded-full bg-[#111a4a]" style={{ width: `${dashboardBudgetPercent}%` }} />
                     </div>
                   </div>
 

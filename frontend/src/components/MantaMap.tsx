@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Circle, GeoJSON, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -57,6 +57,27 @@ export const MantaMap: React.FC<MantaMapProps> = ({
   onSpeedChange,
 }) => {
   const maxDay = result?.params.days ?? 30;
+  const mapRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const frame = window.setTimeout(() => {
+      mapRef.current?.invalidateSize();
+    }, 0);
+
+    return () => window.clearTimeout(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const frame = window.setTimeout(() => {
+      mapRef.current?.invalidateSize();
+    }, 0);
+
+    return () => window.clearTimeout(frame);
+  }, [currentDay, playing]);
 
   const parishStyle = useMemo(
     () => (feature: any) => {
@@ -78,8 +99,8 @@ export const MantaMap: React.FC<MantaMapProps> = ({
   );
 
   return (
-    <div className="relative z-10 isolate min-h-[680px] w-full overflow-hidden rounded-lg border border-[#e3e4e8] bg-white shadow-xl">
-      <div className="relative z-30 absolute left-4 top-4 w-[min(100%,320px)] rounded-lg border border-[#e3e4e8] bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+    <div className="relative z-10 isolate h-[650px] w-full overflow-hidden rounded-lg border border-[#e3e4e8] bg-white shadow-sm">
+      <div className="absolute left-4 top-4 z-20 w-[min(100%,320px)] max-w-sm rounded-lg border border-[#e3e4e8] bg-white/95 p-4 shadow-md backdrop-blur-md">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#edf9f6] text-[#167e6c]">
@@ -145,7 +166,10 @@ export const MantaMap: React.FC<MantaMapProps> = ({
         center={MANTA_COORDINATES.center}
         zoom={MANTA_COORDINATES.defaultZoom}
         scrollWheelZoom={true}
-        className="relative z-10 h-[750px] w-full"
+        className="h-full w-full z-0"
+        ref={(instance) => {
+          mapRef.current = instance ?? null;
+        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
