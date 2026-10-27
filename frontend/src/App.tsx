@@ -1,6 +1,6 @@
 /**
- * FASE 6 — Centro de Control Epidemiológico · Operación Cortafuegos Manta
- * Layout: 3 columnas (Control | Mapa | Analítica)
+ * Centro de Comando Epidemiológico Cantonal — Operación Cortafuegos Manta
+ * Layout: 3 columnas ejecutivas (Control | Mapa + KPIs | Analítica)
  * SpookyThon 2026 · Track B · Integrante 3
  */
 
@@ -13,11 +13,8 @@ import { KpiCards }         from './components/KpiCards';
 import { MantaMap }         from './components/MantaMap';
 import { EpidemicCharts }   from './components/EpidemicCharts';
 import { MayorReportModal } from './components/MayorReportModal';
-import {
-  KpiSkeleton, ChartSkeleton, MapSkeleton,
-} from './components/SkeletonLoader';
-
-import { useSimulation }  from './hooks/useSimulation';
+import { KpiSkeleton, ChartSkeleton, MapSkeleton } from './components/SkeletonLoader';
+import { useSimulation } from './hooks/useSimulation';
 
 export default function App() {
   const sim = useSimulation();
@@ -25,7 +22,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
 
-      {/* ── Header sticky ─────────────────────────────────────────── */}
       <Header
         loading={sim.loading}
         reportLoading={sim.reportLoading}
@@ -38,29 +34,20 @@ export default function App() {
         onModeChange={sim.setBackendMode}
       />
 
-      {/* ── Error banner ──────────────────────────────────────────── */}
+      {/* Error banner */}
       {sim.error && (
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 pt-4">
+        <div className="max-w-[1700px] mx-auto px-4 pt-4">
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-sm text-amber-300">
             <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
-            <span>
-              Backend no disponible — mostrando simulación determinista local.{' '}
-              <span className="font-mono text-[11px] text-amber-400/70">{sim.error}</span>
-            </span>
+            Backend no disponible — simulación determinista local activa.
           </div>
         </div>
       )}
 
-      {/* ── Grid de 3 columnas ────────────────────────────────────── */}
-      <main
-        className="
-          max-w-screen-2xl mx-auto px-4 sm:px-6 py-6
-          grid grid-cols-1 lg:grid-cols-[300px_1fr] xl:grid-cols-[300px_1fr_420px]
-          gap-5
-        "
-      >
+      {/* Grid 3 columnas */}
+      <main className="max-w-[1700px] mx-auto p-4 grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_380px] gap-4 items-start">
 
-        {/* ══ Columna Izquierda — Parámetros & Brote Sorpresa ══════ */}
+        {/* Columna 1 — Control + Brote Sorpresa */}
         <ControlPanel
           params={sim.params}
           setParams={sim.setParams}
@@ -69,13 +56,10 @@ export default function App() {
           onPreset={sim.applyPreset}
         />
 
-        {/* ══ Columna Central — Mapa + KPIs ════════════════════════ */}
+        {/* Columna 2 — KPIs + Mapa */}
         <section className="min-w-0 space-y-4">
           {sim.loading && !sim.result ? (
-            <>
-              <KpiSkeleton />
-              <MapSkeleton />
-            </>
+            <><KpiSkeleton /><MapSkeleton /></>
           ) : sim.result ? (
             <>
               <KpiCards result={sim.result} />
@@ -91,38 +75,26 @@ export default function App() {
               />
             </>
           ) : (
-            <>
-              <KpiSkeleton />
-              <MapSkeleton />
-            </>
+            <><KpiSkeleton /><MapSkeleton /></>
           )}
         </section>
 
-        {/* ══ Columna Derecha — Gráficas epidemiológicas ═══════════ */}
+        {/* Columna 3 — Analítica + Boletín */}
         <section className="min-w-0 space-y-4">
           {sim.loading && !sim.result ? (
-            <>
-              <ChartSkeleton height={280} />
-              <ChartSkeleton height={200} />
-            </>
+            <><ChartSkeleton height={280} /><ChartSkeleton height={200} /></>
           ) : sim.result ? (
             <EpidemicCharts result={sim.result} />
           ) : (
-            <>
-              <ChartSkeleton height={280} />
-              <ChartSkeleton height={200} />
-            </>
+            <><ChartSkeleton height={280} /><ChartSkeleton height={200} /></>
           )}
         </section>
 
       </main>
 
-      {/* ── Modal del Boletín del Alcalde ─────────────────────────── */}
+      {/* Modal boletín */}
       {sim.showReport && sim.report && (
-        <MayorReportModal
-          report={sim.report}
-          onClose={sim.closeReport}
-        />
+        <MayorReportModal report={sim.report} onClose={sim.closeReport} />
       )}
     </div>
   );
