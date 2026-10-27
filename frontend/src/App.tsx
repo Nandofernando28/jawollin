@@ -599,21 +599,52 @@ export default function App() {
 
                   <div>
                     <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Politica inicial</p>
-                    <div className="grid w-full grid-cols-3 gap-2">
-                      {(['moderate', 'strict', 'aggressive'] as const).map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => setSetupPolicy(p)}
-                          className={`w-full rounded-lg border px-1 py-2 text-center text-[10px] font-mono font-medium transition duration-150 ${
-                            setupPolicy === p
-                              ? 'border-[#111a4a] bg-[#111a4a] text-white'
-                              : 'border-[#e3e4e8] bg-white text-[#3b3e47] hover:bg-[#f6f6f8]'
-                          }`}
-                        >
-                          {p.toUpperCase()}
-                        </button>
-                      ))}
+                    <div className="mt-2 flex w-full flex-col gap-2">
+                      {[
+                        {
+                          id: 'moderate',
+                          label: 'MODERATE',
+                          desc: 'Uso de mascarillas y aforo controlado',
+                        },
+                        {
+                          id: 'strict',
+                          label: 'STRICT',
+                          desc: 'Restriccion vehicular y cerco perimetral',
+                        },
+                        {
+                          id: 'aggressive',
+                          label: 'AGGRESSIVE',
+                          desc: 'Cuarentena total inmediata en focos',
+                        },
+                      ].map((item) => {
+                        const isSelected = setupPolicy === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setSetupPolicy(item.id as Policy)}
+                            className={`flex w-full items-center justify-between rounded-lg border p-2.5 text-left transition ${
+                              isSelected
+                                ? 'border-[#111a4a] bg-[#111a4a] text-white shadow-sm'
+                                : 'border-[#e3e4e8] bg-white text-[#3b3e47] hover:bg-[#f6f6f8]'
+                            }`}
+                          >
+                            <div>
+                              <span className="block text-[11px] font-mono font-semibold tracking-wide">{item.label}</span>
+                              <span className={`mt-0.5 block text-[10px] ${isSelected ? 'text-white/80' : 'text-[#7c7f88]'}`}>
+                                {item.desc}
+                              </span>
+                            </div>
+                            <div
+                              className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border ${
+                                isSelected ? 'border-white bg-[#167e6c]' : 'border-[#cbcccf]'
+                              }`}
+                            >
+                              {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
