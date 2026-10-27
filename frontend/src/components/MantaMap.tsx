@@ -3,6 +3,7 @@
  * Usa mantaGeo.ts: PARISHES, HUBS, BUS_ROUTES, projectToSVG, prevalenceToColor
  */
 
+import 'leaflet/dist/leaflet.css';
 import React, { useEffect, useMemo } from 'react';
 import {
   MapContainer, TileLayer, Polygon, Polyline, CircleMarker, Popup, useMap,
@@ -26,7 +27,7 @@ const CARTO_KEY = (import.meta.env.VITE_CARTO_API_KEY || '').trim();
 const CARTO_STYLE = (import.meta.env.VITE_CARTO_STYLE || 'dark_all').trim();
 const TILE_URL = CARTO_KEY
   ? `https://{s}.basemaps.cartocdn.com/rastertiles/${CARTO_STYLE}/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`
-  : `https://{s}.basemaps.cartocdn.com/${CARTO_STYLE}/{z}/{x}/{y}{r}.png`;
+  : `https://{s}.basemaps.cartocdn.com/rastertiles/${CARTO_STYLE}/{z}/{x}/{y}{r}.png`;
 
 // ── Paleta ────────────────────────────────────────────────────────────────────
 

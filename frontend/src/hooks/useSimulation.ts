@@ -92,6 +92,11 @@ export function useSimulation(): UseSimulationReturn {
     [params, backendMode],
   );
 
+  // Ejecutar simulacion inicial automaticamente al montar la vista
+  useEffect(() => {
+    execute();
+  }, [execute]);
+
   const applyPreset = useCallback(
     (preset: SurprisePreset) => {
       setParams((prev) => {
