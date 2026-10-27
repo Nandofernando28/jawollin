@@ -292,6 +292,7 @@ def _prepare_network(net: Dict[str, Any]) -> Dict[str, Any]:
 # TAREA 2.0: SIEMBRA DEL PACIENTE CERO
 # ============================================================================
 
+#reorganiza los contactos de la red en lsitas planas (a -->"w"). Así numpy calcula los contagios de todos a la vez, en lugar de persona por persona.
 def seed_initial_outbreak(
     prep: Dict[str, Any], params: Dict[str, Any], rng: np.random.Generator
 ) -> np.ndarray:

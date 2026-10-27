@@ -105,7 +105,7 @@ _GRAPH_CACHE: "OrderedDict[Tuple[int, int], Dict[str, Any]]" = OrderedDict()
 # Un bloque de aristas: (origen, destino, peso, hub)
 EdgeBlock = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 
-
+#dada una parroquia, mide la distancia a los dos mercados y devuelve el más cercano.
 def _nearest_market(parish_id: str) -> str:
     """Mercado (Tarqui o Central) más cercano al centroide de la parroquia."""
     px, py = MANTA_PARISHES[parish_id]["centroid"]
@@ -117,12 +117,12 @@ def _nearest_market(parish_id: str) -> str:
             best, best_dist = market, dist
     return best
 
-
+#empaqueta un grupo de aristas en 4 listas: quién, con quién, peso y hub.
 def _edge_block(u: np.ndarray, v: np.ndarray, w: np.ndarray, hub: int) -> EdgeBlock:
     return (u.astype(np.int32), v.astype(np.int32), w.astype(np.float32),
             np.full(len(u), hub, dtype=np.int8))
 
-
+#crea los contactos dentro de un hub
 def _small_world(
     members: np.ndarray,
     k: int,
