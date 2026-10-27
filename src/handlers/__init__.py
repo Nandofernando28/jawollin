@@ -16,7 +16,7 @@ import os
 import sys
 import types
 
-if importlib.util.find_spec("src") is None:
+if "src" not in sys.modules and importlib.util.find_spec("src") is None:
     _alias = types.ModuleType("src")
     _alias.__path__ = [os.path.dirname(os.path.dirname(os.path.abspath(__file__)))]
     sys.modules["src"] = _alias
