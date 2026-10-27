@@ -1,7 +1,129 @@
+/**
+ * FASE 6 — Centro de Control Epidemiológico · Operación Cortafuegos Manta
+ * Layout: 3 columnas (Control | Mapa | Analítica)
+ * SpookyThon 2026 · Track B · Integrante 3
+ */
+
+import React from 'react';
+import { AlertTriangle } from 'lucide-react';
+
+import { Header }           from './components/Header';
+import { ControlPanel }     from './components/ControlPanel';
+import { KpiCards }         from './components/KpiCards';
+import { MantaMap }         from './components/MantaMap';
+import { EpidemicCharts }   from './components/EpidemicCharts';
+import { MayorReportModal } from './components/MayorReportModal';
+import {
+  KpiSkeleton, ChartSkeleton, MapSkeleton,
+} from './components/SkeletonLoader';
+
+import { useSimulation }  from './hooks/useSimulation';
+
 export default function App() {
+  const sim = useSimulation();
+
   return (
-    <div>
-      {/* TODO */}
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+
+      {/* ── Header sticky ─────────────────────────────────────────── */}
+      <Header
+        loading={sim.loading}
+        reportLoading={sim.reportLoading}
+        hasResult={!!sim.result}
+        backendMode={sim.backendMode}
+        backendHealthy={sim.backendHealthy}
+        onRun={() => sim.execute()}
+        onReset={sim.resetAll}
+        onReport={sim.openReport}
+        onModeChange={sim.setBackendMode}
+      />
+
+      {/* ── Error banner ──────────────────────────────────────────── */}
+      {sim.error && (
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 pt-4">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-sm text-amber-300">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+            <span>
+              Backend no disponible — mostrando simulación determinista local.{' '}
+              <span className="font-mono text-[11px] text-amber-400/70">{sim.error}</span>
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Grid de 3 columnas ────────────────────────────────────── */}
+      <main
+        className="
+          max-w-screen-2xl mx-auto px-4 sm:px-6 py-6
+          grid grid-cols-1 lg:grid-cols-[300px_1fr] xl:grid-cols-[300px_1fr_420px]
+          gap-5
+        "
+      >
+
+        {/* ══ Columna Izquierda — Parámetros & Brote Sorpresa ══════ */}
+        <ControlPanel
+          params={sim.params}
+          setParams={sim.setParams}
+          loading={sim.loading}
+          onRun={() => sim.execute()}
+          onPreset={sim.applyPreset}
+        />
+
+        {/* ══ Columna Central — Mapa + KPIs ════════════════════════ */}
+        <section className="min-w-0 space-y-4">
+          {sim.loading && !sim.result ? (
+            <>
+              <KpiSkeleton />
+              <MapSkeleton />
+            </>
+          ) : sim.result ? (
+            <>
+              <KpiCards result={sim.result} />
+              <MantaMap
+                result={sim.result}
+                currentDay={sim.currentDay}
+                playing={sim.playing}
+                playbackSpeed={sim.playbackSpeed}
+                onDayChange={sim.setCurrentDay}
+                onTogglePlay={sim.togglePlay}
+                onResetDay={sim.resetDay}
+                onSpeedChange={sim.setPlaybackSpeed}
+              />
+            </>
+          ) : (
+            <>
+              <KpiSkeleton />
+              <MapSkeleton />
+            </>
+          )}
+        </section>
+
+        {/* ══ Columna Derecha — Gráficas epidemiológicas ═══════════ */}
+        <section className="min-w-0 space-y-4">
+          {sim.loading && !sim.result ? (
+            <>
+              <ChartSkeleton height={280} />
+              <ChartSkeleton height={200} />
+            </>
+          ) : sim.result ? (
+            <EpidemicCharts result={sim.result} />
+          ) : (
+            <>
+              <ChartSkeleton height={280} />
+              <ChartSkeleton height={200} />
+            </>
+          )}
+        </section>
+
+      </main>
+
+      {/* ── Modal del Boletín del Alcalde ─────────────────────────── */}
+      {sim.showReport && sim.report && (
+        <MayorReportModal
+          report={sim.report}
+          onClose={sim.closeReport}
+        />
+      )}
     </div>
   );
 }

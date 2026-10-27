@@ -1,1 +1,74 @@
+/* Google Fonts — must be first before @import "tailwindcss" */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
 @import "tailwindcss";
+
+/* ── Base ──────────────────────────────────────────────────────── */
+
+:root {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: #020617; /* slate-950 */
+  color: #f1f5f9;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+.font-mono {
+  font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: #0f172a; }
+::-webkit-scrollbar-thumb  { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* ── Range inputs ──────────────────────────────────────────────── */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #1e293b;
+  border-radius: 9999px;
+  height: 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: currentColor;
+  border: 2px solid #0f172a;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"].accent-emerald-500::-webkit-slider-thumb { background: #10b981; }
+input[type="range"].accent-amber-500::-webkit-slider-thumb  { background: #f59e0b; }
+input[type="range"].accent-sky-500::-webkit-slider-thumb    { background: #0ea5e9; }
+input[type="range"].accent-indigo-500::-webkit-slider-thumb { background: #6366f1; }
+
+/* ── Print styles ──────────────────────────────────────────────── */
+
+@media print {
+  header, aside, .no-print { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .prose { color: #000 !important; }
+  .prose h1, .prose h2, .prose h3 { color: #000 !important; }
+  .prose p, .prose li, .prose td, .prose th { color: #333 !important; }
+}
