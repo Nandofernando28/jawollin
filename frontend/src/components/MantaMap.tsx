@@ -21,6 +21,13 @@ const toLatLon = ([lon, lat]: LonLat): [number, number] => [lat, lon];
 const MANTA_CENTER: [number, number] = [-0.9538, -80.7189];
 const MANTA_ZOOM = 13;
 
+// ── Configuracion de tiles de CARTO ───────────────────────────────────────────
+const CARTO_KEY = (import.meta.env.VITE_CARTO_API_KEY || '').trim();
+const CARTO_STYLE = (import.meta.env.VITE_CARTO_STYLE || 'dark_all').trim();
+const TILE_URL = CARTO_KEY
+  ? `https://{s}.basemaps.cartocdn.com/rastertiles/${CARTO_STYLE}/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`
+  : `https://{s}.basemaps.cartocdn.com/${CARTO_STYLE}/{z}/{x}/{y}{r}.png`;
+
 // ── Paleta ────────────────────────────────────────────────────────────────────
 
 const C = {
@@ -157,7 +164,7 @@ export function MantaMap({
 
           {/* CartoDB Dark Matter */}
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            url={TILE_URL}
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
             subdomains="abcd"
             maxZoom={19}
