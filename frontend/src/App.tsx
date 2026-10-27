@@ -5,6 +5,7 @@ import {
   BellRing,
   Biohazard,
   Building2,
+  ChevronDown,
   Clock,
   Cpu,
   Dices,
@@ -19,6 +20,7 @@ import {
   RotateCcw,
   Shield,
   ShieldCheck,
+  SlidersHorizontal,
   Syringe,
   TrendingDown,
   TrendingUp,
@@ -40,10 +42,10 @@ const POLICY_META: Record<Policy, { label: string; reduction: number; pressure: 
 };
 
 const PRESET_META: Record<CrisisPreset, { label: string; multiplier: number; note: string }> = {
-  standard: { label: 'Brote Estandar', multiplier: 0.0, note: 'Riesgo endemico estable en la ciudad' },
-  supercontagion: { label: 'Variante Supercontagio (2x)', multiplier: 0.2, note: 'Riesgo de transmision acelerado' },
-  budget_cut: { label: 'Corte Presupuestario (50%)', multiplier: -0.08, note: 'Recursos reducidos y respuesta lenta' },
-  terminal_focus: { label: 'Foco en Terminal', multiplier: 0.1, note: 'Flujo de buses y pasajeros elevando la presion' },
+  standard: { label: 'Brote Estandar', multiplier: 0.0, note: 'Riesgo endemico estable' },
+  supercontagion: { label: 'Variante Supercontagio (2x)', multiplier: 0.2, note: 'Transmision acelerada' },
+  budget_cut: { label: 'Corte Presupuestario (50%)', multiplier: -0.08, note: 'Recursos reducidos' },
+  terminal_focus: { label: 'Foco en Terminal', multiplier: 0.1, note: 'Presion alta por transito' },
 };
 
 const DEFAULT_HUB_STATE: HubToggleState = {
@@ -55,6 +57,13 @@ const DEFAULT_HUB_STATE: HubToggleState = {
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const formatCompact = (value: number) => {
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}K`;
+  }
+  return value.toFixed(0);
+};
 
 const buildLinePath = (values: number[], width: number, height: number, padding: number) => {
   const minValue = Math.min(...values);
@@ -79,14 +88,8 @@ const polarPoint = (cx: number, cy: number, radius: number, angle: number) => {
   };
 };
 
-const formatCompact = (value: number) => {
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}K`;
-  }
-  return value.toFixed(0);
-};
-
 export default function App() {
+  const [isConfigured, setIsConfigured] = useState<boolean>(false);
   const [currentDay, setCurrentDay] = useState(14);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<1 | 2 | 4>(2);
@@ -96,6 +99,62 @@ export default function App() {
   const [reportOpen, setReportOpen] = useState(false);
   const [seed, setSeed] = useState(42);
   const [hubState, setHubState] = useState<HubToggleState>(DEFAULT_HUB_STATE);
+  const [initialFocus, setInitialFocus] = useState<string>('tarqui');
+  const [initialR0, setInitialR0] = useState(2.6);
+  const [initialHub, setInitialHub] = useState<string>('tarqui');
+  const [budgetAssigned, setBudgetAssigned] = useState(80000);
+  const [initialDoses, setInitialDoses] = useState(300);
+  const [initialBrigades, setInitialBrigades] = useState(8);
+  const [setupSeed, setSetupSeed] = useState(42);
+  const [setupPolicy, setSetupPolicy] = useState<Policy>('strict');
+
+  const applyScenarioPreset = (preset: 'standard' | 'supercontagion') => {
+    if (preset === 'standard') {
+      setInitialFocus('tarqui');
+      setInitialHub('tarqui');
+      setInitialR0(2.6);
+      setBudgetAssigned(80000);
+      setInitialDoses(300);
+      setInitialBrigades(8);
+      setSetupSeed(42);
+      setSetupPolicy('strict');
+      setSelectedPreset('standard');
+      setPolicy('strict');
+      setSeed(42);
+      setHubState({ tarqui: true, uleam: false, terminal: true, mercado_central: true, empacadoras: false });
+      return;
+    }
+
+    setInitialFocus('terminal');
+    setInitialHub('terminal');
+    setInitialR0(4.1);
+    setBudgetAssigned(94000);
+    setInitialDoses(420);
+    setInitialBrigades(10);
+    setSetupSeed(91);
+    setSetupPolicy('aggressive');
+    setSelectedPreset('supercontagion');
+    setPolicy('aggressive');
+    setSeed(91);
+    setHubState({ tarqui: true, uleam: true, terminal: true, mercado_central: true, empacadoras: true });
+  };
+
+  const launchSimulation = () => {
+    setSeed(setupSeed);
+    setPolicy(setupPolicy);
+    setCurrentDay(14);
+    setPlaying(false);
+    setSelectedPreset('standard');
+    setHubState((prev) => ({
+      ...prev,
+      tarqui: initialFocus === 'tarqui' || prev.tarqui,
+      uleam: initialFocus === 'uleam' || prev.uleam,
+      terminal: initialFocus === 'terminal' || prev.terminal,
+      mercado_central: initialFocus === 'mercado_central' || prev.mercado_central,
+      empacadoras: initialFocus === 'empacadoras' || prev.empacadoras,
+    }));
+    setIsConfigured(true);
+  };
 
   const policySummary = POLICY_META[policy];
   const presetSummary = PRESET_META[selectedPreset];
@@ -106,9 +165,7 @@ export default function App() {
   );
 
   useEffect(() => {
-    if (!playing) {
-      return undefined;
-    }
+    if (!playing) return undefined;
 
     const intervalMs = speed === 1 ? 1300 : speed === 2 ? 800 : 500;
     const timer = window.setInterval(() => {
@@ -159,7 +216,10 @@ export default function App() {
       );
 
       const randomValue = Math.max(16, Math.round(baseValue * (1 - randomReduction)));
-      const strategicValue = Math.max(8, Math.round(baseValue * (1 - strategicReduction * (0.66 + (day / TOTAL_DAYS) * 0.45))));
+      const strategicValue = Math.max(
+        8,
+        Math.round(baseValue * (1 - strategicReduction * (0.66 + (day / TOTAL_DAYS) * 0.45))),
+      );
 
       base.push(baseValue);
       random.push(randomValue);
@@ -170,7 +230,6 @@ export default function App() {
   }, [effectiveReduction, intervenedHubs.length, policySummary.pressure, presetSummary.multiplier, seed, selectedPreset]);
 
   const currentBaseValue = baseCurve[currentDay - 1] ?? baseCurve[0];
-  const currentRandomValue = randomCurve[currentDay - 1] ?? randomCurve[0];
   const currentStrategicValue = strategicCurve[currentDay - 1] ?? strategicCurve[0];
 
   const cumulativeAvoided = useMemo(() => {
@@ -218,7 +277,7 @@ export default function App() {
     );
   }, [currentDay, effectiveReduction, intervenedHubs]);
 
-  const budgetAvailable = 80000;
+  const budgetAvailable = budgetAssigned;
   const budgetSpent = useMemo(() => {
     const base =
       22000 +
@@ -226,13 +285,22 @@ export default function App() {
       intervenedHubs.length * 5300 +
       (policy === 'aggressive' ? 14000 : policy === 'strict' ? 9500 : 5500) +
       (selectedPreset === 'budget_cut' ? -15000 : selectedPreset === 'supercontagion' ? 10000 : 0);
-    return clamp(base, 18000, 82000);
-  }, [currentDay, intervenedHubs.length, policy, selectedPreset]);
+    return clamp(base, 18000, Math.max(18000, budgetAvailable));
+  }, [budgetAvailable, currentDay, intervenedHubs.length, policy, selectedPreset]);
 
-  const budgetPercent = clamp((budgetSpent / budgetAvailable) * 100, 18, 100);
-  const dosageAvailable = Math.max(180, 420 - currentDay * 5 - intervenedHubs.length * 18 + (selectedPreset === 'budget_cut' ? -80 : 20));
-  const brigadesAvailable = Math.max(6, 16 - currentDay / 2 + intervenedHubs.length + (selectedPreset === 'budget_cut' ? -4 : 2));
-  const testKits = Math.max(80, 260 - currentDay * 4 + intervenedHubs.length * 12 + (selectedPreset === 'budget_cut' ? -30 : 14));
+  const dashboardBudgetPercent = clamp((budgetSpent / Math.max(budgetAvailable, 1)) * 100, 18, 100);
+  const dosageAvailable = Math.max(
+    60,
+    initialDoses - currentDay * 4 - intervenedHubs.length * 16 + (selectedPreset === 'budget_cut' ? -50 : 20),
+  );
+  const brigadesAvailable = Math.max(
+    2,
+    initialBrigades - currentDay / 2 + intervenedHubs.length + (selectedPreset === 'budget_cut' ? -2 : 1),
+  );
+  const testKits = Math.max(
+    40,
+    260 - currentDay * 4 + intervenedHubs.length * 12 + (selectedPreset === 'budget_cut' ? -30 : 14),
+  );
 
   const seirState = useMemo(() => {
     const baseShare = Math.max(0.18, 0.76 - currentDay * 0.0035 - effectiveReduction * 0.32);
@@ -272,8 +340,6 @@ export default function App() {
   const rValue = clamp(2.8 - effectiveReduction * 2.4, 0.7, 2.8);
   const radialCircumference = 2 * Math.PI * 52;
   const radialDashOffset = radialCircumference - (rValue / 2.8) * radialCircumference;
-  const radialAngle = (rValue / 2.8) * 270 - 135;
-  const radialPoint = polarPoint(84, 84, 52, (radialAngle * Math.PI) / 180);
 
   const statCards = [
     {
@@ -317,6 +383,17 @@ export default function App() {
     }));
   };
 
+  const handleMaxAlert = () => {
+    setAlertOpen(true);
+    setHubState({
+      tarqui: true,
+      uleam: true,
+      terminal: true,
+      mercado_central: true,
+      empacadoras: true,
+    });
+  };
+
   const gaussianPoints = useMemo(() => {
     const values: number[] = [];
     for (let index = 0; index < 22; index += 1) {
@@ -343,56 +420,309 @@ export default function App() {
 
   const playbackSpeedForMap: 1 | 2 | 5 = speed === 4 ? 5 : speed;
 
-  return (
-    <div className="min-h-screen bg-[#f6f6f8] text-[#111a4a]">
-      <header className="sticky top-0 z-40 border-b border-[#e3e4e8] bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex h-[62px] max-w-[1200px] items-center justify-between gap-4 px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] text-[#111a4a]">
-              <ShieldCheck className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-[#111a4a]">
-                Manta Epidemic Containment Console
-              </p>
-              <p className="text-[11px] text-[#7c7f88]">Hubs aislados: {intervenedHubs.length}/5</p>
+  if (!isConfigured) {
+    const r0Percent = ((initialR0 - 1.2) / (4.5 - 1.2)) * 100;
+    const budgetPercent = ((budgetAssigned - 20000) / (120000 - 20000)) * 100;
+
+    return (
+      <div className="min-h-screen bg-[#f6f6f8] px-4 py-10 text-[#111a4a]">
+        <div className="mx-auto max-w-2xl rounded-lg border border-[#e3e4e8] bg-white p-8 shadow-xl">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] text-[#111a4a]">
+                <SlidersHorizontal className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Configuracion</p>
+                <h1 className="mt-1 text-2xl font-semibold text-[#111a4a]">Parametros de Contencion Epidemiologica Manta</h1>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-2 rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-2 py-1.5 text-[10px] font-medium text-[#3b3e47] lg:flex">
-              <Cpu className="h-3.5 w-3.5 text-[#167e6c]" />
-              Seed {seed}
-            </div>
-            <label className="hidden items-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-2.5 py-1.5 text-[10px] font-medium text-[#3b3e47] md:flex">
-              <BellRing className="h-3.5 w-3.5 text-[#111a4a]" />
-              <select
-                value={selectedPreset}
-                onChange={(event) => setSelectedPreset(event.target.value as CrisisPreset)}
-                className="bg-transparent pr-1 text-[#111a4a] outline-none"
-              >
-                {Object.entries(PRESET_META).map(([key, meta]) => (
-                  <option key={key} value={key}>
-                    {meta.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <p className="mt-4 text-sm text-[#3b3e47]">
+            Configure el escenario inicial de propagacion antes de iniciar el motor de simulacion.
+          </p>
+
+          <div className="mt-3 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               type="button"
-              onClick={() => setReportOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-3 py-2 text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
+              onClick={() => applyScenarioPreset('standard')}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-4 py-2.5 text-center text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
             >
-              <FileText className="h-4 w-4 text-[#111a4a]" />
-              Informe Alcaldia
+              <ShieldCheck className="h-4 w-4 text-[#167e6c]" />
+              <span>Cargar Escenario Estandar (COVID-19 base)</span>
             </button>
             <button
               type="button"
-              onClick={() => setAlertOpen((current) => !current)}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#ec652b] px-3 py-2 text-[11px] font-medium text-white shadow-sm transition hover:bg-[#dc5725]"
+              onClick={() => applyScenarioPreset('supercontagion')}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-4 py-2.5 text-center text-[11px] font-medium text-[#111a4a] shadow-sm transition hover:bg-[#f6f6f8]"
+            >
+              <Biohazard className="h-4 w-4 text-[#ec652b]" />
+              <span>Cargar Variante de Alta Transmisibilidad</span>
+            </button>
+          </div>
+
+          <div className="mt-8 space-y-6">
+            <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Patologia</p>
+                  <h2 className="mt-2 text-lg font-semibold text-[#111a4a]">Foco Inicial</h2>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#111a4a]">
+                  <MapPin className="h-4 w-4" />
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Punto cero</span>
+                <div className="relative w-full">
+                  <select
+                    value={initialHub}
+                    onChange={(event) => setInitialHub(event.target.value)}
+                    className="w-full cursor-pointer appearance-none rounded-lg border border-[#e3e4e8] bg-white px-3 py-2.5 pr-8 text-sm text-[#111a4a] outline-none focus:border-[#111a4a]"
+                  >
+                    {MANTA_HUBS.map((hub) => (
+                      <option key={hub.id} value={hub.id}>
+                        {hub.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-[#7c7f88]">
+                    <ChevronDown className="h-4 w-4" />
+                  </div>
+                </div>
+              </label>
+
+              <div className="mt-5">
+                <div className="mb-2 flex items-center justify-between text-[11px] text-[#3b3e47]">
+                  <span>R0 inicial</span>
+                  <span className="font-mono text-[#167e6c]">{initialR0.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1.2"
+                  max="4.5"
+                  step="0.1"
+                  value={initialR0}
+                  onChange={(event) => setInitialR0(Number(event.target.value))}
+                  className="h-2 w-full cursor-pointer appearance-none rounded-lg"
+                  style={{
+                    background: `linear-gradient(to right, #167e6c 0%, #167e6c ${r0Percent}%, #e3e4e8 ${r0Percent}%, #e3e4e8 100%)`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Recursos</p>
+                    <h2 className="mt-2 text-lg font-semibold text-[#111a4a]">Presupuesto Municipal</h2>
+                  </div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#111a4a]">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-[11px] text-[#3b3e47]">
+                      <span>Presupuesto asignado</span>
+                      <span className="font-mono text-[#111a4a]">${budgetAssigned.toLocaleString()}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20000"
+                      max="120000"
+                      step="5000"
+                      value={budgetAssigned}
+                      onChange={(event) => setBudgetAssigned(Number(event.target.value))}
+                      className="h-2 w-full cursor-pointer appearance-none rounded-lg"
+                      style={{
+                        background: `linear-gradient(to right, #167e6c 0%, #167e6c ${budgetPercent}%, #e3e4e8 ${budgetPercent}%, #e3e4e8 100%)`,
+                      }}
+                    />
+                  </div>
+
+                  <label className="block">
+                    <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Dosis de vacunas COVID</span>
+                    <div className="relative">
+                      <Syringe className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#167e6c]" />
+                      <input
+                        type="number"
+                        value={initialDoses}
+                        onChange={(event) => setInitialDoses(Number(event.target.value) || 0)}
+                        className="w-full rounded-lg border border-[#e3e4e8] bg-white py-2.5 pl-10 pr-3 text-sm text-[#111a4a] outline-none"
+                      />
+                    </div>
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Brigadas de cerco epidemiologico</span>
+                    <div className="relative">
+                      <Truck className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#111a4a]" />
+                      <input
+                        type="number"
+                        value={initialBrigades}
+                        onChange={(event) => setInitialBrigades(Number(event.target.value) || 0)}
+                        className="w-full rounded-lg border border-[#e3e4e8] bg-white py-2.5 pl-10 pr-3 text-sm text-[#111a4a] outline-none"
+                      />
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Estrategia</p>
+                    <h2 className="mt-2 text-lg font-semibold text-[#111a4a]">Reproducibilidad</h2>
+                  </div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#111a4a]">
+                    <Hash className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Semilla</span>
+                    <div className="relative">
+                      <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#167e6c]" />
+                      <input
+                        type="number"
+                        value={setupSeed}
+                        onChange={(event) => setSetupSeed(Number(event.target.value) || 0)}
+                        className="w-full rounded-lg border border-[#e3e4e8] bg-white py-2.5 pl-10 pr-3 text-sm text-[#111a4a] outline-none"
+                      />
+                    </div>
+                  </label>
+
+                  <div>
+                    <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-[#7c7f88]">Politica inicial</p>
+                    <div className="mt-2 flex w-full flex-col gap-2">
+                      {[
+                        {
+                          id: 'moderate',
+                          label: 'MODERATE',
+                          desc: 'Uso de mascarillas y aforo controlado',
+                        },
+                        {
+                          id: 'strict',
+                          label: 'STRICT',
+                          desc: 'Restriccion vehicular y cerco perimetral',
+                        },
+                        {
+                          id: 'aggressive',
+                          label: 'AGGRESSIVE',
+                          desc: 'Cuarentena total inmediata en focos',
+                        },
+                      ].map((item) => {
+                        const isSelected = setupPolicy === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setSetupPolicy(item.id as Policy)}
+                            className={`flex w-full items-center justify-between rounded-lg border p-2.5 text-left transition ${
+                              isSelected
+                                ? 'border-[#167e6c] bg-[#167e6c]/10 text-[#111a4a] shadow-sm ring-1 ring-[#167e6c]/20'
+                                : 'border-[#e3e4e8] bg-white text-[#3b3e47] hover:bg-[#f6f6f8]'
+                            }`}
+                          >
+                            <div>
+                              <span
+                                className={`block text-[11px] font-mono font-semibold tracking-wide ${
+                                  isSelected ? 'text-[#167e6c]' : 'text-[#111a4a]'
+                                }`}
+                              >
+                                {item.label}
+                              </span>
+                              <span className="mt-0.5 block text-[10px] text-[#7c7f88]">{item.desc}</span>
+                            </div>
+                            <div
+                              className={`flex h-4 w-4 items-center justify-center rounded-full border transition ${
+                                isSelected ? 'border-[#167e6c] bg-[#167e6c]' : 'border-[#cbcccf] bg-white'
+                              }`}
+                            >
+                              {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={launchSimulation}
+            className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#ec652b] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#dc5725]"
+          >
+            Lanzar Simulacion de Contencion
+            <Play className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f6f6f8] text-[#111a4a]">
+      <header className="sticky top-0 z-40 border-b border-[#e3e4e8] bg-white/90 px-6 py-2.5 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#111a4a] font-mono text-xs font-bold text-white shadow-sm">
+                M
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h1 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#111a4a]">
+                    Manta Epidemic Console
+                  </h1>
+                  <span className="rounded border border-[#167e6c]/20 bg-[#167e6c]/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#167e6c]">
+                    Track B
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7c7f88]">
+                  Hubs intervenidos: <span className="font-semibold text-[#111a4a]">{intervenedHubs.length}/5</span>
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          <div className="flex items-center space-x-2.5">
+            <button
+              type="button"
+              onClick={() => setIsConfigured(false)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] px-3 py-1.5 text-xs font-medium text-[#3b3e47] transition hover:bg-[#f6f6f8]"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5 text-[#111a4a]" />
+              <span>Parametros</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] px-3 py-1.5 text-xs font-medium text-[#3b3e47] transition hover:bg-[#f6f6f8]"
+            >
+              <FileText className="h-3.5 w-3.5 text-[#167e6c]" />
+              <span>Informe</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleMaxAlert}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#ec652b] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#d8561f]"
             >
               <BellRing className="h-3.5 w-3.5" />
-              Maxima Alerta
+              <span>Maxima Alerta</span>
             </button>
           </div>
         </div>
@@ -433,8 +763,7 @@ export default function App() {
               <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7c7f88]">Diagnostico</p>
                 <p className="mt-2 text-sm">
-                  El foco de Tarqui sigue siendo el nodo principal, pero la estrategia {policySummary.label.toLowerCase()} logra
-                  reducir la presion epidemiologica en el conjunto de la ciudad.
+                  El foco de Tarqui sigue siendo el punto principal, pero la estrategia {policySummary.label.toLowerCase()} reduce la presion epidemiologica del conjunto de la ciudad.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
@@ -483,7 +812,7 @@ export default function App() {
             ))}
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-[#e3e4e8] bg-white p-2 shadow-sm">
+          <section className="relative z-10 isolate overflow-hidden rounded-lg border border-[#e3e4e8] bg-white shadow-sm">
             <MantaMap
               result={{ params: { days: TOTAL_DAYS } }}
               currentDay={currentDay}
@@ -581,10 +910,7 @@ export default function App() {
                       <span className="font-mono text-[#111a4a]">${formatCompact(budgetSpent)} / $80,000</span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-[#edf0f3]">
-                      <div
-                        className="h-full rounded-full bg-[#111a4a]"
-                        style={{ width: `${budgetPercent}%` }}
-                      />
+                      <div className="h-full rounded-full bg-[#111a4a]" style={{ width: `${dashboardBudgetPercent}%` }} />
                     </div>
                   </div>
 
@@ -609,6 +935,62 @@ export default function App() {
                         <span className="text-[11px] uppercase tracking-[0.14em]">Kits</span>
                       </div>
                       <p className="mt-2 font-mono text-xl font-semibold text-[#111a4a]">{Math.round(testKits)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#e3e4e8] bg-white p-5 shadow-sm lg:min-h-[330px]">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">EFICIENCIA EPIDEMIOLOGICA</p>
+                    <h2 className="mt-2 flex items-center gap-2 text-xl font-semibold text-[#111a4a]">
+                      Indice de Transmision Rt
+                      <TrendingDown className="h-4 w-4 text-[#167e6c]" />
+                    </h2>
+                  </div>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#edf9f6] text-[#167e6c]">
+                    <TrendingDown className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-4">
+                    <div className="flex items-end justify-between gap-3">
+                      <div>
+                        <p className={`font-mono text-4xl font-semibold ${rValue < 1 ? 'text-[#167e6c]' : 'text-[#ec652b]'}`}>
+                          {rValue.toFixed(2)}
+                        </p>
+                        <p className={`mt-2 text-[10px] font-medium uppercase tracking-[0.14em] ${rValue < 1 ? 'text-[#167e6c]' : 'text-[#ec652b]'}`}>
+                          {rValue < 1 ? 'RITMO DE TRANSMISION CONTROLADO' : 'BROTE EN EXPANSION ACELERADA'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-[#7c7f88]">Estado</p>
+                        <p className="mt-1 font-mono text-sm font-semibold text-[#111a4a]">{rValue < 1 ? 'OK' : 'ALERTA'}</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-[11px] text-[#3b3e47]">Umbral critico de propagacion: 1.00</p>
+                  </div>
+
+                  <div className="rounded-lg border border-[#e3e4e8] bg-white p-3">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-[#3b3e47]">Costo promedio por contagio evitado: $12.40 USD</p>
+                    <div className="mt-4 space-y-3">
+                      {[
+                        { label: 'Antidotos y vacunas', value: 50, color: '#167e6c' },
+                        { label: 'Brigadas de campo', value: 32, color: '#111a4a' },
+                        { label: 'Kits de monitoreo', value: 18, color: '#ec652b' },
+                      ].map((item) => (
+                        <div key={item.label}>
+                          <div className="mb-1 flex items-center justify-between text-[11px] text-[#3b3e47]">
+                            <span>{item.label}</span>
+                            <span className="font-mono text-[#111a4a]">{item.value}%</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-[#edf0f3]">
+                            <div className="h-full rounded-full" style={{ width: `${item.value}%`, backgroundColor: item.color }} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -695,17 +1077,6 @@ export default function App() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#edf9f6] text-[#167e6c]">
                       <Cpu className="h-4 w-4" />
                     </div>
-                  </div>
-
-                  <div className="mb-4 flex items-center gap-2 rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-2.5">
-                    <Dices className="h-4 w-4 text-[#111a4a]" />
-                    <span className="text-[10px] uppercase tracking-[0.14em] text-[#7c7f88]">Seed</span>
-                    <input
-                      type="number"
-                      value={seed}
-                      onChange={(event) => setSeed(Number(event.target.value) || 0)}
-                      className="w-20 bg-transparent text-right text-sm font-medium text-[#111a4a] outline-none"
-                    />
                   </div>
 
                   <button
