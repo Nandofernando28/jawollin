@@ -41,10 +41,10 @@ Para cumplir con la regla de la competencia (*"Repositorio público con un histo
 
 - **Rama sugerida:** `feature/aws-backend-bedrock`
 - **Plan Fase 3 ([tasks-fase-3-backend-serverless-hibrido.md](./tasks-fase-3-backend-serverless-hibrido.md)):**
-  - [ ] **Tarea 1.1 – 1.3:** Implementar `src/handlers/worker.py` para procesar lotes de réplicas Monte Carlo invocados por el estado `Map` de AWS Step Functions Express.
-  - [ ] **Tarea 2.1 – 2.2:** Implementar en `src/handlers/orchestrator.py` el hash determinista `sim_hash` (SHA-256), la lectura/escritura de caché en **Amazon DynamoDB** y el guardado de series espaciales en **Amazon S3**.
-  - [ ] **Tarea 3.1 – 4.2:** Implementar la invocación a Step Functions (`StartSyncExecution`) con fallback directo y el enrutador HTTP (`GET /health`, `POST /simulate`, `GET /simulations/{simHash}`).
-  - [ ] **Tarea 5.1 – 5.3:** Implementar el servidor híbrido local multihilo en `src/local_server.py` (`localhost:8000`) con CORS habilitado.
+  - [x] **Tarea 1.1 – 1.3:** Implementar `src/handlers/worker.py` para procesar lotes de réplicas Monte Carlo invocados por el estado `Map` de AWS Step Functions Express.
+  - [x] **Tarea 2.1 – 2.2:** Implementar en `src/handlers/orchestrator.py` el hash determinista `sim_hash` (SHA-256), la lectura/escritura de caché en **Amazon DynamoDB** y el guardado de series espaciales en **Amazon S3**.
+  - [x] **Tarea 3.1 – 4.2:** Implementar la invocación a Step Functions (`StartSyncExecution`) con fallback directo y el enrutador HTTP (`GET /health`, `POST /simulate`, `GET /simulations/{simHash}`).
+  - [x] **Tarea 5.1 – 5.3:** Implementar el servidor híbrido local multihilo en `src/local_server.py` (`localhost:8000`) con CORS habilitado.
 - **Plan Fase 4 ([tasks-fase-4-boletin-alcalde-bedrock.md](./tasks-fase-4-boletin-alcalde-bedrock.md)):**
   - [ ] **Tarea 1.1 – 2.2:** Implementar en `src/handlers/mayor_report.py` el extractor de contexto ejecutivo y la integración con **Amazon Bedrock** (`amazon.nova-micro-v1:0` / Claude 3 Haiku).
   - [ ] **Tarea 3.1 – 5.2:** Implementar el generador heurístico determinista de respaldo (3 secciones oficiales para el Alcalde de Manta) y las pruebas de integración en `tests/test_handlers.py`.

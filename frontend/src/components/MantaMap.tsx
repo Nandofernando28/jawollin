@@ -36,6 +36,7 @@ export const MantaMap: React.FC<MantaMapProps> = ({
   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
   maxZoom={19}
+  className="map-tiles-dark"
 />
         {/* Polígonos de Parroquias */}
         <GeoJSON

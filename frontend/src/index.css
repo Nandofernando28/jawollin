@@ -86,3 +86,8 @@ input[type="range"].accent-indigo-500::-webkit-slider-thumb  { background: #6366
   header, aside, .no-print { display: none !important; }
   body { background: #fff !important; color: #000 !important; }
 }
+
+/* Convierte cualquier mapa base en Dark Mode táctico */
+.map-tiles-dark {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}

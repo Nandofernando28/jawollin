@@ -62,13 +62,13 @@ DEFAULT_SIMULATION_PARAMS: Dict[str, Any] = {
     "initial_infected": 4,
     "days": 30,
     "monte_carlo_runs": 30,
-    "beta_day": 0.085,
-    "beta_night": 0.110,
+    "beta_day": 0.05,
+    "beta_night": 0.07,
     "incubation_days": 2,
     "infectious_days": 5,
     "vaccine_efficacy": 0.85,
-    "daily_budget": 600.0,
-    "total_budget": 12000.0,
+    "daily_budget": 400.0,
+    "total_budget": 8000.0,
     "vaccine_cost": 15.0,
     "brigade_cost": 65.0,
     "hub_closure_cost": 220.0,
@@ -292,6 +292,7 @@ def _prepare_network(net: Dict[str, Any]) -> Dict[str, Any]:
 # TAREA 2.0: SIEMBRA DEL PACIENTE CERO
 # ============================================================================
 
+#reorganiza los contactos de la red en lsitas planas (a -->"w"). Así numpy calcula los contagios de todos a la vez, en lugar de persona por persona.
 def seed_initial_outbreak(
     prep: Dict[str, Any], params: Dict[str, Any], rng: np.random.Generator
 ) -> np.ndarray:
