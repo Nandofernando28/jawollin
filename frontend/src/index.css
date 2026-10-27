@@ -1,85 +1,126 @@
-/* Google Fonts — before @import "tailwindcss" */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap");
-
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
-/* ── Base ───────────────────────────────────────────────────────── */
 :root {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  --color-cloud-canvas: #f6f6f8;
+  --color-pure-white: #ffffff;
+  --color-silver-lining: #e3e4e8;
+  --color-indigo-navy: #111a4a;
+  --color-slate-ink: #3b3e47;
+  --color-steel: #7c7f88;
+  --color-seafoam-700: #167e6c;
+  --color-signal-orange: #ec652b;
+  --color-charcoal: #232730;
+  --radius-lg: 8px;
+  --shadow-soft: 0 12px 30px rgba(17, 26, 74, 0.08);
 }
+
 * { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background-color: #020617;
-  color: #f1f5f9;
+  margin: 0;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--color-cloud-canvas);
+  color: var(--color-indigo-navy);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
-.font-mono { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
 
-/* ── Scrollbar ──────────────────────────────────────────────────── */
-::-webkit-scrollbar        { width: 5px; height: 5px; }
-::-webkit-scrollbar-track  { background: #0f172a; }
-::-webkit-scrollbar-thumb  { background: #334155; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
+button,
+input,
+select {
+  font: inherit;
+}
 
-/* ── Range inputs ───────────────────────────────────────────────── */
-input[type="range"] {
+.font-mono,
+code,
+pre {
+  font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
+}
+
+.leaflet-container {
+  background: #edf4f6 !important;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 12px;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid var(--color-silver-lining) !important;
+  box-shadow: var(--shadow-soft) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: var(--color-charcoal) !important;
+  border-bottom: 1px solid var(--color-silver-lining) !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  border-radius: 8px !important;
+  box-shadow: 0 18px 36px rgba(17, 26, 74, 0.12) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--color-pure-white) !important;
+  border: 1px solid var(--color-silver-lining) !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+}
+
+input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
-  background: #1e293b;
-  border-radius: 9999px;
   height: 6px;
-  cursor: pointer;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #167e6c 0%, #167e6c var(--range-percent, 50%), #e3e4e8 var(--range-percent, 50%), #e3e4e8 100%);
   outline: none;
 }
-input[type="range"]::-webkit-slider-thumb {
+
+input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px; height: 14px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: currentColor;
-  border: 2px solid #0f172a;
+  background: #167e6c;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(22, 126, 108, 0.25);
   cursor: pointer;
-  transition: transform 0.1s;
 }
-input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-input[type="range"].accent-emerald-500::-webkit-slider-thumb { background: #10b981; }
-input[type="range"].accent-amber-500::-webkit-slider-thumb   { background: #f59e0b; }
-input[type="range"].accent-sky-500::-webkit-slider-thumb     { background: #0ea5e9; }
-input[type="range"].accent-indigo-500::-webkit-slider-thumb  { background: #6366f1; }
 
-/* ── Leaflet dark-mode overrides ────────────────────────────────── */
-.leaflet-container {
-  background: #020617 !important;
-  font-family: "Inter", system-ui, sans-serif;
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #167e6c;
+  box-shadow: 0 4px 10px rgba(22, 126, 108, 0.25);
+  cursor: pointer;
 }
-.leaflet-control-zoom a {
-  background-color: #1e293b !important;
-  color: #94a3b8 !important;
-  border-color: #334155 !important;
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
-.leaflet-control-zoom a:hover {
-  background-color: #334155 !important;
-  color: #f1f5f9 !important;
+
+::-webkit-scrollbar-track {
+  background: #f0f1f3;
 }
-.leaflet-popup-content-wrapper {
-  background: #1e293b !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #334155 !important;
-  border-radius: 10px !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+
+::-webkit-scrollbar-thumb {
+  background: #c4c7ce;
+  border-radius: 9999px;
 }
-.leaflet-popup-tip           { background: #1e293b !important; }
-.leaflet-popup-content       { margin: 10px 14px !important; font-size: 12px !important; line-height: 1.5 !important; }
-.leaflet-popup-close-button  { color: #64748b !important; }
-.leaflet-popup-close-button:hover { color: #f1f5f9 !important; }
-.leaflet-control-attribution {
-  background: rgba(2,6,23,0.75) !important;
-  color: #475569 !important;
-  font-size: 10px !important;
-}
-.leaflet-control-attribution a { color: #64748b !important; }
 
 /* ── Print ──────────────────────────────────────────────────────── */
 @media print {
@@ -87,7 +128,3 @@ input[type="range"].accent-indigo-500::-webkit-slider-thumb  { background: #6366
   body { background: #fff !important; color: #000 !important; }
 }
 
-/* Convierte cualquier mapa base en Dark Mode táctico */
-.map-tiles-dark {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
-}
