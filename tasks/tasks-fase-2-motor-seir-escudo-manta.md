@@ -31,13 +31,13 @@ Update the file after completing each sub-task, not just after completing an ent
   - [ ] 0.2 Verificar que la Fase 1 (`src/engine/graph_manta.py`) esté lista e importable desde `src/engine/simulator.py`.
 
 - [ ] 1.0 Definir constantes de estados SEIR-VQ y normalizador de parámetros con valores por defecto
-  - [ ] 1.1 Declarar en `src/engine/simulator.py` las constantes enteras de estado:
+  - [/] 1.1 Declarar en `src/engine/simulator.py` las constantes enteras de estado (Parcialmente completada: constantes numéricas `STATE_*` y catálogo `STATE_NAMES` implementados):
     - `STATE_SANO = 0` (🟢 Susceptible)
     - `STATE_MORDIDO = 1` (🟡 Expuesto / en incubación)
     - `STATE_ZOMBIE = 2` (🔴 Infeccioso activo)
     - `STATE_AISLADO = 3` (🟣 Contenido por brigada sanitaria)
     - `STATE_INMUNE = 4` (🔵 Exorcizado / Recuperado o Vacunado con éxito)
-  - [ ] 1.2 Implementar `normalize_simulation_params(raw_params: Dict[str, Any]) -> Dict[str, Any]` con valores por defecto calibrados y acotación de rangos seguros (clamping) para cualquier input libre de la UI:
+  - [/] 1.2 Implementar `normalize_simulation_params(raw_params: Dict[str, Any]) -> Dict[str, Any]` con valores por defecto calibrados y acotación de rangos seguros (clamping) para cualquier input libre de la UI (Parcialmente completada: función implementada con clamping y pruebas unitarias passing):
     - `n_nodes`: default `1200` (rango `200 .. 5000`)
     - `days`: default `30` (rango `7 .. 90`)
     - `beta_day`: default `0.085` (probabilidad base de contagio por contacto diurno)

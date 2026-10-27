@@ -184,5 +184,59 @@
     "seen": 1793052695.9271986,
     "ast_hash": "ec4687d832aeeb37f5d6700084e8b4ad",
     "semantic_hash": ""
+  },
+  "tasks/plan-equipo-3-integrantes.md": {
+    "mtime": 1793053888.6309228,
+    "seen": 1793072396.6864405,
+    "ast_hash": "8d3a682bed658e50160fff0cb6b24d56",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-fase-1-red-multicapa-manta.md": {
+    "mtime": 1793053089.8987186,
+    "seen": 1793072396.6866903,
+    "ast_hash": "3c79913886a927e7dd0803e9c9c4d9ab",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-fase-2-motor-seir-escudo-manta.md": {
+    "mtime": 1793053149.625949,
+    "seen": 1793072396.6866934,
+    "ast_hash": "319463a87e27f558c5e716ff08c35d29",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-fase-3-backend-serverless-hibrido.md": {
+    "mtime": 1793053205.5893917,
+    "seen": 1793072396.6866963,
+    "ast_hash": "48a3903bf842b4f852f5757ee082f24c",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-fase-4-boletin-alcalde-bedrock.md": {
+    "mtime": 1793053254.5644164,
+    "seen": 1793072396.6866984,
+    "ast_hash": "3f722b9ea5ed998f6388468d7036dcf9",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-fase-5-cartografia-manta-contratos-ts.md": {
+    "mtime": 1793053256.023658,
+    "seen": 1793072396.686701,
+    "ast_hash": "e56ccf1854c81e42c0ee175201d8055c",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-fase-6-interfaz-react-centro-control.md": {
+    "mtime": 1793053316.552931,
+    "seen": 1793072396.6867037,
+    "ast_hash": "b4a2aa04cd0a7cbf228834ef4a052acf",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-fase-7-verificacion-despliegue-entregables.md": {
+    "mtime": 1793053318.132007,
+    "seen": 1793072396.6867058,
+    "ast_hash": "d9e4847f64184fd0b3fb09baf0d08254",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-operacion-cortafuegos-manta.md": {
+    "mtime": 1793053947.3941798,
+    "seen": 1793072396.6867077,
+    "ast_hash": "326f5ff09ebb8d528b5a8cd40721e851",
+    "semantic_hash": ""
   }
 }

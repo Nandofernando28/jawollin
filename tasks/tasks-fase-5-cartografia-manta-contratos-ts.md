@@ -50,7 +50,7 @@ Update the file after completing each sub-task, not just after completing an ent
   - [ ] 2.4 Exportar `MANTA_TRANSIT_CORRIDORS`: rutas vectoriales SVG que representan las arterias viales reales que conectan los Hubs (Ruta del Spondylus San Mateo–ULEAM–Centro, Av. 4 de Noviembre, Vía Puerto–Aeropuerto por Tarqui y Los Esteros, y corredor hacia Terminal Terrestre en Eloy Alfaro) para animar el flujo diurno de buses y nodos puente.
 
 - [ ] 3.0 Definir los Contratos e Interfaces TypeScript en `frontend/src/types/simulation.ts`
-  - [ ] 3.1 Definir la interfaz `SimulationParams` con todos los parámetros configurables por el usuario y el jurado:
+  - [x] 3.1 Definir la interfaz `SimulationParams` con todos los parámetros configurables por el usuario y el jurado:
     - `n_nodes: number`
     - `days: number`
     - `beta_day: number`
@@ -67,7 +67,7 @@ Update the file after completing each sub-task, not just after completing an ent
     - `hub_closure_cost: number`
     - `monte_carlo_runs: number`
     - `seed: number`
-  - [ ] 3.2 Definir las interfaces de resultados estadísticos:
+  - [x] 3.2 Definir las interfaces de resultados estadísticos:
     - `PercentileBand`: `{ mean: number[]; p10: number[]; p50: number[]; p90: number[] }`
     - `StrategyTimeSeries`: series diarias para `sano`, `mordido`, `zombie`, `aislado`, `inmune`, `ever_infected`, `budget_spent`, `vaccines_applied`, `brigades_deployed`, `hubs_closed`.
     - `ParishDaySnapshot` y `HubDaySnapshot` para colorear y animar el mapa de Manta en cada día $t \in [0, \text{days}]$.
@@ -76,5 +76,5 @@ Update the file after completing each sub-task, not just after completing an ent
     - `MayorReportResponse`: contrato devuelto por `POST /mayor-report`.
     - `BackendMode`: `'aws' | 'local'`.
 
-- [ ] 4.0 Verificación de Compilación de Tipos de la Fase 5
-  - [ ] 4.1 Ejecutar `npx tsc --noEmit` dentro de `frontend/` para comprobar que `mantaGeo.ts` y `simulation.ts` compilan sin ningún error ni advertencia de TypeScript.
+- [x] 4.0 Verificación de Compilación de Tipos de la Fase 5
+  - [x] 4.1 Ejecutar `npx tsc --noEmit` dentro de `frontend/` para comprobar que `mantaGeo.ts` y `simulation.ts` compilan sin ningún error ni advertencia de TypeScript.
