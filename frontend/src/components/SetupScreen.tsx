@@ -141,9 +141,10 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
               type="button"
               onClick={() => set(p.changes)}
               title={p.description}
-              className="rounded-lg border border-[#e3e4e8] bg-white px-3 py-2.5 text-[11px] font-medium shadow-sm transition hover:bg-[#f6f6f8]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] bg-white px-3 py-2.5 text-[11px] font-medium shadow-sm transition hover:bg-[#f6f6f8]"
             >
-              {p.icon} {p.label}
+              <p.icon className="h-3.5 w-3.5" aria-hidden="true" />
+              {p.label}
             </button>
           ))}
         </div>

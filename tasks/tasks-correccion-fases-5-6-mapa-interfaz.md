@@ -3,7 +3,7 @@
 **Origen:** revisión de [tasks-fase-5-cartografia-manta-contratos-ts.md](./tasks-fase-5-cartografia-manta-contratos-ts.md) y [tasks-fase-6-interfaz-react-centro-control.md](./tasks-fase-6-interfaz-react-centro-control.md) del 27/10/2026.
 **Plan Central:** [tasks-operacion-cortafuegos-manta.md](./tasks-operacion-cortafuegos-manta.md)
 
-Objetivo: que el mapa y la consola muestren solo lo que calcula el backend, sin datos inventados ni contradicciones con el README, y que el jurado pueda cambiar parámetros en vivo durante el 🎃 Brote Sorpresa sin tropiezos.
+Objetivo: que el mapa y la consola muestren solo lo que calcula el backend, sin datos inventados ni contradicciones con el README, y que el jurado pueda cambiar parámetros en vivo durante el Brote Sorpresa sin tropiezos.
 
 ## Relevant Files
 

@@ -29,11 +29,11 @@ from src.engine.graph_manta import (
 # TAREA 1.1: CONSTANTES NUMÉRICAS DE ESTADOS EPIDEMIOLÓGICOS (SEIR-VQ)
 # ============================================================================
 
-STATE_SANO: int = 0      # 🟢 Susceptible / Sano
-STATE_MORDIDO: int = 1   # 🟡 Expuesto / Incubando (no contagia aún o transmisión reducida)
-STATE_ZOMBIE: int = 2    # 🔴 Infeccioso activo (propaga mordeduras)
-STATE_AISLADO: int = 3   # 🟣 Contenido por brigada sanitaria (cuarentena activa)
-STATE_INMUNE: int = 4    # 🔵 Exorcizado / Inmune por vacuna exitosa o antídoto
+STATE_SANO: int = 0      # Susceptible / Sano
+STATE_MORDIDO: int = 1   # Expuesto / Incubando (no contagia aún o transmisión reducida)
+STATE_ZOMBIE: int = 2    # Infeccioso activo (propaga mordeduras)
+STATE_AISLADO: int = 3   # Contenido por brigada sanitaria (cuarentena activa)
+STATE_INMUNE: int = 4    # Exorcizado / Inmune por vacuna exitosa o antídoto
 
 STATE_NAMES: Dict[int, str] = {
     STATE_SANO: "sano",

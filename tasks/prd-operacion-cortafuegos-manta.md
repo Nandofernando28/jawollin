@@ -28,7 +28,7 @@ El sistema opera en **modo híbrido**: desplegado en **AWS Serverless** (API Gat
    - *La Red:* Cortafuegos temporal o fumigación en hubs críticos con mayor riesgo de contagio masivo.
 3. **Optimización con Restricción de Presupuesto:** Administrar un presupuesto financiero global y una tasa de entrega diaria de recursos, decidiendo en cada día $t$ la combinación de intervenciones que maximice el número de contagios evitados por cada dólar invertido.
 4. **Superioridad Demostrada vs. Líneas Base:** Superar en al menos un **35% a 60%** la cantidad de vidas salvadas/no contagiadas frente a la intervención aleatoria en un ensamble de Monte Carlo ($M \ge 30$ corridas).
-5. **Capacidad de Respuesta ante Brote Sorpresa 🎃:** Permitir al jurado modificar parámetros arbitrarios en vivo (ej. $2\times$ tasa de contagio, $-50\%$ vacunas, brote localizado en Mercado Tarqui, efectividad reducida al 50%) mediante controles libres y recalcular la simulación completa en menos de **5 segundos**.
+5. **Capacidad de Respuesta ante Brote Sorpresa:** Permitir al jurado modificar parámetros arbitrarios en vivo (ej. $2\times$ tasa de contagio, $-50\%$ vacunas, brote localizado en Mercado Tarqui, efectividad reducida al 50%) mediante controles libres y recalcular la simulación completa en menos de **5 segundos**.
 6. **Reproducibilidad Matemática Estricta:** Asegurar que dada una misma semilla pseudoaleatoria (`seed`) y los mismos parámetros, el resultado sea determinista e idéntico tanto en AWS como en local.
 7. **Control Financiero en la Nube:** Operar la solución completa con un costo proyectado menor a **$0.05 USD** durante el hackathon y un costo mensual menor a **$2.00 USD/mes** en producción, protegido con un AWS Budget de **$5.00 USD**.
 
@@ -41,7 +41,7 @@ El sistema opera en **modo híbrido**: desplegado en **AWS Serverless** (API Gat
 - **Quiero:** Ejecutar una simulación epidemiológica definiendo los parámetros de la plaga y el presupuesto disponible.
 - **Para:** Comparar gráficamente la curva de contagios día a día de la estrategia *Cortafuegos Manta* contra *No Intervenir* e *Intervención al Azar*, conociendo con certeza cuántas personas se salvaron.
 
-### US-02: Calibración Rápida ante el "Brote Sorpresa 🎃" (Jurado Técnico)
+### US-02: Calibración Rápida ante el "Brote Sorpresa" (Jurado Técnico)
 - **Como:** Jurado de la misión SpookyThon 2026.
 - **Quiero:** Cambiar libremente la semilla, duplicar la tasa de transmisión, reducir las vacunas a la mitad o cambiar el punto de inicio del brote a un hub específico.
 - **Para:** Comprobar en menos de 5 minutos si la estrategia sigue siendo robusta, matemáticamente consistente y no se rompe ante variaciones imprevistas.

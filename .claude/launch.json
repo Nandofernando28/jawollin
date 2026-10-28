@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend-local",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["src/local_server.py"],
+      "port": 8000
+    },
+    {
+      "name": "frontend-local",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-Command", "$env:VITE_API_URL='http://localhost:8000'; npm run dev --prefix frontend -- --port 5173 --strictPort"],
+      "port": 5173
+    }
+  ]
+}

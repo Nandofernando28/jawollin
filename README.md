@@ -1,8 +1,8 @@
 # Operación Cortafuegos Manta
 
-> SpookyThon 2026 · Track B · La Plaga Zombie 🧟‍♀️
+> SpookyThon 2026 · Track B · La Plaga Zombie
 
-**🌐 Aplicación desplegada en AWS:** https://main.d2rdluo4raik0f.amplifyapp.com
+**Aplicación desplegada en AWS:** https://main.d2rdluo4raik0f.amplifyapp.com
 
 **API (Amazon API Gateway, `us-east-1`):** `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` (por ejemplo, [`/health`](https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod/health))
 
@@ -12,9 +12,9 @@
 
 **Lo que hicimos.** Una herramienta que simula día a día cómo se propaga una plaga por una red de contactos de Manta (hogares, barrios, mercados, la ULEAM, las empacadoras, el terminal y los buses) y que, con un presupuesto que llega por días, decide cada día qué comprar:
 
-- 💉 **vacunas** para las personas sanas que rodean a los casos y para quienes conectan barrios;
-- 🚑 **brigadas** que aíslan a los casos detectados con más contactos;
-- 🔥 **cierres o fumigaciones** de hubs cuando la epidemia se descontrola.
+- **vacunas** para las personas sanas que rodean a los casos y para quienes conectan barrios;
+- **brigadas** que aíslan a los casos detectados con más contactos;
+- **cierres o fumigaciones** de hubs cuando la epidemia se descontrola.
 
 La estrategia, **Escudo Manta**, elige cada día la acción que más contagios evita por dólar. Se compara siempre contra **no hacer nada** y contra **gastar el mismo dinero al azar**, con 30 simulaciones por estrategia, promedios y rangos P10–P90.
 
@@ -27,7 +27,7 @@ La estrategia, **Escudo Manta**, elige cada día la acción que más contagios e
 
 El Escudo evita el **98%** de los contagios frente a no hacer nada y el **72%** frente al azar, sin vacunar nunca a quien ya está infectado o es inmune. Escalado a los 271 000 habitantes de Manta, son unos **187 000 contagios evitados**.
 
-**Cómo se usa.** Una consola web (ver [Interfaz](#interfaz)) permite cambiar el contagio, las vacunas, el presupuesto y el punto de inicio, aplicar los **🎃 Brotes Sorpresa** del reto con un clic, ver el avance en un mapa de Manta y generar una propuesta de decreto para el alcalde en lenguaje simple. El cálculo corre en AWS (Lambda + Step Functions) o en un servidor local de respaldo.
+**Cómo se usa.** Una consola web (ver [Interfaz](#interfaz)) permite cambiar el contagio, las vacunas, el presupuesto y el punto de inicio, aplicar los **Brotes Sorpresa** del reto con un clic, ver el avance en un mapa de Manta y generar una propuesta de decreto para el alcalde en lenguaje simple. El cálculo corre en AWS (Lambda + Step Functions) o en un servidor local de respaldo.
 
 **Utilidad real.** Es, en pequeño, lo que usan los ministerios de salud para planificar vacunación, cierres o fumigación con recursos limitados.
 
@@ -147,9 +147,9 @@ _Un día de simulación: el COE recibe el presupuesto, ve los casos detectados, 
 
 | Defensa                       | Costo         | Qué hace                                                                      | Contagios que se espera evitar                                                                                                     |
 | ----------------------------- | ------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 🔥 **Cortafuegos en un hub**  | 220 $ por día | Cierra o fumiga un hub ese día: sus contactos contagian un 88% menos          | Riesgo de hoy entre los Zombies detectados del hub y sus contactos Sanos, × 0,88, × 2 (por los Zombies que aún nadie ha reportado) |
-| 🚑 **Brigada de aislamiento** | 65 $          | Aísla a un Zombie detectado: deja de contagiar                                | Riesgo diario de ese Zombie hacia sus contactos Sanos (día + noche) × los días de contagio que le quedan                           |
-| 💉 **Vacuna anillo + puente** | 15 $          | Vacuna a una persona Sana; funciona en el 85% de los casos y la vuelve Inmune | 0,85 × (65% por su cercanía a Zombies detectados + 35% por su centralidad puente) × β                                              |
+| **Cortafuegos en un hub**  | 220 $ por día | Cierra o fumiga un hub ese día: sus contactos contagian un 88% menos          | Riesgo de hoy entre los Zombies detectados del hub y sus contactos Sanos, × 0,88, × 2 (por los Zombies que aún nadie ha reportado) |
+| **Brigada de aislamiento** | 65 $          | Aísla a un Zombie detectado: deja de contagiar                                | Riesgo diario de ese Zombie hacia sus contactos Sanos (día + noche) × los días de contagio que le quedan                           |
+| **Vacuna anillo + puente** | 15 $          | Vacuna a una persona Sana; funciona en el 85% de los casos y la vuelve Inmune | 0,85 × (65% por su cercanía a Zombies detectados + 35% por su centralidad puente) × β                                              |
 
 **Vacunación anillo + puente.** Para cada persona Sana se combinan dos cosas:
 
@@ -158,7 +158,7 @@ _Un día de simulación: el COE recibe el presupuesto, ve los casos detectados, 
 
 **Regla de oro: nunca se vacuna a un infectado o inmune.** La lista de candidatos a vacuna se arma **solo con personas en estado Sano** que no hayan sido vacunadas antes. Además, cada dosis se audita: si alguna se aplicara a alguien que no está Sano, se contaría como desperdicio. El contador `wasted_vaccines_count` ha sido **0 en todas las simulaciones**.
 
-**Se adapta sola al 🎃 Brote Sorpresa.** No tiene reglas fijas del tipo "primero vacunar". Si el jurado baja la eficacia de la vacuna, el valor de vacunar baja automáticamente y el dinero se va a brigadas; si la plaga se vuelve mucho más contagiosa, cerrar hubs empieza a compensar. Por ejemplo, con una vacuna al 25% y el contagio de día al 0,18, el Escudo pasa de 10,7 a 63,6 brigadas y de 487 a 234 vacunas, sin cambiar el código.
+**Se adapta sola al Brote Sorpresa.** No tiene reglas fijas del tipo "primero vacunar". Si el jurado baja la eficacia de la vacuna, el valor de vacunar baja automáticamente y el dinero se va a brigadas; si la plaga se vuelve mucho más contagiosa, cerrar hubs empieza a compensar. Por ejemplo, con una vacuna al 25% y el contagio de día al 0,18, el Escudo pasa de 10,7 a 63,6 brigadas y de 487 a 234 vacunas, sin cambiar el código.
 
 **Cuándo usa cada defensa.** Con brotes controlables, le rinden más las brigadas (65 $) y las vacunas (15 $). Cerrar un hub cuesta 220 $ y solo protege un día, así que solo lo hace cuando la epidemia se descontrola y hay muchos contagios dentro de un mismo lugar (ver [docs/calibracion.md](docs/calibracion.md), fila 8).
 
@@ -168,9 +168,9 @@ _Un día de simulación: el COE recibe el presupuesto, ve los casos detectados, 
 
 | Estrategia                             | Qué hace                                                                                                                                                                                                                                                                                                                     |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🙅 **Sin intervención** (`none`)       | No gasta nada. Muestra qué pasa si nadie actúa.                                                                                                                                                                                                                                                                              |
-| 🎲 **Intervención al azar** (`random`) | Recibe **el mismo presupuesto** cada día y **la misma información** (los mismos Zombies detectados) que el Escudo. Cada compra es al azar: elige un tipo de acción cualquiera (hub, brigada o vacuna) y un objetivo cualquiera, sin mirar anillos ni puentes. También respeta la regla de oro: solo vacuna a personas Sanas. |
-| 🛡️ **Escudo Manta** (`shield`)         | La estrategia descrita arriba.                                                                                                                                                                                                                                                                                               |
+| **Sin intervención** (`none`)       | No gasta nada. Muestra qué pasa si nadie actúa.                                                                                                                                                                                                                                                                              |
+| **Intervención al azar** (`random`) | Recibe **el mismo presupuesto** cada día y **la misma información** (los mismos Zombies detectados) que el Escudo. Cada compra es al azar: elige un tipo de acción cualquiera (hub, brigada o vacuna) y un objetivo cualquiera, sin mirar anillos ni puentes. También respeta la regla de oro: solo vacuna a personas Sanas. |
+| **Escudo Manta** (`shield`)         | La estrategia descrita arriba.                                                                                                                                                                                                                                                                                               |
 
 Si el Escudo supera al azar, es porque **elige mejor**, no porque tenga más recursos.
 
@@ -245,9 +245,9 @@ Con los valores por defecto y la semilla 2026, el resultado debe ser exactamente
 
 | Estrategia                     | Contagiados     | Pico de zombies | Gasto   | Vacunas | Brigadas | Días de hubs cerrados |
 | ------------------------------ | --------------- | --------------- | ------- | ------- | -------- | --------------------- |
-| 🙅 Sin intervención            | 842,5 (753–922) | 279,6           | 0 $     | 0       | 0        | 0                     |
-| 🎲 Al azar (mismo presupuesto) | 51,4 (5–119)    | 16,3            | 7 995 $ | 178     | 15,7     | 19,6                  |
-| 🛡️ **Escudo Manta**            | **14,5 (6–25)** | **5,0**         | 7 996 $ | 487     | 10,7     | 0                     |
+| Sin intervención            | 842,5 (753–922) | 279,6           | 0 $     | 0       | 0        | 0                     |
+| Al azar (mismo presupuesto) | 51,4 (5–119)    | 16,3            | 7 995 $ | 178     | 15,7     | 19,6                  |
+| **Escudo Manta**            | **14,5 (6–25)** | **5,0**         | 7 996 $ | 487     | 10,7     | 0                     |
 
 Contagios evitados por el Escudo, comparados réplica a réplica: **828 frente a no hacer nada** (P10–P90: 738 a 909) y **36,9 frente al azar** (P10–P90: −8 a 101). El rango frente al azar empieza en negativo: en las repeticiones más favorables para el azar, el Escudo queda unas pocas personas por detrás, pero en promedio evita el 72% de los contagios que deja el azar. El azar gasta casi lo mismo, pero una buena parte en cerrar hubs al azar (19,6 días), que es la acción más cara.
 

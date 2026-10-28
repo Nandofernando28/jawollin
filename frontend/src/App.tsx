@@ -240,9 +240,10 @@ export default function App() {
                   key={p.id}
                   onClick={() => applyPreset(p.id)}
                   title={p.description}
-                  className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-2.5 py-1 text-xs font-medium text-[#3b3e47] transition hover:border-[#111a4a] hover:bg-white"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-2.5 py-1 text-xs font-medium text-[#3b3e47] transition hover:border-[#111a4a] hover:bg-white"
                 >
-                  {p.icon} {p.label}
+                  <p.icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {p.label}
                 </button>
               ))}
             </div>

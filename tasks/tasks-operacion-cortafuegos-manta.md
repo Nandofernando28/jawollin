@@ -1,6 +1,6 @@
 ## Documentos de Plan de Implementación por Fase
 
-> 👥 **Distribución para Equipo de 3 Personas:** Consulta [**plan-equipo-3-integrantes.md**](./plan-equipo-3-integrantes.md) para ver la asignación equitativa (**33.3% de esfuerzo cada uno** y cero conflictos de Git) dividida por carpetas y fases.
+> **Distribución para Equipo de 3 Personas:** Consulta [**plan-equipo-3-integrantes.md**](./plan-equipo-3-integrantes.md) para ver la asignación equitativa (**33.3% de esfuerzo cada uno** y cero conflictos de Git) dividida por carpetas y fases.
 
 Cada fase del plan central cuenta con su propio documento de implementación detallado bajo la estructura de `Rules/generate-tasks.md`:
 
@@ -29,7 +29,7 @@ Cada fase del plan central cuenta con su propio documento de implementación det
 - `frontend/src/components/MantaMap.tsx` - Componente de mapa interactivo SVG con reproducción día a día (Play, Pausa, Reset, Scrubber 0–30 días), coloración coroplética por densidad de zombies en parroquias, estado de hubs (abierto vs. cortafuegos activo) y visualización de anillos de vacunación.
 - `frontend/src/components/EpidemicCharts.tsx` - Componente de gráficas epidemiológicas SVG comparando las curvas SEIR-VQ de las 3 estrategias con bandas de incertidumbre P10-P90 y desglose de uso de presupuesto diario.
 - `frontend/src/components/MayorReportModal.tsx` - Componente de tarjeta/modal ejecutivo para mostrar el Boletín de Emergencia del Alcalde generado por Amazon Bedrock (o motor heurístico local).
-- `frontend/src/App.tsx` - Aplicación principal con estética de Centro de Control Epidemiológico (3 columnas), switch de conexión híbrida (`AWS Cloud` vs. `Local Server`), panel de sliders e inputs libres para responder en < 5 segundos al "🎃 Brote Sorpresa", tarjetas KPI de vidas salvadas y vista integrada.
+- `frontend/src/App.tsx` - Aplicación principal con estética de Centro de Control Epidemiológico (3 columnas), switch de conexión híbrida (`AWS Cloud` vs. `Local Server`), panel de sliders e inputs libres para responder en < 5 segundos al "Brote Sorpresa", tarjetas KPI de vidas salvadas y vista integrada.
 - `infra/template.yaml` - Plantilla AWS SAM / CloudFormation con API Gateway HTTP API, Step Functions Express Workflow, Lambdas Python 3.12 ARM64, DynamoDB On-Demand, S3 con expiración a 14 días y AWS Budget de $5.00 USD.
 - `docs/costos.md` - Desglose detallado del costo real durante el evento (~$0.02 USD) y proyección mensual en producción para el COE de Manta (~$2.00 USD/mes).
 - `README.md` - Documentación raíz con descripción del escenario, modelo matemático SEIR-VQ, supuestos y fuentes (INEC/MSP), semilla y parámetros por defecto para reproducibilidad, diagrama de arquitectura, captura del AWS Budget y guía de despliegue.
@@ -107,14 +107,14 @@ Update the file after completing each sub-task, not just after completing an ent
   - [ ] 6.3 Crear el componente `frontend/src/components/MayorReportModal.tsx` para presentar el **Boletín Ejecutivo para el Alcalde de Manta**, indicando el origen del reporte (`Amazon Bedrock AI` o `Motor Analítico COE`), las 3 secciones en lenguaje simple y opción de copiar/descargar directiva.
   - [ ] 6.4 Implementar `frontend/src/App.tsx` integrando la consola completa en 3 columnas con estética oscura de Centro de Operaciones de Emergencia:
     - **Header:** Título del proyecto, indicador de latencia y caché (`sim_hash`), estado de verificación `0% vacunas desperdiciadas` y **Switch Híbrido (`AWS Cloud` / `Servidor Local`)** con fallback automático si la petición de red falla.
-    - **Columna Izquierda (Panel de Parámetros Libres para el 🎃 Brote Sorpresa):** Inputs y sliders libres para Semilla (`seed`), Población (`n_nodes`), Réplicas Monte Carlo (`monte_carlo_runs`), Epicentro Inicial (`start_hub`), Pacientes Cero (`initial_infected`), Tasa de Contagio Diurno (`beta_day`) y Nocturno (`beta_night`), Días de Incubación (`incubation_days`), Días Infecciosos (`infectious_days`), Eficacia de Vacuna (`vaccine_efficacy`), Presupuesto Diario (`daily_budget`), Presupuesto Total (`total_budget`) y costos unitarios.
+    - **Columna Izquierda (Panel de Parámetros Libres para el Brote Sorpresa):** Inputs y sliders libres para Semilla (`seed`), Población (`n_nodes`), Réplicas Monte Carlo (`monte_carlo_runs`), Epicentro Inicial (`start_hub`), Pacientes Cero (`initial_infected`), Tasa de Contagio Diurno (`beta_day`) y Nocturno (`beta_night`), Días de Incubación (`incubation_days`), Días Infecciosos (`infectious_days`), Eficacia de Vacuna (`vaccine_efficacy`), Presupuesto Diario (`daily_budget`), Presupuesto Total (`total_budget`) y costos unitarios.
     - **Columna Central:** Mapa interactivo de Manta (`MantaMap.tsx`) + tabla comparativa por parroquia y hub en el día $t$.
     - **Columna Derecha:** Tarjetas KPI de alto impacto (**Vidas Salvadas vs. No Hacer Nada**, **Vidas Salvadas vs. Azar**, **Reducción del Pico Zombie %**, **Costo por Vida Salvada $**), gráficas (`EpidemicCharts.tsx`) y botón de acción para **Generar Boletín para el Alcalde**.
 
 - [ ] 7.0 Fase 7: Pruebas de Verificación, Reproducibilidad por Semilla, Despliegue AWS y Documentación de Entregables (README, Costos, Budget)
   - [ ] 7.1 Ejecutar la suite completa de pruebas unitarias de Python (`python -m unittest discover -s tests -v`) y validar que todas las pruebas de grafo, simulador, no-vacunación de infectados, determinismo por semilla y handlers pasen al 100%.
   - [ ] 7.2 Compilar el frontend de producción (`cd frontend && npm run build`) verificando que no existan errores de TypeScript ni de estilos en Tailwind v4.
-  - [ ] 7.3 Probar la integración extremo a extremo levantando `src/local_server.py` y verificando tiempos de respuesta $< 2$ segundos para 30 corridas Monte Carlo ante cambios de parámetros tipo "🎃 Brote Sorpresa" (doble de contagio, mitad de presupuesto, inicio en Mercado Tarqui, eficacia de vacuna al 50%).
+  - [ ] 7.3 Probar la integración extremo a extremo levantando `src/local_server.py` y verificando tiempos de respuesta $< 2$ segundos para 30 corridas Monte Carlo ante cambios de parámetros tipo "Brote Sorpresa" (doble de contagio, mitad de presupuesto, inicio en Mercado Tarqui, eficacia de vacuna al 50%).
   - [ ] 7.4 Completar el archivo `README.md` en la raíz del repositorio incluyendo todos los requisitos de la rúbrica de SpookyThon 2026:
     - Descripción del escenario en Manta y formulación matemática del modelo SEIR-VQ sobre red multicapa Día/Noche.
     - Tabla de supuestos, parámetros por defecto y semilla oficial (`seed = 2026`) para reproducir exactamente los resultados.

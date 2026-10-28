@@ -12,7 +12,7 @@
 ### Notes
 
 - **Regla de Oro del Jurado (Cero Vacunas Desperdiciadas):** El jurado penaliza severamente si se vacuna a quien ya está infectado (`MORDIDO` o `ZOMBIE`) o ya es inmune (`EXORCIZADO`). El filtro de candidatos para la Defensa 3 debe exigir `state[u] == STATE_SANO` (`0`) antes de aplicar cualquier dosis y registrar un contador de auditoría `wasted_vaccines = 0`.
-- **Resistencia al "🎃 Brote Sorpresa":** Si el jurado reduce la eficacia de la vacuna (`vaccine_efficacy = 0.3`) o duplica la tasa de contagio (`beta_day = 0.25`), el optimizador de ROI marginal debe detectarlo automáticamente en su fórmula de utilidad esperada por dólar y redirigir mayor presupuesto hacia **Cortafuegos de Hubs (Defensa 1)** y **Brigadas de Aislamiento (Defensa 2)**, evitando que la estrategia colapse.
+- **Resistencia al "Brote Sorpresa":** Si el jurado reduce la eficacia de la vacuna (`vaccine_efficacy = 0.3`) o duplica la tasa de contagio (`beta_day = 0.25`), el optimizador de ROI marginal debe detectarlo automáticamente en su fórmula de utilidad esperada por dólar y redirigir mayor presupuesto hacia **Cortafuegos de Hubs (Defensa 1)** y **Brigadas de Aislamiento (Defensa 2)**, evitando que la estrategia colapse.
 - **Comandos de prueba:** Ejecutar `python -m unittest tests/test_simulator.py -v` para validar esta fase.
 - **Piezas del modelo añadidas durante la implementación** (no estaban en el plan original; constantes en `simulator.py`, justificadas en el README):
   - `DETECTION_PROB = 0.35`: el COE solo conoce a los Zombies reportados; brigadas y vacunación en anillo actúan sobre casos detectados, y los Mordidos son invisibles.

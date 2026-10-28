@@ -9,13 +9,13 @@
 - `frontend/src/components/EpidemicCharts.tsx` - Componente de visualización de curvas epidemiológicas SEIR-VQ con bandas sombreadas de incertidumbre **P10–P90** y gráfica de asignación presupuestaria diaria por tipo de defensa.
 - `frontend/src/components/MayorReportModal.tsx` - Modal/panel ejecutivo para presentar el Boletín Oficial para el Alcalde de Manta generado por Amazon Bedrock (o motor heurístico del COE), con botón de copia rápida al portapapeles.
 - `frontend/src/services/api.ts` - Cliente HTTP con soporte para el Switch Híbrido (`AWS Cloud API Gateway` vs `Local Python Server localhost:8000`) y fallback transparente automático en caso de error de red.
-- `frontend/src/App.tsx` - Consola principal de 3 columnas (*Control de Crisis Epidemiológica*), panel de sliders e inputs libres para responder en vivo al **🎃 Brote Sorpresa**, tarjetas de KPIs cuantitativos y estado de auditoría de reproducibilidad.
+- `frontend/src/App.tsx` - Consola principal de 3 columnas (*Control de Crisis Epidemiológica*), panel de sliders e inputs libres para responder en vivo al **Brote Sorpresa**, tarjetas de KPIs cuantitativos y estado de auditoría de reproducibilidad.
 - `frontend/src/index.css` - Estilos base en Tailwind CSS v4 y animaciones sutiles de pulso para focos infecciosos y escudos activos.
 
 ### Notes
 
 - **Criterio de Producto (15% en Rúbrica Base):** *"Que una persona real pueda usarlo sin explicación."* Cada control deslizante debe mostrar claramente su valor actual, unidades (`%`, `días`, `$ USD`, `personas`) y una breve descripción de qué representa en la realidad de Manta.
-- **Diseño para el "🎃 Brote Sorpresa" (Sin Presets Rígidos):** Tal como se definió en el PRD (Decisión #2 = Opción B), el panel izquierdo debe ofrecer **únicamente sliders e inputs numéricos libres** sin botones de presets prefabricados, permitiendo al equipo ajustar en segundos cualquier combinación arbitraria que dicte el jurado (ej. cambiar semilla, duplicar contagio diurno, bajar eficacia de vacuna, reducir presupuesto o cambiar el epicentro inicial a un mercado).
+- **Diseño para el "Brote Sorpresa" (Sin Presets Rígidos):** Tal como se definió en el PRD (Decisión #2 = Opción B), el panel izquierdo debe ofrecer **únicamente sliders e inputs numéricos libres** sin botones de presets prefabricados, permitiendo al equipo ajustar en segundos cualquier combinación arbitraria que dicte el jurado (ej. cambiar semilla, duplicar contagio diurno, bajar eficacia de vacuna, reducir presupuesto o cambiar el epicentro inicial a un mercado).
 - **Código de Colores Oficial del Reto:**
   - 🟢 **Sano (Susceptible):** Esmeralda (`#10b981`)
   - 🟡 **Mordido (Expuesto):** Ámbar (`#f59e0b`)
@@ -61,8 +61,8 @@ Update the file after completing each sub-task, not just after completing an ent
     - Anillo verde/azul pulsante cuando se están aplicando vacunas de anillo alrededor del foco.
     - Tooltip detallado al hacer clic o pasar el cursor sobre cualquier parroquia o hub.
   - [x] 2.4 *(Play/Pause a 400 ms por día con velocidades ×1/×2/×5, reinicio y slider; el selector de estrategia está en la barra de la consola. Sin indicador día/noche.)* Implementar la barra de control temporal (Scrubber Día `0` a `days`):
-    - Botón **Play / Pause** (animación automática a 350 ms por día), botón **Reiniciar (Día 0)**, slider interactivo día a día e indicador de **Fase Diurna ☀️ (Hubs y Buses)** vs **Fase Nocturna 🌙 (Hogares y Barrios)**.
-    - Selector de vista comparativa en el mapa: `🛡️ Cortafuegos Manta (Nuestra Estrategia)` vs `🎲 Intervención al Azar (Línea Base 2)` vs `💀 Sin Intervención (Línea Base 1)`.
+    - Botón **Play / Pause** (animación automática a 350 ms por día), botón **Reiniciar (Día 0)**, slider interactivo día a día e indicador de **Fase Diurna (Hubs y Buses)** vs **Fase Nocturna (Hogares y Barrios)**.
+    - Selector de vista comparativa en el mapa: `Cortafuegos Manta (Nuestra Estrategia)` vs `Intervención al Azar (Línea Base 2)` vs `Sin Intervención (Línea Base 1)`.
 
 - [x] 3.0 Construir el Módulo de Gráficas Epidemiológicas P10–P90 (`frontend/src/components/EpidemicCharts.tsx`)
   - [x] 3.1 Implementar la **Gráfica 1 — Comparativa de Curvas de Contagio (3 Estrategias con Bandas P10–P90)**:
@@ -70,7 +70,7 @@ Update the file after completing each sub-task, not just after completing an ent
       - `Sin Intervención` (rojo discontinuo)
       - `Intervención al Azar` (ámbar)
       - `Cortafuegos Manta` (esmeralda/cian brillante)
-    - Permitir alternar la métrica graficada entre **🔴 Zombies Activos por Día** y **📈 Acumulado Total de Contagiados**.
+    - Permitir alternar la métrica graficada entre **🔴 Zombies Activos por Día** y **Acumulado Total de Contagiados**.
     - Mostrar una línea vertical sincronizada con el `currentDay` del mapa interactivo.
   - [x] 3.2 *(El gasto se muestra por día y por defensa, no acumulado.)* Implementar la **Gráfica 2 — Dinámica de Estados SEIR-VQ y Desglose de Defensas**:
     - Mostrar la evolución diaria de los 5 estados (🟢 Sanos, 🟡 Mordidos, 🔴 Zombies, 🟣 Aislados, 🔵 Exorcizados/Inmunes) en la estrategia *Cortafuegos Manta*.
@@ -82,13 +82,13 @@ Update the file after completing each sub-task, not just after completing an ent
 
 - [x] 5.0 Ensamblar la Consola Principal de 3 Columnas en `frontend/src/App.tsx`
   - [x] 5.1 *(El estado online se ve desde 1 280 px; `sim_hash`, tiempo de cómputo y "Calculado / Desde caché" van en la barra bajo la cabecera; "0 dosis desperdiciadas" en la tarjeta de gasto.)* **Barra Superior (Header Operativo):**
-    - Identidad visual: *"🧟‍♂️ OPERACIÓN CORTAFUEGOS MANTA · Comité de Contención Epidemiológica (SpookyThon 2026 · Track B)"*.
-    - **Switch Híbrido de Servidor:** Selector interactivo `☁️ AWS Cloud (us-east-1)` / `💻 Local Server (Contingencia ULEAM)` con badge de estado online, tiempo de respuesta (`ms`), badge de reproducibilidad (`sim_hash` y `Cache Hit / Computed`) y check verde `✅ 0 Vacunas Desperdiciadas en Infectados`.
-  - [x] 5.2 *(En la pantalla "Parámetros", no en una columna; los campos numéricos aplican el valor al salir o con Enter.)* **Columna Izquierda — Panel de Parámetros Libres (Calibración y 🎃 Brote Sorpresa):**
+    - Identidad visual: *"OPERACIÓN CORTAFUEGOS MANTA · Comité de Contención Epidemiológica (SpookyThon 2026 · Track B)"*.
+    - **Switch Híbrido de Servidor:** Selector interactivo `AWS Cloud (us-east-1)` / `Local Server (Contingencia ULEAM)` con badge de estado online, tiempo de respuesta (`ms`), badge de reproducibilidad (`sim_hash` y `Cache Hit / Computed`) y check verde `0 Vacunas Desperdiciadas en Infectados`.
+  - [x] 5.2 *(En la pantalla "Parámetros", no en una columna; los campos numéricos aplican el valor al salir o con Enter.)* **Columna Izquierda — Panel de Parámetros Libres (Calibración y Brote Sorpresa):**
     - Sección 1 — *Semilla y Escenario Base*: Input numérico para **Semilla Determinista (`seed`)**, selector de **Epicentro Inicial (`start_hub`)** (`Mercado Tarqui`, `ULEAM`, `Mercado Central`, `Empacadoras Los Esteros`, `Terminal Terrestre`, `Aleatorio`), slider de **Población Red (`n_nodes`)**, **Pacientes Cero (`initial_infected`)**, **Horizonte (`days`)** y **Corridas Monte Carlo (`monte_carlo_runs`)**.
     - Sección 2 — *Parámetros Biológicos de la Plaga*: Sliders e inputs numéricos libres para **Tasa de Contagio Diurno ($\beta_{\text{day}}$)**, **Tasa de Contagio Nocturno ($\beta_{\text{night}}$)**, **Período de Incubación ($\tau_{\text{inc}}$ días)** y **Duración Infecciosa ($\gamma$ días)**.
     - Sección 3 — *Recursos Limitados y Costos (*Escudo Manta*)*: Sliders e inputs libres para **Eficacia de Vacuna ($\eta_{\text{vac}}$ %)**, **Presupuesto Diario ($/día)**, **Presupuesto Total ($ USD)**, y costos unitarios (**Costo Vacuna $**, **Costo Brigada $**, **Costo Cierre Hub $/día**).
-    - Botón primario **"🚀 Ejecutar Simulación Monte Carlo"** y botón secundario **"↺ Restaurar Parámetros por Defecto (`seed=2026`)"**.
+    - Botón primario **"Ejecutar Simulación Monte Carlo"** y botón secundario **"↺ Restaurar Parámetros por Defecto (`seed=2026`)"**.
   - [x] 5.3 **Columna Central — Territorio y Avance Espacial:**
     - Componente `MantaMap.tsx` arriba y tabla detallada en vivo abajo mostrando por cada una de las 5 Parroquias y 5 Hubs los casos activos, personas inmunizadas y defensas desplegadas en el día seleccionado.
   - [x] 5.4 *(Las tarjetas KPI van en una fila sobre el mapa; el botón "Boletín COE" está en la cabecera.)* **Columna Derecha — Impacto Cuantitativo, Curvas P10–P90 y Boletín del Alcalde:**
@@ -98,7 +98,7 @@ Update the file after completing each sub-task, not just after completing an ent
       3. **Pico de Zombies Evitado** (reducción % del pico hospitalario/infeccioso).
       4. **Eficiencia Presupuestaria** (Costo por vida salvada en USD + desglose de dosis, brigadas y cierres ejecutados).
     - Componente `EpidemicCharts.tsx`.
-    - Botón destacado **"🏛️ Generar Boletín Ejecutivo para el Alcalde (Amazon Bedrock)"**.
+    - Botón destacado **"Generar Boletín Ejecutivo para el Alcalde (Amazon Bedrock)"**.
 
 - [x] 6.0 Verificación de la Fase 6
   - [x] 6.1 Ejecutar `npm run build` en `frontend/` y verificar que TypeScript (`tsc -b`) y Vite generen el bundle de producción en `frontend/dist/` con cero errores.
