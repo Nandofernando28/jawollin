@@ -25,7 +25,7 @@ La estrategia, **Escudo Manta**, elige cada día la acción que más contagios e
 | Personas contagiadas (de 1 200) | 842 (70%)        | 51      | **14,5**         |
 | Pico de zombies a la vez        | 279,6            | 16,3    | **5,0**          |
 
-El Escudo evita el **98%** de los contagios frente a no hacer nada y el **72%** frente al azar, sin vacunar nunca a quien ya está infectado o es inmune. Escalado a los 271 000 habitantes de Manta, son unos **187 000 contagios evitados**.
+El Escudo evita el **98%** de los contagios frente a no hacer nada y el **72%** frente al azar, sin vacunar nunca a quien ya está infectado o es inmune. Todas las cifras son sobre la población simulada (1 200 personas por defecto), la que se configura al iniciar; no se escalan a la población real de Manta.
 
 **Cómo se usa.** Una consola web (ver [Interfaz](#interfaz)) permite cambiar el contagio, las vacunas, el presupuesto y el punto de inicio, aplicar los **Brotes Sorpresa** del reto con un clic, ver el avance en un mapa de Manta y generar una propuesta de decreto para el alcalde en lenguaje simple. El cálculo corre en AWS (Lambda + Step Functions) o en un servidor local de respaldo.
 
@@ -286,7 +286,7 @@ El botón de informe genera una **propuesta de decreto del COE** en lenguaje sim
 
 - **Sale de los resultados, no de plantillas fijas.** Las acciones se ordenan según el dinero que el Escudo puso en cada defensa. Un hub solo aparece como cerrado si la simulación lo cerró; si no, el informe explica que cerrar no compensa y recomienda vigilarlo.
 - **Nombra el Brote Sorpresa.** Compara los parámetros con el escenario base y describe cada cambio (más contagio, vacuna que cubre a medias, menos presupuesto, otro punto de inicio) y cómo se repartió el dinero.
-- **Lleva las cifras a escala de Manta.** Cada persona de la muestra de 1 200 equivale a unos 226 habitantes (271 000 / 1 200), el mismo factor que usa la interfaz.
+- **Usa la población configurada.** Las cifras se dan sobre la población simulada que se eligió al iniciar (por defecto 1 200 personas), igual que la interfaz, sin escalarlas a la población real de Manta.
 - **Es determinista:** la misma simulación produce el mismo informe.
 
 **Amazon Bedrock es opcional y está apagado por defecto** (`UseBedrock=false` en [`infra/template.yaml`](infra/template.yaml)). Lo dejamos así por dos razones: nuestra cuenta de AWS es nueva y no tiene acceso a los modelos fundacionales, y el informe heurístico no puede inventar cifras, mientras que un modelo de lenguaje sí podría. Si se activa, el modelo recibe solo los datos de la simulación; si falla, tarda más de 8 s o responde algo que no cumple el formato, se usa el informe heurístico.
@@ -353,7 +353,7 @@ Todo modelo simplifica la realidad. Estas son las simplificaciones conocidas del
 | **Estrategia voraz por contagios evitados por dólar** | Decide en milisegundos, se explica en una frase y se adapta sola al Brote Sorpresa porque recalcula cada día. | Aprendizaje por refuerzo u optimización global: difíciles de explicar al jurado y lentos para ajustar en 5 minutos. |
 | **El COE solo ve los casos detectados** (35% diario) | Sin esta regla, la estrategia aislaría a los pacientes cero el primer día, algo imposible en la realidad. | Dar a la estrategia información perfecta sobre quién está infectado. |
 | **Las 3 estrategias enfrentan el mismo brote** (números aleatorios comunes) | La diferencia entre estrategias se debe a la estrategia, no a la suerte de cada simulación. | Simular cada estrategia con un azar independiente, que necesitaría muchas más repeticiones. |
-| **Muestra de 1 200 personas** escalada a Manta | Mantiene la estructura de hogares, hubs y buses y corre en ~1 s, dentro de los 5 minutos del Brote Sorpresa. | Simular los 271 000 habitantes, mucho más lento sin cambiar las conclusiones. |
+| **Población simulada de 1 200 personas** en lugar de toda Manta | Mantiene la estructura de hogares, hubs y buses y corre en ~1 s, dentro de los 5 minutos del Brote Sorpresa. | Simular los 271 000 habitantes, mucho más lento sin cambiar las conclusiones. |
 | **Serverless** (Lambda + Step Functions + DynamoDB + S3) | Las repeticiones corren en paralelo y, sin uso, el costo es prácticamente cero. | Servidores o contenedores encendidos todo el día (EC2, Fargate), que cuestan aunque nadie use la herramienta. |
 | **Caché por configuración y semilla** (`sim_hash` en DynamoDB) | La misma configuración devuelve al instante el mismo resultado: refuerza la reproducibilidad y ahorra cómputo. | Recalcular siempre. |
 | **Servidor local con la misma API** (`src/local_server.py`) | Si falla la conexión con AWS durante la demo, la consola sigue funcionando en un portátil. | Depender solo de la nube. |
@@ -410,7 +410,7 @@ Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos lo
 
 | Tarjeta                 | Qué dice                                                                                               |
 | ----------------------- | ------------------------------------------------------------------------------------------------------ |
-| Contagios evitados      | Frente a no hacer nada, escalado a los 271 000 habitantes de Manta (y la cifra de la muestra).         |
+| Contagios evitados      | Frente a no hacer nada, sobre la población configurada al iniciar la simulación.                      |
 | Frente a actuar al azar | Lo que aporta elegir bien con el mismo presupuesto.                                                    |
 | Pico de zombies         | Cuánto baja el máximo de casos simultáneos, y el pico de cada estrategia.                              |
 | Gasto ejecutado         | Gasto, dosis, brigadas, días de cierre, costo por contagio evitado y dosis desperdiciadas (siempre 0). |

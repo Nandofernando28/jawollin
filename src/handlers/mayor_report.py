@@ -26,8 +26,6 @@ from src.handlers.orchestrator import get_cached_simulation
 
 logger = logging.getLogger(__name__)
 
-# Mismo factor de escala que usa el frontend (KpiCards): 271 000 / n_nodes
-MANTA_POPULATION = 271_000
 # Por debajo de esta eficacia la vacuna "cubre a medias" (Brote Sorpresa)
 SURPRISE_EFFICACY_THRESHOLD = 0.55
 VALID_PRIORITIES = ("CRITICA", "ALTA", "MEDIA")
@@ -198,7 +196,6 @@ def extract_executive_context(sim_data: Dict[str, Any]) -> Dict[str, Any]:
     sim_hash = str(sim_data.get("sim_hash") or params.get("sim_hash") or "cf-manta-sim")
 
     total_pop = int(kpis.get("total_population") or _param(params, "n_nodes"))
-    scale = MANTA_POPULATION / max(total_pop, 1)
     start_hub = str(_param(params, "start_hub"))
     timeline_none = spatial_timelines.get("none") or []
     timeline_shield = spatial_timelines.get("shield") or []
@@ -230,8 +227,7 @@ def extract_executive_context(sim_data: Dict[str, Any]) -> Dict[str, Any]:
 
     total_spent = round(float(kpis.get("total_budget_spent", 0.0)), 2)
     cost_per_life = round(float(kpis.get("cost_per_life_saved_vs_random", 0.0)), 2) if lives_saved_random > 0 else 0.0
-    # Costo por contagio evitado frente a no actuar. No cambia con la escala:
-    # gasto y contagios crecen en la misma proporción al pasar de la muestra a Manta.
+    # Costo por contagio evitado frente a no actuar, sobre la población simulada
     cost_per_avoided = round(total_spent / lives_saved_none, 2) if lives_saved_none > 0 else 0.0
     efficacy = float(_param(params, "vaccine_efficacy"))
     changes = detect_scenario_changes(params)
@@ -263,10 +259,8 @@ def extract_executive_context(sim_data: Dict[str, Any]) -> Dict[str, Any]:
         "lives_saved_vs_none": lives_saved_none,
         "peak_reduction_pct": round(float(kpis.get("peak_reduction_vs_none_pct", 0.0)), 1),
         "budget_spent_usd": total_spent,
-        "budget_manta_equivalent_usd": round(total_spent * scale, -3),
         "cost_per_life_saved_usd": cost_per_life,
         "cost_per_infection_avoided_usd": cost_per_avoided,
-        "scale_factor": round(scale, 2),
         "most_critical_parish": parish_name,
         "critical_hubs_intervened": [h["name"] for h in hubs_detail],
     }
@@ -277,7 +271,6 @@ def extract_executive_context(sim_data: Dict[str, Any]) -> Dict[str, Any]:
         "monte_carlo_runs": _param(params, "monte_carlo_runs"),
         "days": _param(params, "days"),
         "total_population": total_pop,
-        "scale_factor": scale,
         "total_infected_none": infected_none,
         "total_infected_none_pct": round(100 * infected_none / max(total_pop, 1), 1),
         "lives_saved_vs_none": lives_saved_none,
@@ -294,7 +287,6 @@ def extract_executive_context(sim_data: Dict[str, Any]) -> Dict[str, Any]:
         "vaccine_parish": (MANTA_PARISHES[MANTA_HUBS[vaccine_hub]["parish"]]["name"] if vaccine_hub
                            else MANTA_PARISHES[brigade_parish_id]["name"]),
         "cost_per_infection_avoided_usd": cost_per_avoided,
-        "budget_manta_equivalent_usd": metrics_snapshot["budget_manta_equivalent_usd"],
         "peak_reduction_vs_none_pct": metrics_snapshot["peak_reduction_pct"],
         "most_critical_parish_id": parish_id,
         "most_critical_parish": parish_name,
@@ -362,14 +354,14 @@ def build_bedrock_prompts(ctx: Dict[str, Any]) -> Tuple[str, str]:
         "- Usa solo los datos que te doy. No inventes cifras, hospitales, instituciones ni números de decreto.\n"
         "- Copia las cifras tal como te las doy: una cifra que no esté en los datos invalida la respuesta.\n"
         "- Si los días de cierre de hubs son 0, NO recomiendes cerrar hubs: recomienda vigilarlos.\n"
-        "- Las cifras son de una muestra a escala; usa las equivalencias para Manta que te doy.\n"
+        "- Las cifras son de la población simulada que se configuró al iniciar; no las lleves a la población real de Manta.\n"
         "- Menciona los rangos: el plan gana en promedio, no necesariamente en cada simulación.\n"
         "Responde EXCLUSIVAMENTE con un objeto JSON válido con esta estructura (texto en Markdown):\n"
         "{\n"
         '  "headline": "Titular de la propuesta de decreto",\n'
         '  "situacion_critica": "### Considerando, y una lista de frases que empiezan con Que: qué pasaría sin actuar y dónde golpea más el brote.",\n'
         '  "directivas_operativas": "### Decreta, y un **Artículo N.** por defensa en el orden del gasto real: qué hacer, dónde y en qué días.",\n'
-        '  "balance_recursos": "### Anexo: balance de recursos. Contagios evitados con sus rangos, gasto en la muestra y en Manta, costo por contagio evitado.",\n'
+        '  "balance_recursos": "### Anexo: balance de recursos. Contagios evitados con sus rangos, gasto y costo por contagio evitado.",\n'
         '  "action_items": [\n'
         '    {"title": "Acción breve", "description": "Detalle operativo", "priority": "CRITICA|ALTA|MEDIA", "parish_or_hub": "Lugar"}\n'
         "  ]\n"
@@ -394,14 +386,11 @@ def build_bedrock_prompts(ctx: Dict[str, Any]) -> Tuple[str, str]:
 
     user_prompt = (
         "Datos de la simulación:\n"
-        f"- Muestra: {ctx['total_population']:,} personas que representan a los {MANTA_POPULATION:,} habitantes de Manta "
-        f"(cada persona de la muestra equivale a {ctx['scale_factor']:.0f} habitantes).\n"
+        f"- Población simulada: {ctx['total_population']:,} personas.\n"
         f"- Sin intervenir se contagiaría el {ctx['total_infected_none_pct']}% de la población.\n"
         f"- Parroquia con más contagios sin intervenir: {ctx['most_critical_parish']}. El brote empieza en {ctx['start_hub_name']}.\n"
-        f"- Contagios evitados frente a no hacer nada: {ctx['lives_saved_vs_none']:,.0f} en la muestra "
-        f"(unos {ctx['lives_saved_vs_none'] * ctx['scale_factor']:,.0f} habitantes de Manta).\n"
-        f"- Contagios evitados frente a gastar lo mismo al azar: {ctx['lives_saved_vs_random']:,.0f} en la muestra "
-        f"(unos {ctx['lives_saved_vs_random'] * ctx['scale_factor']:,.0f} habitantes).\n"
+        f"- Contagios evitados frente a no hacer nada: {ctx['lives_saved_vs_none']:,.0f} personas.\n"
+        f"- Contagios evitados frente a gastar lo mismo al azar: {ctx['lives_saved_vs_random']:,.0f} personas.\n"
         f"- Reducción del pico de casos activos: {ctx['peak_reduction_vs_none_pct']}%.\n"
         f"- Gasto: {ctx['budget_spent_usd']:,.2f} $ de {ctx['total_budget_usd']:,.0f} $ "
         f"({share['vaccine']}% vacunas, {share['brigade']}% brigadas, {share['hub']}% cierres de hubs).\n"
@@ -415,8 +404,7 @@ def build_bedrock_prompts(ctx: Dict[str, Any]) -> Tuple[str, str]:
         f"brigadas {_days(phases.get('brigade'))}; cierres {_days(phases.get('hub'))}; {exhausted}.\n"
         f"- Rangos en el {PHASE_SHARE * 100:.0f}% central de las simulaciones: contagios evitados frente a no hacer nada "
         f"{_rng(ctx['lives_saved_vs_none_range'])}; frente al azar {_rng(ctx['lives_saved_vs_random_range'])}.\n"
-        f"- Costo por contagio evitado frente a no actuar: {ctx['cost_per_infection_avoided_usd']:,.2f} $ "
-        f"(igual en la muestra y en Manta). Gasto equivalente para toda Manta: {ctx['budget_manta_equivalent_usd']:,.0f} $.\n"
+        f"- Costo por contagio evitado frente a no actuar: {ctx['cost_per_infection_avoided_usd']:,.2f} $.\n"
         f"- Cambios del escenario (Brote Sorpresa): {changes}.\n\n"
         "Genera ÚNICAMENTE el JSON solicitado sin texto introductorio ni explicaciones adicionales."
     )
@@ -542,9 +530,9 @@ def _n(value: float, decimals: int = 0) -> str:
     return f"{value:,.{decimals}f}".replace(",", " ").replace(".", ",")
 
 
-def _people(sample_count: float, scale: float, noun: str = "personas") -> str:
-    """Cifra de la muestra y su equivalente aproximado en habitantes de Manta."""
-    return f"**{_n(sample_count)} {noun}** en la muestra (unos **{_n(sample_count * scale)} habitantes** de Manta)"
+def _people(count: float, total_population: int, noun: str = "personas") -> str:
+    """Cifra de la simulación junto a la población configurada al iniciarla."""
+    return f"**{_n(count)} {noun}** de una población simulada de {_n(total_population)} personas"
 
 
 def _range_text(bounds: Optional[Tuple[float, float]]) -> str:
@@ -574,7 +562,7 @@ def build_heuristic_mayor_report(context_data: Dict[str, Any]) -> Dict[str, Any]
     cerrados si la simulación los cerró.
     """
     ctx = context_data
-    scale = ctx["scale_factor"]
+    population = ctx["total_population"]
     parish = ctx["most_critical_parish"]
     brigade_parish = ctx["brigade_parish"]
     vaccine_place = ctx["vaccine_hub_name"] or ctx["vaccine_parish"]
@@ -598,9 +586,9 @@ def build_heuristic_mayor_report(context_data: Dict[str, Any]) -> Dict[str, Any]
     considerando = [
         "### Considerando",
         f"- Que, sin ninguna intervención, la simulación proyecta que se contagiaría el "
-        f"**{_n(ctx['total_infected_none_pct'], 1)}% de la población**: {_people(ctx['total_infected_none'], scale)}. "
+        f"**{_n(ctx['total_infected_none_pct'], 1)}% de la población**: {_people(ctx['total_infected_none'], population)}. "
         f"El brote empieza en **{ctx['start_hub_name']}** y la parroquia con más contagios sería **{parish}**.",
-        f"- Que el plan Escudo Manta evita {_people(ctx['lives_saved_vs_none'], scale, 'contagios')} frente a no "
+        f"- Que el plan Escudo Manta evita {_people(ctx['lives_saved_vs_none'], population, 'contagios')} frente a no "
         f"actuar.{_range_text(ctx['lives_saved_vs_none_range'])}",
     ]
     if changes:
@@ -611,8 +599,7 @@ def build_heuristic_mayor_report(context_data: Dict[str, Any]) -> Dict[str, Any]
     )
     considerando.append(
         f"*Cifras promedio de {ctx['monte_carlo_runs']} simulaciones de {ctx['days']} días con la semilla {ctx['seed']}. "
-        f"La muestra de {_n(ctx['total_population'])} personas representa a Manta a escala "
-        f"(cada persona equivale a unos {_n(scale)} habitantes).*"
+        f"Población simulada: {_n(population)} personas, la que se configuró al iniciar la simulación.*"
     )
     situacion_critica = "\n\n".join(considerando)
 
@@ -660,14 +647,14 @@ def build_heuristic_mayor_report(context_data: Dict[str, Any]) -> Dict[str, Any]
         )
     directivas_operativas = "\n\n".join(decreta)
 
-    # 4. Anexo: balance de recursos, con rangos y a escala de Manta
+    # 4. Anexo: balance de recursos, con rangos, sobre la población simulada
     random_range = ctx["lives_saved_vs_random_range"]
     balance_lines = [
         "### Anexo: balance de recursos",
-        f"- **Contagios evitados frente a no hacer nada:** {_people(ctx['lives_saved_vs_none'], scale, 'contagios')} "
+        f"- **Contagios evitados frente a no hacer nada:** {_people(ctx['lives_saved_vs_none'], population, 'contagios')} "
         f"({_n(ctx['lives_saved_vs_none_pct'], 1)}% menos).{_range_text(ctx['lives_saved_vs_none_range'])}",
         f"- **Contagios evitados frente a gastar lo mismo al azar:** "
-        f"{_people(ctx['lives_saved_vs_random'], scale, 'contagios')} ({_n(ctx['lives_saved_vs_random_pct'], 1)}% menos)."
+        f"{_people(ctx['lives_saved_vs_random'], population, 'contagios')} ({_n(ctx['lives_saved_vs_random_pct'], 1)}% menos)."
         f"{_range_text(random_range)}",
     ]
     if random_range and random_range[0] <= 0 < ctx["lives_saved_vs_random"]:
@@ -677,18 +664,17 @@ def build_heuristic_mayor_report(context_data: Dict[str, Any]) -> Dict[str, Any]
         )
     if ctx["infected_shield_range"]:
         lo, hi = ctx["infected_shield_range"]
-        balance_lines.append(f"- **Contagiados con el plan:** entre {_n(lo)} y {_n(hi)} personas de la muestra "
+        balance_lines.append(f"- **Contagiados con el plan:** entre {_n(lo)} y {_n(hi)} personas simuladas "
                              "en el 80% central de las simulaciones.")
     balance_lines += [
         f"- **Pico de casos activos:** {_n(ctx['peak_reduction_vs_none_pct'], 1)}% más bajo que sin intervención.",
-        f"- **Gasto:** {_n(ctx['budget_spent_usd'])} $ de {_n(ctx['total_budget_usd'])} $ disponibles para la muestra "
-        f"de {_n(ctx['total_population'])} personas ({_n(ctx['remaining_budget_usd'])} $ sin usar). Para toda Manta, "
-        f"el mismo gasto por habitante equivale a unos **{_n(ctx['budget_manta_equivalent_usd'])} $**.",
+        f"- **Gasto:** {_n(ctx['budget_spent_usd'])} $ de {_n(ctx['total_budget_usd'])} $ disponibles para la población "
+        f"simulada de {_n(population)} personas ({_n(ctx['remaining_budget_usd'])} $ sin usar).",
     ]
     if ctx["cost_per_infection_avoided_usd"] > 0:
         balance_lines.append(
             f"- **Costo por contagio evitado:** unos **{_n(ctx['cost_per_infection_avoided_usd'], 2)} $** frente a no "
-            "actuar. Es igual en la muestra y en Manta, porque el gasto y los contagios crecen en la misma proporción."
+            "actuar."
         )
     if ctx["lives_saved_vs_random"] <= 0:
         balance_lines.append(

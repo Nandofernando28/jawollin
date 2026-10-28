@@ -7,6 +7,7 @@ import React from 'react';
 import type { HubId, ParishId, SimulationResponse, SpatialDaySnapshot, StrategyType } from '../types/simulation';
 import { MantaMap } from './MantaMap';
 import { ExpansionDetector } from './ExpansionDetector';
+import { VirusStatusBadge } from './VirusStatusBadge';
 import { PixelIcon } from './PixelIcon';
 import { STATE_COLOR, STATE_LABEL } from '../theme/pixelTheme';
 
@@ -98,6 +99,7 @@ export function LiveSimulation(props: LiveSimulationProps) {
               <p className="mc-label text-[#d8d8d8]">Paso 2 · Simulación en vivo</p>
               <h2 className="mc-title text-[20px]">Día {currentDay} de {days}</h2>
             </div>
+            <VirusStatusBadge cumulative={result.strategies[props.strategy].ever_infected.mean} day={currentDay} />
           </div>
           <div className="flex flex-wrap gap-2">
             {STRATEGY_OPTIONS.map((o) => (
