@@ -11,6 +11,7 @@ Incluye:
 """
 
 import heapq
+import math
 from typing import Dict, Any, List, Optional, Sequence, Set
 
 import numpy as np
@@ -81,162 +82,64 @@ def _clamp(val: float, min_val: float, max_val: float) -> float:
     return max(min_val, min(max_val, val))
 
 
+def _float_param(raw: Dict[str, Any], key: str, min_val: float, max_val: float) -> float:
+    """Lee un número acotado; si no es un número finito, usa el valor por defecto."""
+    try:
+        value = float(raw.get(key, DEFAULT_SIMULATION_PARAMS[key]))
+    except (ValueError, TypeError):
+        return float(DEFAULT_SIMULATION_PARAMS[key])
+    if not math.isfinite(value):
+        return float(DEFAULT_SIMULATION_PARAMS[key])
+    return float(_clamp(value, min_val, max_val))
+
+
+def _int_param(raw: Dict[str, Any], key: str, min_val: int, max_val: int) -> int:
+    """Como _float_param pero entero: acepta "1500" y también "1500.0"."""
+    return int(_clamp(int(_float_param(raw, key, float("-inf"), float("inf"))), min_val, max_val))
+
+
+def parse_bool(value: Any) -> bool:
+    """Interpreta "false", "0", "no" y "" como falso (bool("false") sería True)."""
+    if isinstance(value, str):
+        return value.strip().lower() not in ("", "false", "0", "no", "off")
+    return bool(value)
+
+
 def normalize_simulation_params(raw_params: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     Sanea, castea y acota a rangos seguros (clamping) los parámetros de la simulación.
     Garantiza que cualquier combinación recibida (incluso en el Brote Sorpresa)
     sea matemáticamente válida y segura para ejecución local y en AWS Lambda.
+    Los rangos son los mismos que ofrece la interfaz. Con el máximo de población,
+    días y réplicas, cada lote de 5 réplicas de un worker tarda unos 2 s.
     """
     raw = raw_params or {}
 
-    try:
-        n_nodes = int(_clamp(int(raw.get("n_nodes", DEFAULT_SIMULATION_PARAMS["n_nodes"])), 100, 10000))
-    except (ValueError, TypeError):
-        n_nodes = DEFAULT_SIMULATION_PARAMS["n_nodes"]
-
-    try:
-        seed = int(raw.get("seed", DEFAULT_SIMULATION_PARAMS["seed"]))
-    except (ValueError, TypeError):
-        seed = DEFAULT_SIMULATION_PARAMS["seed"]
+    n_nodes = _int_param(raw, "n_nodes", 200, 5000)
+    seed = _int_param(raw, "seed", -(2 ** 31), 2 ** 31 - 1)
 
     raw_hub = str(raw.get("start_hub", DEFAULT_SIMULATION_PARAMS["start_hub"])).lower().strip()
     start_hub = raw_hub if raw_hub in VALID_START_HUBS else DEFAULT_SIMULATION_PARAMS["start_hub"]
-
-    try:
-        initial_infected = int(_clamp(
-            int(raw.get("initial_infected", DEFAULT_SIMULATION_PARAMS["initial_infected"])),
-            1,
-            max(1, n_nodes // 2),
-        ))
-    except (ValueError, TypeError):
-        initial_infected = DEFAULT_SIMULATION_PARAMS["initial_infected"]
-
-    try:
-        days = int(_clamp(int(raw.get("days", DEFAULT_SIMULATION_PARAMS["days"])), 5, 180))
-    except (ValueError, TypeError):
-        days = DEFAULT_SIMULATION_PARAMS["days"]
-
-    try:
-        monte_carlo_runs = int(_clamp(
-            int(raw.get("monte_carlo_runs", DEFAULT_SIMULATION_PARAMS["monte_carlo_runs"])),
-            1,
-            200,
-        ))
-    except (ValueError, TypeError):
-        monte_carlo_runs = DEFAULT_SIMULATION_PARAMS["monte_carlo_runs"]
-
-    try:
-        beta_day = float(_clamp(float(raw.get("beta_day", DEFAULT_SIMULATION_PARAMS["beta_day"])), 0.0, 1.0))
-    except (ValueError, TypeError):
-        beta_day = DEFAULT_SIMULATION_PARAMS["beta_day"]
-
-    try:
-        beta_night = float(_clamp(float(raw.get("beta_night", DEFAULT_SIMULATION_PARAMS["beta_night"])), 0.0, 1.0))
-    except (ValueError, TypeError):
-        beta_night = DEFAULT_SIMULATION_PARAMS["beta_night"]
-
-    try:
-        incubation_days = int(_clamp(
-            int(raw.get("incubation_days", DEFAULT_SIMULATION_PARAMS["incubation_days"])),
-            0,
-            30,
-        ))
-    except (ValueError, TypeError):
-        incubation_days = DEFAULT_SIMULATION_PARAMS["incubation_days"]
-
-    try:
-        infectious_days = int(_clamp(
-            int(raw.get("infectious_days", DEFAULT_SIMULATION_PARAMS["infectious_days"])),
-            1,
-            60,
-        ))
-    except (ValueError, TypeError):
-        infectious_days = DEFAULT_SIMULATION_PARAMS["infectious_days"]
-
-    try:
-        vaccine_efficacy = float(_clamp(
-            float(raw.get("vaccine_efficacy", DEFAULT_SIMULATION_PARAMS["vaccine_efficacy"])),
-            0.0,
-            1.0,
-        ))
-    except (ValueError, TypeError):
-        vaccine_efficacy = DEFAULT_SIMULATION_PARAMS["vaccine_efficacy"]
-
-    try:
-        daily_budget = float(_clamp(
-            float(raw.get("daily_budget", DEFAULT_SIMULATION_PARAMS["daily_budget"])),
-            0.0,
-            10000000.0,
-        ))
-    except (ValueError, TypeError):
-        daily_budget = DEFAULT_SIMULATION_PARAMS["daily_budget"]
-
-    try:
-        total_budget = float(_clamp(
-            float(raw.get("total_budget", DEFAULT_SIMULATION_PARAMS["total_budget"])),
-            0.0,
-            100000000.0,
-        ))
-    except (ValueError, TypeError):
-        total_budget = DEFAULT_SIMULATION_PARAMS["total_budget"]
-
-    try:
-        vaccine_cost = float(_clamp(
-            float(raw.get("vaccine_cost", DEFAULT_SIMULATION_PARAMS["vaccine_cost"])),
-            0.1,
-            100000.0,
-        ))
-    except (ValueError, TypeError):
-        vaccine_cost = DEFAULT_SIMULATION_PARAMS["vaccine_cost"]
-
-    try:
-        brigade_cost = float(_clamp(
-            float(raw.get("brigade_cost", DEFAULT_SIMULATION_PARAMS["brigade_cost"])),
-            0.1,
-            100000.0,
-        ))
-    except (ValueError, TypeError):
-        brigade_cost = DEFAULT_SIMULATION_PARAMS["brigade_cost"]
-
-    try:
-        hub_closure_cost = float(_clamp(
-            float(raw.get("hub_closure_cost", DEFAULT_SIMULATION_PARAMS["hub_closure_cost"])),
-            0.1,
-            100000.0,
-        ))
-    except (ValueError, TypeError):
-        hub_closure_cost = DEFAULT_SIMULATION_PARAMS["hub_closure_cost"]
-
-    try:
-        hub_firewall_reduction = float(_clamp(
-            float(raw.get("hub_firewall_reduction", DEFAULT_SIMULATION_PARAMS["hub_firewall_reduction"])),
-            0.0,
-            1.0,
-        ))
-    except (ValueError, TypeError):
-        hub_firewall_reduction = DEFAULT_SIMULATION_PARAMS["hub_firewall_reduction"]
-
-    force_recompute = bool(raw.get("force_recompute", DEFAULT_SIMULATION_PARAMS["force_recompute"]))
 
     return {
         "n_nodes": n_nodes,
         "seed": seed,
         "start_hub": start_hub,
-        "initial_infected": initial_infected,
-        "days": days,
-        "monte_carlo_runs": monte_carlo_runs,
-        "beta_day": beta_day,
-        "beta_night": beta_night,
-        "incubation_days": incubation_days,
-        "infectious_days": infectious_days,
-        "vaccine_efficacy": vaccine_efficacy,
-        "daily_budget": daily_budget,
-        "total_budget": total_budget,
-        "vaccine_cost": vaccine_cost,
-        "brigade_cost": brigade_cost,
-        "hub_closure_cost": hub_closure_cost,
-        "hub_firewall_reduction": hub_firewall_reduction,
-        "force_recompute": force_recompute,
+        "initial_infected": _int_param(raw, "initial_infected", 1, max(1, n_nodes // 2)),
+        "days": _int_param(raw, "days", 7, 90),
+        "monte_carlo_runs": _int_param(raw, "monte_carlo_runs", 5, 100),
+        "beta_day": _float_param(raw, "beta_day", 0.0, 1.0),
+        "beta_night": _float_param(raw, "beta_night", 0.0, 1.0),
+        "incubation_days": _int_param(raw, "incubation_days", 0, 30),
+        "infectious_days": _int_param(raw, "infectious_days", 1, 60),
+        "vaccine_efficacy": _float_param(raw, "vaccine_efficacy", 0.05, 1.0),
+        "daily_budget": _float_param(raw, "daily_budget", 0.0, 10000000.0),
+        "total_budget": _float_param(raw, "total_budget", 0.0, 100000000.0),
+        "vaccine_cost": _float_param(raw, "vaccine_cost", 0.1, 100000.0),
+        "brigade_cost": _float_param(raw, "brigade_cost", 0.1, 100000.0),
+        "hub_closure_cost": _float_param(raw, "hub_closure_cost", 0.1, 100000.0),
+        "hub_firewall_reduction": _float_param(raw, "hub_firewall_reduction", 0.0, 1.0),
+        "force_recompute": parse_bool(raw.get("force_recompute", DEFAULT_SIMULATION_PARAMS["force_recompute"])),
     }
 
 
@@ -421,11 +324,13 @@ def _brigade_expected_infections(
 
 def _vaccine_expected_infections(
     prep: Dict[str, Any], params: Dict[str, Any], state: np.ndarray,
-    vaccinated: np.ndarray, detected: np.ndarray,
+    vaccinated: np.ndarray, detected: np.ndarray, budget: float = 0.0,
 ) -> Dict[int, float]:
     """
     3.3 Valor de vacunar a cada Sano no vacunado (anillo + puente).
     FILTRO OBLIGATORIO: solo se consideran nodos con state == STATE_SANO.
+    La lista corta crece con el presupuesto del día: nunca limita cuántas
+    vacunas se pueden comprar (con vacunas baratas el azar no debe ganar por eso).
     """
     n = prep["n"]
     candidates = np.flatnonzero((state == STATE_SANO) & ~vaccinated)
@@ -446,8 +351,9 @@ def _vaccine_expected_infections(
         0.65 * ring[candidates] * beta
         + 0.35 * bridge[candidates] * prep["mean_day_degree"] * beta
     )
-    if len(candidates) > VACCINE_SHORTLIST:
-        top = np.argpartition(-value, VACCINE_SHORTLIST)[:VACCINE_SHORTLIST]
+    shortlist = max(VACCINE_SHORTLIST, int(budget // params["vaccine_cost"]) + 1)
+    if len(candidates) > shortlist:
+        top = np.argpartition(-value, shortlist)[:shortlist]
         candidates, value = candidates[top], value[top]
     return dict(zip(candidates.tolist(), value.tolist()))
 
@@ -482,7 +388,7 @@ def apply_daily_interventions_shield(
         push(_hub_expected_infections(prep, params, state, detected, h) / costs["hub"], "hub", h, True)
     for z, value in _brigade_expected_infections(prep, params, state, days_in_state, detected).items():
         push(value / costs["brigade"], "brigade", z, True)
-    for u, value in _vaccine_expected_infections(prep, params, state, vaccinated, detected).items():
+    for u, value in _vaccine_expected_infections(prep, params, state, vaccinated, detected, budget).items():
         push(value / costs["vaccine"], "vaccine", u, True)
 
     log = _empty_action_log()
@@ -851,6 +757,8 @@ def _summary_kpis(params: Dict[str, Any], arrays: Dict[str, Dict[str, np.ndarray
         kpis[f"lives_saved_vs_{base}_p90"] = round(float(np.percentile(saved, 90)), 2)
     for s in STRATEGIES:
         kpis[f"total_infected_{s}"] = round(float(final[s].mean()), 2)
+        kpis[f"total_infected_{s}_p10"] = round(float(np.percentile(final[s], 10)), 2)
+        kpis[f"total_infected_{s}_p90"] = round(float(np.percentile(final[s], 90)), 2)
     for s in STRATEGIES:
         kpis[f"peak_zombies_{s}"] = round(float(peaks[s]), 2)
     for base in ("none", "random"):

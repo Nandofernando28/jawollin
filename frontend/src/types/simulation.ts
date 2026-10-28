@@ -177,6 +177,13 @@ export interface SummaryKPIs {
   total_infected_none: number;
   total_infected_random: number;
   total_infected_shield: number;
+  // Rango P10-P90 entre réplicas (opcional: el mock offline no lo calcula)
+  total_infected_none_p10?: number;
+  total_infected_none_p90?: number;
+  total_infected_random_p10?: number;
+  total_infected_random_p90?: number;
+  total_infected_shield_p10?: number;
+  total_infected_shield_p90?: number;
 
   // Pico Máximo de Zombies Activos y Reducción
   peak_zombies_none: number;

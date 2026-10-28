@@ -66,25 +66,30 @@ class WorkerTests(HandlersTestBase):
         with self.assertRaises(ValueError):
             worker.lambda_handler({"params": SMALL, "run_indices": []})
 
-    def test_spatial_offloaded_to_s3_when_bucket_configured(self):
+    def test_batch_offloaded_to_s3_when_bucket_configured(self):
+        """En AWS el lote completo va a S3 y Step Functions solo transporta la referencia."""
         s3 = mock.Mock()
         worker._S3_CLIENT = s3
         os.environ["RESULTS_BUCKET_NAME"] = "bucket-test"
         result = worker.lambda_handler(
-            {"batch_id": 0, "params": SMALL, "run_indices": [0], "sim_hash": "cf-abc"}
+            {"batch_id": 2, "params": SMALL, "run_indices": [10, 11], "sim_hash": "cf-abc"}
         )
-        self.assertEqual(result["spatial"], {})
-        self.assertEqual(result["spatial_ref"], {"bucket": "bucket-test", "key": "spatial/cf-abc.json"})
-        s3.put_object.assert_called_once()
+        self.assertEqual(result["result_ref"], {"bucket": "bucket-test", "key": "batches/cf-abc/2.json"})
+        self.assertEqual(result["run_indices"], [10, 11])
+        self.assertNotIn("strategies", result)
+        uploaded = json.loads(s3.put_object.call_args.kwargs["Body"])
+        self.assertEqual(set(uploaded["strategies"]), {"none", "random", "shield"})
+        self.assertLess(len(json.dumps(result)), 1024)
 
-    def test_s3_failure_falls_back_to_inline_spatial(self):
+    def test_s3_failure_falls_back_to_inline_batch(self):
         worker._S3_CLIENT = mock.Mock(put_object=mock.Mock(side_effect=RuntimeError("s3 caido")))
         os.environ["RESULTS_BUCKET_NAME"] = "bucket-test"
         result = worker.lambda_handler(
             {"batch_id": 0, "params": SMALL, "run_indices": [0], "sim_hash": "cf-abc"}
         )
         self.assertTrue(result["spatial"])
-        self.assertNotIn("spatial_ref", result)
+        self.assertIn("strategies", result)
+        self.assertNotIn("result_ref", result)
 
 
 class HashAndCacheTests(HandlersTestBase):
@@ -137,6 +142,16 @@ class HashAndCacheTests(HandlersTestBase):
         self.assertIsNone(orchestrator.get_cached_simulation("cf-z"))
         orchestrator.save_simulation_cache("cf-z", {"a": 1})
         self.assertEqual(orchestrator.get_cached_simulation("cf-z"), {"a": 1})
+
+    def test_memory_cache_is_bounded_lru(self):
+        limit = orchestrator._MEMORY_CACHE_MAX
+        for i in range(limit):
+            orchestrator.save_simulation_cache(f"cf-{i}", {"i": i})
+        orchestrator.get_cached_simulation("cf-0")  # la mas antigua pasa a ser la mas reciente
+        orchestrator.save_simulation_cache("cf-nueva", {"i": -1})
+        self.assertEqual(len(orchestrator._MEMORY_CACHE), limit)
+        self.assertIsNotNone(orchestrator.get_cached_simulation("cf-0"))
+        self.assertIsNone(orchestrator.get_cached_simulation("cf-1"))
 
 
 class EndpointTests(HandlersTestBase):
@@ -221,18 +236,46 @@ class DistributedExecutionTests(HandlersTestBase):
         local = run_monte_carlo_ensemble(params)
         self.assertEqual(json.dumps(distributed, sort_keys=True), json.dumps(local, sort_keys=True))
 
-    def test_spatial_refs_are_hydrated_from_s3(self):
-        params = normalize_simulation_params({**SMALL, "monte_carlo_runs": 2})
-        objects = {}
+    def _fake_s3(self, objects):
         s3 = mock.Mock()
         s3.put_object = lambda **kw: objects.__setitem__(kw["Key"], kw["Body"])
         s3.get_object = lambda Bucket, Key: {"Body": mock.Mock(read=lambda: objects[Key])}
-        worker._S3_CLIENT = orchestrator._S3_CLIENT = s3
+        return s3
+
+    def test_batch_refs_are_hydrated_from_s3(self):
+        """Los lotes que llegan como referencia a S3 dan el mismo resultado que en local."""
+        params = normalize_simulation_params({**SMALL, "monte_carlo_runs": 12})
+        objects = {}
+        worker._S3_CLIENT = orchestrator._S3_CLIENT = self._fake_s3(objects)
         orchestrator._SFN_CLIENT = self._fake_sfn([])
         os.environ.update(STATE_MACHINE_ARN="arn", RESULTS_BUCKET_NAME="bucket")
         result = orchestrator.execute_distributed_or_local_ensemble(params)
-        self.assertEqual(len(objects), 1)
+        self.assertEqual(sorted(k for k in objects if k.startswith("batches/")), [
+            f"batches/{orchestrator.compute_sim_hash(params)}/{i}.json" for i in range(3)
+        ])
         self.assertTrue(result["spatial_timelines"])
+        local = run_monte_carlo_ensemble(params)
+        self.assertEqual(json.dumps(result, sort_keys=True), json.dumps(local, sort_keys=True))
+
+    def test_step_functions_output_fits_256_kib_at_ui_maximum(self):
+        """Con 100 replicas y 90 dias (maximo de la UI) la salida del Map cabe holgada."""
+        params = normalize_simulation_params({"monte_carlo_runs": 100, "days": 90, "n_nodes": 200})
+        objects, outputs = {}, []
+        worker._S3_CLIENT = orchestrator._S3_CLIENT = self._fake_s3(objects)
+        sfn = self._fake_sfn([])
+        original = sfn.start_sync_execution
+
+        def recording(**kwargs):
+            response = original(**kwargs)
+            outputs.append(response["output"])
+            return response
+
+        orchestrator._SFN_CLIENT = mock.Mock(start_sync_execution=recording)
+        os.environ.update(STATE_MACHINE_ARN="arn", RESULTS_BUCKET_NAME="bucket")
+        with mock.patch.object(orchestrator, "run_monte_carlo_ensemble", side_effect=AssertionError("fallback")):
+            orchestrator.execute_distributed_or_local_ensemble(params)
+        self.assertEqual(len([k for k in objects if k.startswith("batches/")]), 20)
+        self.assertLess(len(outputs[0].encode("utf-8")), 256 * 1024 // 4)
 
     def test_step_functions_failure_falls_back_to_local(self):
         params = normalize_simulation_params(SMALL)

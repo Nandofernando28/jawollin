@@ -11,10 +11,11 @@ _S3_CLIENT = None
 from src.engine.simulator import normalize_simulation_params, run_batch_simulations
 
 
-def _offload_spatial_to_s3(sim_hash: str, spatial: Dict[str, Any]) -> Dict[str, str]:
+def _offload_batch_to_s3(sim_hash: str, batch_id: int, result: Dict[str, Any]) -> Dict[str, str]:
     """
-    Sube la serie espacial a S3 y devuelve la referencia {"bucket", "key"}.
-    Evita que el payload de Step Functions supere el limite de 256 KB.
+    Sube el lote completo (series de las 3 estrategias y serie espacial) a S3 y
+    devuelve la referencia {"bucket", "key"}. Step Functions limita a 256 KiB la
+    salida de cada estado: con 100 replicas o 90 dias el lote en linea no cabe.
     """
     global _S3_CLIENT
     if _S3_CLIENT is None:
@@ -22,11 +23,11 @@ def _offload_spatial_to_s3(sim_hash: str, spatial: Dict[str, Any]) -> Dict[str, 
 
         _S3_CLIENT = boto3.client("s3")
     bucket = os.environ["RESULTS_BUCKET_NAME"]
-    key = f"spatial/{sim_hash}.json"
+    key = f"batches/{sim_hash}/{batch_id}.json"
     _S3_CLIENT.put_object(
         Bucket=bucket,
         Key=key,
-        Body=json.dumps(spatial, separators=(",", ":")).encode("utf-8"),
+        Body=json.dumps(result, separators=(",", ":")).encode("utf-8"),
         ContentType="application/json",
     )
     return {"bucket": bucket, "key": key}
@@ -44,12 +45,12 @@ def lambda_handler(event: Dict[str, Any], context: Any = None) -> Dict[str, Any]
           "params": {...},                 # parametros (se re-normalizan por seguridad)
           "run_indices": [0, 1, 2, 3, 4],
           "record_spatial": true,          # opcional; por defecto batch_id == 0
-          "sim_hash": "cf-..."             # opcional; habilita subir la serie espacial a S3
+          "sim_hash": "cf-..."             # opcional; habilita subir el lote a S3
         }
 
-    Si hay serie espacial, sim_hash y RESULTS_BUCKET_NAME, la serie se sube a S3 y el
-    resultado incluye "spatial_ref" en lugar de "spatial" (que queda vacio). Si no,
-    la serie viaja en linea (modo local o fallo de S3).
+    Con sim_hash y RESULTS_BUCKET_NAME, el lote completo se sube a S3 y el resultado
+    solo lleva {"batch_id", "run_indices", "result_ref", "worker_time_ms"}. Si no
+    (modo local) o si S3 falla, el lote viaja en linea.
     """
     started = time.perf_counter()
 
@@ -65,11 +66,11 @@ def lambda_handler(event: Dict[str, Any], context: Any = None) -> Dict[str, Any]
     result["batch_id"] = batch_id
 
     sim_hash = event.get("sim_hash")
-    if result.get("spatial") and sim_hash and os.environ.get("RESULTS_BUCKET_NAME"):
+    if sim_hash and os.environ.get("RESULTS_BUCKET_NAME"):
         try:
-            result["spatial_ref"] = _offload_spatial_to_s3(str(sim_hash), result["spatial"])
-            result["spatial"] = {}
+            ref = _offload_batch_to_s3(str(sim_hash), batch_id, result)
+            result = {"batch_id": batch_id, "run_indices": result["run_indices"], "result_ref": ref}
         except Exception as exc:
-            logger.warning("No se pudo subir la serie espacial a S3, se devuelve en linea: %s", exc)
+            logger.warning("No se pudo subir el lote a S3, se devuelve en linea: %s", exc)
     result["worker_time_ms"] = round((time.perf_counter() - started) * 1000, 2)
     return result

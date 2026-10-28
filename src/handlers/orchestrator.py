@@ -4,12 +4,15 @@ import json
 import logging
 import os
 import time
+from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from src.engine.simulator import (
     aggregate_batch_results,
     normalize_simulation_params,
+    parse_bool,
     run_monte_carlo_ensemble,
 )
 
@@ -23,7 +26,23 @@ CACHE_TTL_SECONDS = 14 * 86400
 SPATIAL_KEY = "spatial_timelines"
 
 # Cache en memoria del proceso (contenedor Lambda caliente o servidor local).
-_MEMORY_CACHE: Dict[str, Dict[str, Any]] = {}
+# LRU acotado: cada resultado ocupa varios MB como objetos Python.
+_MEMORY_CACHE_MAX = 32
+_MEMORY_CACHE: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
+
+
+def _memory_get(sim_hash: str) -> Optional[Dict[str, Any]]:
+    cached = _MEMORY_CACHE.get(sim_hash)
+    if cached is not None:
+        _MEMORY_CACHE.move_to_end(sim_hash)
+    return cached
+
+
+def _memory_put(sim_hash: str, payload: Dict[str, Any]) -> None:
+    _MEMORY_CACHE[sim_hash] = payload
+    _MEMORY_CACHE.move_to_end(sim_hash)
+    while len(_MEMORY_CACHE) > _MEMORY_CACHE_MAX:
+        _MEMORY_CACHE.popitem(last=False)
 
 # Clientes boto3 perezosos: se crean solo si hay configuracion AWS.
 _DDB_TABLE = None
@@ -100,7 +119,7 @@ def get_cached_simulation(sim_hash: str) -> Optional[Dict[str, Any]]:
     Busca una simulacion previa: primero en memoria y, si hay tabla DynamoDB
     configurada, en AWS. Devuelve None si no existe o si AWS falla.
     """
-    cached = _MEMORY_CACHE.get(sim_hash)
+    cached = _memory_get(sim_hash)
     if cached is not None:
         return cached
 
@@ -121,7 +140,7 @@ def get_cached_simulation(sim_hash: str) -> Optional[Dict[str, Any]]:
                 payload[SPATIAL_KEY] = json.loads(body).get(SPATIAL_KEY, {})
             except Exception as exc:
                 logger.warning("No se pudo leer la serie espacial de S3 (%s): %s", sim_hash, exc)
-        _MEMORY_CACHE[sim_hash] = payload
+        _memory_put(sim_hash, payload)
         return payload
     except Exception as exc:
         logger.warning("Fallo al leer cache DynamoDB (%s): %s", sim_hash, exc)
@@ -135,7 +154,7 @@ def save_simulation_cache(sim_hash: str, payload: Dict[str, Any]) -> None:
     - DynamoDB: resumen sin series espaciales (limite 400 KB por item) + ttl de 14 dias.
     Los errores de AWS se registran pero nunca rompen la respuesta al usuario.
     """
-    _MEMORY_CACHE[sim_hash] = payload
+    _memory_put(sim_hash, payload)
 
     if not _aws_cache_enabled():
         return
@@ -197,18 +216,22 @@ def _build_batches(params: Dict[str, Any], sim_hash: Optional[str] = None) -> Li
     return batches
 
 
-def _hydrate_spatial_refs(batch_results: List[Dict[str, Any]]) -> None:
+def _load_batch(batch: Dict[str, Any]) -> Dict[str, Any]:
+    ref = batch.get("result_ref")
+    if not ref:
+        return batch
+    body = _get_s3().get_object(Bucket=ref["bucket"], Key=ref["key"])["Body"].read()
+    return json.loads(body)
+
+
+def _hydrate_batch_refs(batch_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Los workers suben la serie espacial a S3 para no superar el limite de 256 KB de
-    Step Functions y devuelven "spatial_ref". Aqui se descarga y se reincorpora al
-    lote para que aggregate_batch_results la trate como si viniera en linea.
+    Los workers suben su lote completo a S3 para no superar el limite de 256 KiB de
+    Step Functions y devuelven "result_ref". Aqui se descargan en paralelo para que
+    aggregate_batch_results los trate como si vinieran en linea.
     """
-    for batch in batch_results:
-        ref = batch.get("spatial_ref")
-        if not ref:
-            continue
-        body = _get_s3().get_object(Bucket=ref["bucket"], Key=ref["key"])["Body"].read()
-        batch["spatial"] = json.loads(body)
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        return list(pool.map(_load_batch, batch_results))
 
 
 def _run_distributed(
@@ -224,8 +247,7 @@ def _run_distributed(
             f"Step Functions termino en {response.get('status')}: "
             f"{response.get('error', '')} {response.get('cause', '')}".strip()
         )
-    batch_results = json.loads(response["output"])["batchResults"]
-    _hydrate_spatial_refs(batch_results)
+    batch_results = _hydrate_batch_refs(json.loads(response["output"])["batchResults"])
     return aggregate_batch_results(params, batch_results)
 
 
@@ -342,7 +364,7 @@ def _handle_simulate(event: Dict[str, Any]) -> Dict[str, Any]:
     except (ValueError, json.JSONDecodeError) as exc:
         return _build_http_response(400, {"error": "body_invalido", "message": str(exc)})
 
-    force_recompute = bool(body.pop("force_recompute", False))
+    force_recompute = parse_bool(body.pop("force_recompute", False))
     params = normalize_simulation_params(body)
     sim_hash = compute_sim_hash(params)
 

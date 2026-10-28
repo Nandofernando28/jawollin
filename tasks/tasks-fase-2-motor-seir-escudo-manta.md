@@ -14,6 +14,11 @@
 - **Regla de Oro del Jurado (Cero Vacunas Desperdiciadas):** El jurado penaliza severamente si se vacuna a quien ya está infectado (`MORDIDO` o `ZOMBIE`) o ya es inmune (`EXORCIZADO`). El filtro de candidatos para la Defensa 3 debe exigir `state[u] == STATE_SANO` (`0`) antes de aplicar cualquier dosis y registrar un contador de auditoría `wasted_vaccines = 0`.
 - **Resistencia al "🎃 Brote Sorpresa":** Si el jurado reduce la eficacia de la vacuna (`vaccine_efficacy = 0.3`) o duplica la tasa de contagio (`beta_day = 0.25`), el optimizador de ROI marginal debe detectarlo automáticamente en su fórmula de utilidad esperada por dólar y redirigir mayor presupuesto hacia **Cortafuegos de Hubs (Defensa 1)** y **Brigadas de Aislamiento (Defensa 2)**, evitando que la estrategia colapse.
 - **Comandos de prueba:** Ejecutar `python -m unittest tests/test_simulator.py -v` para validar esta fase.
+- **Piezas del modelo añadidas durante la implementación** (no estaban en el plan original; constantes en `simulator.py`, justificadas en el README):
+  - `DETECTION_PROB = 0.35`: el COE solo conoce a los Zombies reportados; brigadas y vacunación en anillo actúan sobre casos detectados, y los Mordidos son invisibles.
+  - `HIDDEN_CASE_FACTOR = 2.0`: al valorar un cierre de Hub, por cada Zombie detectado se estima otro oculto.
+  - `RING_SECOND_HOP_WEIGHT = 0.25`: peso de la exposición a 2 saltos en la vacunación en anillo.
+  - `VACCINE_SHORTLIST = 300`: candidatos de vacuna evaluados por día; la lista crece con el presupuesto, así que nunca limita cuántas dosis se compran.
 
 ## Instructions for Completing Tasks
 
@@ -31,24 +36,24 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 0.2 Verificar que la Fase 1 (`src/engine/graph_manta.py`) esté lista e importable desde `src/engine/simulator.py`.
 
 - [x] 1.0 Definir constantes de estados SEIR-VQ y normalizador de parámetros con valores por defecto
-  - [x] 1.1 Declarar en `src/engine/simulator.py` las constantes enteras de estado (Parcialmente completada: constantes numéricas `STATE_*` y catálogo `STATE_NAMES` implementados):
+  - [x] 1.1 Declarar en `src/engine/simulator.py` las constantes enteras de estado y el catálogo `STATE_NAMES`:
     - `STATE_SANO = 0` (🟢 Susceptible)
     - `STATE_MORDIDO = 1` (🟡 Expuesto / en incubación)
     - `STATE_ZOMBIE = 2` (🔴 Infeccioso activo)
     - `STATE_AISLADO = 3` (🟣 Contenido por brigada sanitaria)
     - `STATE_INMUNE = 4` (🔵 Exorcizado / Recuperado o Vacunado con éxito)
-  - [x] 1.2 Implementar `normalize_simulation_params(raw_params: Dict[str, Any]) -> Dict[str, Any]` con valores por defecto calibrados y acotación de rangos seguros (clamping) para cualquier input libre de la UI (Parcialmente completada: función implementada con clamping y pruebas unitarias passing):
+  - [x] 1.2 Implementar `normalize_simulation_params(raw_params: Dict[str, Any]) -> Dict[str, Any]` con valores por defecto calibrados y acotación de rangos seguros (clamping) para cualquier input libre de la UI. Los rangos coinciden con los de la interfaz; `NaN`, infinito o texto no numérico vuelven al valor por defecto, y `force_recompute` acepta `"false"`/`"0"` como falso. *Los valores marcados como "calibrado" se cambiaron tras la calibración; el porqué está en `docs/calibracion.md`.*
     - `n_nodes`: default `1200` (rango `200 .. 5000`)
     - `days`: default `30` (rango `7 .. 90`)
-    - `beta_day`: default `0.085` (probabilidad base de contagio por contacto diurno)
-    - `beta_night`: default `0.110` (probabilidad base de contagio intrafamiliar nocturno)
+    - `beta_day`: default `0.05` (calibrado; antes `0.085`) (probabilidad base de contagio por contacto diurno)
+    - `beta_night`: default `0.07` (calibrado; antes `0.110`) (probabilidad base de contagio intrafamiliar nocturno)
     - `incubation_days`: default `2` (días en estado 🟡 Mordido antes de pasar a 🔴 Zombie)
     - `infectious_days`: default `5` (días en estado 🔴 Zombie activo antes de pasar a 🔵 Exorcizado)
     - `initial_infected`: default `4` (pacientes cero en $t=0$)
     - `start_hub`: default `"mercado_tarqui"` (opciones: `"uleam"`, `"mercado_tarqui"`, `"mercado_central"`, `"empacadoras"`, `"terminal_terrestre"`, `"random"`)
     - `vaccine_efficacy`: default `0.85` ($\eta_{vac} \in [0.05, 1.0]$)
-    - `daily_budget`: default `600.0` (USD inyectados por día)
-    - `total_budget`: default `12000.0` (presupuesto máximo acumulado de la campaña)
+    - `daily_budget`: default `400.0` (calibrado; antes `600.0`) (USD inyectados por día)
+    - `total_budget`: default `8000.0` (calibrado; antes `12000.0`) (presupuesto máximo acumulado de la campaña)
     - `vaccine_cost`: default `15.0` (USD por dosis de vacuna aplicada)
     - `brigade_cost`: default `65.0` (USD por aislamiento/antídoto directo a un Zombie)
     - `hub_closure_cost`: default `220.0` (USD por día de cierre quirúrgico/fumigación intensiva de un Hub)
@@ -97,12 +102,12 @@ Update the file after completing each sub-task, not just after completing an ent
     - Los nodos en `STATE_ZOMBIE` cuyo `days_in_state >= infectious_days` transicionan a `STATE_INMUNE` (Exorcizado/Recuperado).
 
 - [x] 6.0 Implementar el Ensamble Monte Carlo (`run_monte_carlo_ensemble`) y Métricas Espaciales
-  - [x] 6.1 Implementar una función auxiliar `run_batch_simulations(params, run_indices, include_spatial_on_first=True)` que pueda ser llamada tanto localmente como desde `src/handlers/worker.py` en AWS Lambda.
+  - [x] 6.1 Implementar una función auxiliar `run_batch_simulations(params, run_indices, include_spatial=True)` (la serie espacial se guarda solo para la réplica 0) que pueda ser llamada tanto localmente como desde `src/handlers/worker.py` en AWS Lambda.
   - [x] 6.2 Consolidar las $M$ corridas para cada estrategia (`none`, `random`, `shield`) calculando por cada día $t \in [0, \text{days}]$:
-    - Media (`mean`) y percentiles `p10`, `p50`, `p90` para `sano`, `mordido`, `zombie`, `aislado`, `inmune`, `ever_infected` y `cumulative_budget_spent`.
+    - Media (`mean`) y percentiles `p10`, `p50`, `p90` para `sano`, `mordido`, `zombie`, `aislado`, `inmune`, `ever_infected` y `cumulative_budget_spent`. *`cumulative_budget_spent` se entrega solo como media: el gasto casi no varía entre réplicas y la interfaz no usa sus percentiles.*
   - [x] 6.3 Generar la serie temporal espacial (`spatial_timeline`) agregada por día para las 5 parroquias y los 5 hubs (conteo de Sanos, Mordidos, Zombies, Aislados, Inmunes y bandera `firewall_active` por hub) para alimentar el mapa interactivo de la Fase 6.
   - [x] 6.4 Calcular el bloque `summary_kpis`:
-    - `total_infected_none`, `total_infected_random`, `total_infected_shield` (media y rango P10–P90).
+    - `total_infected_none`, `total_infected_random`, `total_infected_shield` (media y rango P10–P90 en `total_infected_*_p10` / `_p90`).
     - `lives_saved_vs_none` y `lives_saved_vs_random` (números absolutos y porcentaje).
     - `peak_zombies_none`, `peak_zombies_random`, `peak_zombies_shield` y `peak_reduction_vs_none_pct`.
     - `total_vaccines_used`, `total_brigades_used`, `total_hub_days_closed`, `total_budget_spent`, `cost_per_life_saved`.

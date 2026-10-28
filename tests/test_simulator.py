@@ -36,6 +36,9 @@ CONTRACT_KPI_KEYS = {
     "lives_saved_vs_none", "lives_saved_vs_none_pct", "lives_saved_vs_none_p10", "lives_saved_vs_none_p90",
     "lives_saved_vs_random", "lives_saved_vs_random_pct", "lives_saved_vs_random_p10", "lives_saved_vs_random_p90",
     "total_infected_none", "total_infected_random", "total_infected_shield",
+    "total_infected_none_p10", "total_infected_none_p90",
+    "total_infected_random_p10", "total_infected_random_p90",
+    "total_infected_shield_p10", "total_infected_shield_p90",
     "peak_zombies_none", "peak_zombies_random", "peak_zombies_shield",
     "peak_reduction_vs_none_pct", "peak_reduction_vs_random_pct",
     "total_budget_spent", "remaining_budget",
@@ -74,21 +77,49 @@ class TestSimulatorConstantsAndNormalization(unittest.TestCase):
     def test_normalize_clamping_and_types(self):
         """Verifica que los valores extremos se acoten a rangos seguros."""
         raw = {
-            "n_nodes": "50",            # Por debajo de min 100
-            "days": 999,                 # Por encima de max 180
+            "n_nodes": "50",            # Por debajo de min 200
+            "days": 999,                 # Por encima de max 90
+            "monte_carlo_runs": 1,       # Por debajo de min 5
             "beta_day": "1.85",          # Por encima de max 1.0
-            "vaccine_efficacy": -0.5,    # Por debajo de min 0.0
+            "vaccine_efficacy": -0.5,    # Por debajo de min 0.05
             "start_hub": "UNKNOWN_PLACE", # No válido
             "initial_infected": 500,     # Debe acotarse respecto a n_nodes
         }
         normalized = normalize_simulation_params(raw)
 
-        self.assertEqual(normalized["n_nodes"], 100)
-        self.assertEqual(normalized["days"], 180)
+        self.assertEqual(normalized["n_nodes"], 200)
+        self.assertEqual(normalized["days"], 90)
+        self.assertEqual(normalized["monte_carlo_runs"], 5)
         self.assertEqual(normalized["beta_day"], 1.0)
-        self.assertEqual(normalized["vaccine_efficacy"], 0.0)
+        self.assertEqual(normalized["vaccine_efficacy"], 0.05)
         self.assertEqual(normalized["start_hub"], "mercado_tarqui")
-        self.assertTrue(normalized["initial_infected"] <= 50)
+        self.assertTrue(normalized["initial_infected"] <= 100)
+
+    def test_normalize_upper_limits_match_interface(self):
+        """Los máximos son los de la interfaz: así el cálculo cabe en el timeout de la Lambda."""
+        normalized = normalize_simulation_params({"n_nodes": 10000, "monte_carlo_runs": 500})
+        self.assertEqual(normalized["n_nodes"], 5000)
+        self.assertEqual(normalized["monte_carlo_runs"], 100)
+
+    def test_normalize_rejects_non_finite_and_bad_text(self):
+        """NaN, infinito o texto no numérico vuelven al valor por defecto."""
+        normalized = normalize_simulation_params({
+            "beta_day": float("nan"), "beta_night": "inf", "daily_budget": "-inf",
+            "seed": "abc", "initial_infected": "muchos",
+        })
+        for key in ("beta_day", "beta_night", "daily_budget", "seed", "initial_infected"):
+            self.assertEqual(normalized[key], DEFAULT_SIMULATION_PARAMS[key], key)
+
+    def test_normalize_accepts_decimal_text_for_integers(self):
+        normalized = normalize_simulation_params({"n_nodes": "1500.0", "days": 45.7})
+        self.assertEqual(normalized["n_nodes"], 1500)
+        self.assertEqual(normalized["days"], 45)
+
+    def test_force_recompute_text_values(self):
+        for text in ("false", "False", "0", "no", ""):
+            self.assertFalse(normalize_simulation_params({"force_recompute": text})["force_recompute"], text)
+        for value in ("true", "1", True):
+            self.assertTrue(normalize_simulation_params({"force_recompute": value})["force_recompute"], value)
 
 
 class TestSingleRun(unittest.TestCase):
@@ -135,6 +166,17 @@ class TestSingleRun(unittest.TestCase):
         candidates = _vaccine_expected_infections(prep, self.params, state, np.zeros(n, bool), detected)
         self.assertGreater(len(candidates), 0)
         self.assertTrue(all(state[u] == STATE_SANO for u in candidates))
+
+    def test_vaccine_shortlist_grows_with_budget(self):
+        """Con presupuesto para más de 300 dosis, la lista de candidatos no las limita."""
+        prep = _prepare_network(self.net)
+        n = self.params["n_nodes"]
+        state = np.full(n, STATE_SANO, dtype=np.int8)
+        none = np.zeros(n, dtype=bool)
+        small = _vaccine_expected_infections(prep, self.params, state, none, none, budget=400.0)
+        large = _vaccine_expected_infections(prep, self.params, state, none, none, budget=1e6)
+        self.assertEqual(len(small), 300)
+        self.assertEqual(len(large), n)
 
 
 class TestMonteCarloEnsemble(unittest.TestCase):
@@ -207,10 +249,27 @@ class TestStrategySuperiority(unittest.TestCase):
         self.assertGreater(surprise["total_brigades_used"], default["total_brigades_used"])
         self.assertLess(surprise["total_vaccines_used"], default["total_vaccines_used"])
 
+    def test_surprise_outbreak_starts_closing_hubs(self):
+        """Con la epidemia descontrolada, cerrar hubs empieza a compensar (Tarea 7.1)."""
+        default, surprise = self.default["summary_kpis"], self.surprise["summary_kpis"]
+        self.assertGreater(surprise["total_hub_days_closed"], default["total_hub_days_closed"])
+
     def test_surprise_outbreak_still_beats_random(self):
         k = self.surprise["summary_kpis"]
         self.assertLess(k["total_infected_shield"], k["total_infected_random"])
         self.assertEqual(k["wasted_vaccines_count"], 0)
+
+    def test_cheap_vaccines_still_beat_random(self):
+        """Vacunas a 1 $: el Escudo puede comprar más de 300 dosis al día y sigue ganando."""
+        k = run_monte_carlo_ensemble({"vaccine_cost": 1})["summary_kpis"]
+        self.assertLess(k["total_infected_shield"], k["total_infected_random"])
+        self.assertEqual(k["wasted_vaccines_count"], 0)
+
+    def test_infected_ranges_are_ordered(self):
+        k = self.default["summary_kpis"]
+        for s in STRATEGIES:
+            self.assertLessEqual(k[f"total_infected_{s}_p10"], k[f"total_infected_{s}"])
+            self.assertLessEqual(k[f"total_infected_{s}"], k[f"total_infected_{s}_p90"])
 
 
 if __name__ == "__main__":

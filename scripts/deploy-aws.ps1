@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Despliega la infraestructura 100% Serverless (API Gateway HTTP API + Step Functions Express Map +
-  Lambda Python NumPy/NetworkX + DynamoDB On-Demand + S3 + AWS Budget $5) en us-east-1.
+  Lambda Python NumPy + DynamoDB On-Demand + S3 + AWS Budget $5) en us-east-1.
 #>
 param(
     [string]$ProfileName = "spookython",
@@ -19,7 +19,7 @@ Write-Host "=================================================================" -
 Push-Location "$PSScriptRoot\..\infra"
 
 try {
-    Write-Host "`n1. Empaquetando funciones AWS Lambda (Python 3.12 ARM64 + NumPy + NetworkX)..." -ForegroundColor Green
+    Write-Host "`n1. Empaquetando funciones AWS Lambda (Python 3.12 ARM64 + NumPy)..." -ForegroundColor Green
     sam build --template-file template.yaml --cached --parallel
 
     Write-Host "`n2. Desplegando Stack CloudFormation/SAM en $Region..." -ForegroundColor Green

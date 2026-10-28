@@ -4,7 +4,7 @@ Description: >
   spookython-cortafuegos-manta
   Infraestructura 100% Serverless para Operacion Cortafuegos Manta (Track B - La Plaga Zombie).
   Incluye: Amazon API Gateway (HTTP API) + AWS Step Functions (Express Workflow con Map State) +
-  AWS Lambda (Python NumPy/NetworkX ARM64) + Amazon DynamoDB (On-Demand) + Amazon S3 + AWS Budget ($5).
+  AWS Lambda (Python NumPy ARM64) + Amazon DynamoDB (On-Demand) + Amazon S3 + AWS Budget ($5).
 
 Parameters:
   EnvironmentName:
@@ -122,7 +122,7 @@ Resources:
             ExpirationInDays: 14
 
   # ============================================================================
-  # 4. AWS LAMBDA WORKER - MOTOR EPIDEMIOLOGICO MONTE CARLO (NUMPY + NETWORKX)
+  # 4. AWS LAMBDA WORKER - MOTOR EPIDEMIOLOGICO MONTE CARLO (NUMPY)
   # ============================================================================
   MonteCarloWorkerFunction:
     Type: AWS::Serverless::Function
