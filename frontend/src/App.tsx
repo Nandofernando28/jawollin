@@ -5,7 +5,6 @@ import { IntroScreen } from './components/IntroScreen';
 import { BlockTransition } from './components/BlockTransition';
 import { LiveSimulation } from './components/LiveSimulation';
 import { ResultsScroll } from './components/ResultsScroll';
-import { SURPRISE_PRESETS } from './data/surprisePresets';
 import { Header } from './components/Header';
 import { SetupScreen } from './components/SetupScreen';
 import { KpiCards } from './components/KpiCards';
@@ -24,7 +23,6 @@ export default function App() {
     loading,
     error,
     execute,
-    applyPreset,
     resetAll,
     currentDay,
     setCurrentDay,
@@ -296,24 +294,6 @@ export default function App() {
                 <PixelIcon name="check" size={8} />
                 Datos reales del motor SEIR
               </span>
-            </div>
-
-            {/* Botones de Brotes Sorpresa para evaluación rápida */}
-            <div className="mc-panel flex flex-wrap items-center gap-2 p-3">
-              <span className="mc-label text-mc-ink">
-                Brotes Sorpresa:
-              </span>
-              {SURPRISE_PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => applyPreset(p.id)}
-                  title={p.description}
-                  className="mc-button mc-button-sm mc-button-danger"
-                >
-                  <p.icon className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={3} />
-                  {p.label}
-                </button>
-              ))}
             </div>
 
             {/* Hubs y recursos del día (izq) y curvas epidemiológicas con bandas P10-P90 (der) */}

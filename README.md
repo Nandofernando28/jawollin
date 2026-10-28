@@ -399,7 +399,7 @@ Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos lo
 
 1. **Presentación "El Ataque Nocturno":** noche cerrada con estrellas y luna pixel. Tras el primer clic o tecla (los navegadores no permiten sonido antes) se oyen grillos y viento; de repente cae un rayo con su trueno y aparece un letrero de madera flotante: *"La noche ha caído sobre Manta. Los aldeanos han sido mordidos"*. Una barra *"Generando terreno... 100%"* se llena y, al terminar, suena un mordisco de manzana y se entra solo a los parámetros. Se salta con **Esc** o con el botón *Saltar*.
 2. **Paso 1 · Parámetros:** la pantalla de parámetros de siempre (contagio, presupuesto, eficacia de la vacuna, punto de inicio, semilla…) y el botón *[ EJECUTAR SIMULACIÓN DE CONTENCIÓN ]*.
-3. **Paso 2 · Simulación y resultados:** el mapa se reproduce solo día a día, con un marcador de cuántas personas hay en cada estado (sanos, mordidos, zombies, aislados y exorcizados), el estado del virus y la estrategia que se quiere ver. Al terminar, en la misma pantalla aparecen debajo los resultados: un pergamino compara el Escudo con las dos líneas base (contagiados con su rango P10–P90, pico de zombies y contagios evitados) en tabla y en pilares de bloques, con acceso directo al informe para el alcalde, y siguen los indicadores, los Brotes Sorpresa, el detalle de hubs y las gráficas completas.
+3. **Paso 2 · Simulación y resultados:** el mapa se reproduce solo día a día, con un marcador de cuántas personas hay en cada estado (sanos, mordidos, zombies, aislados y exorcizados), el estado del virus y la estrategia que se quiere ver. Al terminar, en la misma pantalla aparecen debajo los resultados: un pergamino compara el Escudo con las dos líneas base (contagiados con su rango P10–P90, pico de zombies y contagios evitados) en tabla y en pilares de bloques, con acceso directo al informe para el alcalde, y siguen los indicadores, el detalle de hubs y las gráficas completas.
 
 **Sonido.** Cinco efectos con elementos `<audio>` de HTML5: grillos y viento, trueno, mordisco de manzana, clic de madera en **todos** los botones y una campanilla al lanzar la simulación. Son **originales**: se sintetizan con `python scripts/generar_sonidos.py` (osciladores, ruido y filtros, sin audios de videojuegos). Los navegadores no permiten sonido hasta el primer clic o tecla, y se puede silenciar desde la cabecera o la presentación.
 
@@ -414,7 +414,7 @@ Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos lo
 | Pico de zombies         | Cuánto baja el máximo de casos simultáneos, y el pico de cada estrategia.                              |
 | Gasto ejecutado         | Gasto, dosis, brigadas, días de cierre, costo por contagio evitado y dosis desperdiciadas (siempre 0). |
 
-**Estrategia en el visor y Brotes Sorpresa.** Junto al día de la simulación se elige qué estrategia muestra el mapa (_Cortafuegos Manta_, _Al Azar_ o _Sin Intervención_). En los resultados, los botones de **Brote Sorpresa** aplican y simulan los escenarios del reto: _Contagio ×2_, _Mitad de vacunas_, _Brote en Mercado Central_ y _Vacuna a medias_ (los valores están en [`frontend/src/data/surprisePresets.ts`](frontend/src/data/surprisePresets.ts) y coinciden con [docs/calibracion.md](docs/calibracion.md)). Se pueden combinar.
+**Estrategia en el visor y Brotes Sorpresa.** Junto al día de la simulación se elige qué estrategia muestra el mapa (_Cortafuegos Manta_, _Al Azar_ o _Sin Intervención_). Los botones de **Brote Sorpresa** están en _Parámetros_: cambian los valores del escenario (sin simular todavía, para poder combinarlos) y se lanzan con el botón de ejecutar. Son los escenarios del reto: _Contagio ×2_, _Mitad de vacunas_, _Brote en Mercado Central_ y _Vacuna a medias_ (los valores están en [`frontend/src/data/surprisePresets.ts`](frontend/src/data/surprisePresets.ts) y coinciden con [docs/calibracion.md](docs/calibracion.md)). Se pueden combinar.
 
 **Mapa de Manta.** Reproducción día a día (play, pausa, velocidad ×1/×2/×5 y slider). Cada parroquia se colorea por el porcentaje de su población con infección activa (menos de 2%, de 2% a 10%, más de 10%). Cada hub se marca con un icono: un escudo si tiene el cortafuegos activo ese día, un bloque de diamante si hay vacunación en anillo alrededor y una antorcha si está abierto; al hacer clic muestra sus casos activos. En los resultados, una tabla muestra cada hub y cada parroquia en el día elegido y el gasto acumulado.
 
@@ -505,7 +505,7 @@ curl http://localhost:8000/health
 docker compose up --build
 ```
 
-**Prueba de fuego en vivo:** elegir una semilla en _Parámetros_, simular y comprobar que el Escudo queda por debajo de las dos líneas base; luego aplicar los botones de **Brote Sorpresa** (también combinados). Los resultados esperados de cada escenario están en [docs/calibracion.md](docs/calibracion.md).
+**Prueba de fuego en vivo:** elegir una semilla en _Parámetros_, simular y comprobar que el Escudo queda por debajo de las dos líneas base; luego volver a _Parámetros_ (botón **Cambiar parámetros** en los resultados), aplicar los botones de **Brote Sorpresa** (también combinados) y ejecutar otra vez. Los resultados esperados de cada escenario están en [docs/calibracion.md](docs/calibracion.md).
 
 ## Costos
 
