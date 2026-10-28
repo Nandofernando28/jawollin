@@ -2,7 +2,7 @@
 
 > SpookyThon 2026 · Track B · La Plaga Zombie 🧟‍♀️
 
-**🌐 Aplicación desplegada en AWS:** https://main.d2xnw5a1o65wwk.amplifyapp.com
+**🌐 Aplicación desplegada en AWS:** https://main.d2rdluo4raik0f.amplifyapp.com
 
 **API (Amazon API Gateway, `us-east-1`):** `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` (por ejemplo, [`/health`](https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod/health))
 
@@ -396,7 +396,7 @@ Luego abrir `http://localhost:5173`. La consola usa **siempre AWS** (la URL de `
 | Pieza | Dónde |
 |---|---|
 | Backend (stack `spookython-cortafuegos-manta`) | API: `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` |
-| Frontend (Amplify, app `cortafuegos-manta`, rama `main`) | https://main.d2xnw5a1o65wwk.amplifyapp.com |
+| Frontend (Amplify, app `cortafuegos-manta-web`, conectada a GitHub, rama `main`) | https://main.d2rdluo4raik0f.amplifyapp.com |
 
 **Requisitos para volver a desplegar:** AWS CLI con el perfil `spookython`, [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html), **Docker** (para construir las Lambdas arm64 en la imagen oficial de Lambda, aunque el equipo no tenga Python 3.12) y Node.js 20 o superior.
 
@@ -418,13 +418,9 @@ O con el script, que hace lo mismo y escribe la URL de la API en `frontend/.env.
 
 Con `-AlertEmail correo@dominio.com` crea además el **AWS Budget** de 5 $ con alertas al 50% y 80%. La URL de la API aparece en las salidas del stack como `HttpApiUrl`.
 
-**2. Frontend.** Se publica en Amplify como **despliegue manual** (se sube la web ya construida; no hace falta conectar GitHub). Desde `frontend/`, construir con la URL de la API:
+**2. Frontend.** La app de Amplify `cortafuegos-manta-web` está **conectada al repositorio de GitHub**: cada push a `main` la vuelve a construir y publicar sola, con [`amplify.yml`](amplify.yml) (monorepo con carpeta raíz `frontend`). La URL de la API se le pasa con la variable de entorno **`VITE_API_URL`** = `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` (*Amplify → cortafuegos-manta-web → Hosting → Environment variables*). Si cambia la API, hay que actualizar esa variable y volver a desplegar la rama.
 
-```powershell
-$env:VITE_API_URL = "https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod"; npm run build
-```
-
-Luego comprimir el **contenido** de `frontend/dist/` en un zip (con `index.html` en la raíz) y subirlo en la consola de **AWS Amplify → cortafuegos-manta → main → Deploy updates** (arrastrar el zip). Por CLI: `aws amplify create-deployment --app-id d2xnw5a1o65wwk --branch-name main`, subir el zip a la `zipUploadUrl` que devuelve y `aws amplify start-deployment` con su `jobId`.
+Para crear la app desde cero en otra cuenta: *Amplify → Create new app → GitHub* → autorizar el repositorio → rama `main` → marcar **"My app is a monorepo"** con carpeta `frontend` → añadir `VITE_API_URL` en *Advanced settings* → *Save and deploy*.
 
 **Límite de concurrencia de Lambda.** Las cuentas nuevas tienen **10 ejecuciones simultáneas** de Lambda. Por eso la máquina de estados corre como máximo **8 workers a la vez** ([`infra/statemachine/monte_carlo_express.asl.json`](infra/statemachine/monte_carlo_express.asl.json)) y reintenta con espera creciente si Lambda responde 429. Con 100 repeticiones y 90 días tarda unos 7 s. Si se amplía la cuota (Service Quotas → AWS Lambda → *Concurrent executions*), se puede subir `MaxConcurrency`.
 
