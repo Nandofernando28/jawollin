@@ -522,35 +522,20 @@ pre {
   }
 }
 
-/* ── Mapa (Leaflet): Estilo pergamino (Rules/Desing_MC.md §2.1 y §6) ────────── */
+/* ── Mapa (Leaflet): Estilo tactico oscuro (Rules/Desing_MC.md §2.1) ────────── */
 .leaflet-container {
-  background: var(--mc-paper) !important;
+  background: var(--mc-core-off-black) !important;
   font-family: var(--font-ui);
   font-size: 13px;
 }
 
-.mc-paper-map .leaflet-tile-pane {
-  filter: sepia(0.55) saturate(1.35) contrast(1.08) brightness(0.98);
-}
+
 
 .mc-paper-map .leaflet-tile {
   image-rendering: pixelated;
 }
 
-.mc-paper-map .leaflet-tile-pane::after {
-  content: "";
-  position: absolute;
-  left: -10000px;
-  top: -10000px;
-  width: 20000px;
-  height: 20000px;
-  z-index: 10;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(58, 42, 20, 0.16) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(58, 42, 20, 0.16) 1px, transparent 1px);
-  background-size: 16px 16px;
-}
+
 
 /* Control de zoom como botones de piedra (Rules/Desing_MC.md §5.1) */
 .leaflet-control-zoom {

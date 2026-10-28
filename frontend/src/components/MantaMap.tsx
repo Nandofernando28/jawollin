@@ -23,7 +23,7 @@ import { MATERIAL } from '../theme/pixelTheme';
 // pergamino (.mc-paper-map), para que el mapa parezca un mapa de papel.
 const DEFAULT_CARTO_KEY = 'cb1_4wbd_1_65f9d0e2dc755e74c2198851';
 const CARTO_KEY = (import.meta.env.VITE_CARTO_API_KEY || DEFAULT_CARTO_KEY).trim();
-const CARTO_STYLE = (import.meta.env.VITE_CARTO_STYLE || 'voyager').trim();
+const CARTO_STYLE = (import.meta.env.VITE_CARTO_STYLE || 'dark_all').trim();
 
 const OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const CARTO_URL = CARTO_KEY
