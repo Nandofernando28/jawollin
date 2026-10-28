@@ -1,5 +1,5 @@
 import React, { useState, useId } from 'react';
-import { HelpCircle } from 'lucide-react';
+import { PixelIcon } from './PixelIcon';
 
 interface TooltipProps {
   text: string;
@@ -20,21 +20,17 @@ export function Tooltip({ text, children }: TooltipProps) {
       onBlur={() => setVisible(false)}
     >
       {children ?? (
-        <HelpCircle className="w-3.5 h-3.5 text-slate-600 hover:text-slate-400 cursor-help" />
+        <span className="cursor-help text-mc-muted hover:text-mc-ink">
+          <PixelIcon name="help" size={16} />
+        </span>
       )}
       {visible && (
         <span
           id={id}
           role="tooltip"
-          className="
-            absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2
-            w-56 text-[11px] leading-snug text-slate-200
-            bg-slate-800 border border-slate-700 rounded-lg
-            px-2.5 py-2 shadow-2xl pointer-events-none
-          "
+          className="mc-tooltip pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-60 -translate-x-1/2 px-3 py-2"
         >
           {text}
-          <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-700" />
         </span>
       )}
     </span>
