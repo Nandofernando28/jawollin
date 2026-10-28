@@ -150,13 +150,13 @@ export function LiveSimulation(props: LiveSimulationProps) {
         </div>
 
         {/* Marcador de estados del día */}
-        <aside className="mc-panel space-y-3 p-3 lg:col-span-4" aria-live="off">
+        <aside className="mc-panel flex flex-col gap-3 p-3 lg:col-span-4" aria-live="off">
           <div className="mc-panel-dark px-3 py-2">
             <p className="mc-label text-[#ede5e2]">Población · día {currentDay}</p>
             <h3 className="mc-title mt-1 text-[14px]">Estados de la plaga</h3>
           </div>
           {totals.map((t) => (
-            <div key={t.key} className="mc-slot-dark p-2">
+            <div key={t.key} className="mc-slot-dark flex flex-1 flex-col justify-center p-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-[15px]">
                   <span className="h-4 w-4 border-2 border-black" style={{ background: t.color }} />
