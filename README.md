@@ -327,6 +327,21 @@ Todo modelo simplifica la realidad. Estas son las simplificaciones conocidas del
 - El fondo del mapa (tiles de CARTO) necesita internet. Sin conexión, el mapa sigue mostrando las parroquias y los hubs, pero sin calles.
 - Con muchas personas y repeticiones el cálculo local se vuelve lento (5 000 personas, 100 repeticiones y 60 días tardan unos 20 s en un portátil). En AWS se reparte en paralelo.
 
+## Decisiones de diseño
+
+| Decisión | Por qué | Qué descartamos |
+|---|---|---|
+| **Red de contactos persona a persona**, con capa de día y de noche | El reto describe el contagio "en la casa, en el bus, en el colegio, en el mercado". Con una red podemos decidir a **qué persona** vacunar o aislar, no solo a qué barrio. | Un modelo por barrios (SEIR por parroquia): más simple, pero no permite vacunación en anillo ni identificar a los puentes. |
+| **Estado Aislado** además de los cuatro sugeridos | Las brigadas necesitan un estado propio: el aislado sigue enfermo, pero ya no contagia. | Tratar el aislamiento como una curación inmediata, que exageraría el efecto de las brigadas. |
+| **Estrategia voraz por contagios evitados por dólar** | Decide en milisegundos, se explica en una frase y se adapta sola al Brote Sorpresa porque recalcula cada día. | Aprendizaje por refuerzo u optimización global: difíciles de explicar al jurado y lentos para ajustar en 5 minutos. |
+| **El COE solo ve los casos detectados** (35% diario) | Sin esta regla, la estrategia aislaría a los pacientes cero el primer día, algo imposible en la realidad. | Dar a la estrategia información perfecta sobre quién está infectado. |
+| **Las 3 estrategias enfrentan el mismo brote** (números aleatorios comunes) | La diferencia entre estrategias se debe a la estrategia, no a la suerte de cada simulación. | Simular cada estrategia con un azar independiente, que necesitaría muchas más repeticiones. |
+| **Muestra de 1 200 personas** escalada a Manta | Mantiene la estructura de hogares, hubs y buses y corre en ~1 s, dentro de los 5 minutos del Brote Sorpresa. | Simular los 271 000 habitantes, mucho más lento sin cambiar las conclusiones. |
+| **Serverless** (Lambda + Step Functions + DynamoDB + S3) | Las repeticiones corren en paralelo y, sin uso, el costo es prácticamente cero. | Servidores o contenedores encendidos todo el día (EC2, Fargate), que cuestan aunque nadie use la herramienta. |
+| **Caché por configuración y semilla** (`sim_hash` en DynamoDB) | La misma configuración devuelve al instante el mismo resultado: refuerza la reproducibilidad y ahorra cómputo. | Recalcular siempre. |
+| **Servidor local con la misma API** (`src/local_server.py`) | Si falla la conexión con AWS durante la demo, la consola sigue funcionando en un portátil. | Depender solo de la nube. |
+| **Informe del alcalde generado a partir de los resultados**, con Bedrock opcional | El informe no puede inventar cifras, y la cuenta es nueva y no tiene acceso a modelos fundacionales. | Un informe redactado siempre por un modelo de lenguaje. |
+
 ## Arquitectura en AWS
 
 Todo es **serverless** en la región **`us-east-1`** (N. Virginia) y se despliega con **AWS SAM** desde [`infra/template.yaml`](infra/template.yaml). No hay servidores encendidos: si nadie usa la herramienta, el costo es prácticamente cero.
