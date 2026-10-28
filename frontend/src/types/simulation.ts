@@ -265,9 +265,19 @@ export interface MayorReportResponse {
 
 export interface MayorMetricsSnapshot {
   lives_saved_vs_random: number;
+  /** Contagios evitados frente a no intervenir (en la muestra) */
+  lives_saved_vs_none: number;
   peak_reduction_pct: number;
+  /** Gasto de la muestra (dólares) */
   budget_spent_usd: number;
+  /** El mismo gasto por habitante, llevado a toda Manta (redondeado a miles) */
+  budget_manta_equivalent_usd: number;
+  /** Gasto dividido entre los contagios evitados frente al azar (compatibilidad) */
   cost_per_life_saved_usd: number;
+  /** Gasto dividido entre los contagios evitados frente a no actuar; no depende de la escala */
+  cost_per_infection_avoided_usd: number;
+  /** Habitantes de Manta que representa cada persona de la muestra */
+  scale_factor: number;
   most_critical_parish: string;
   /** Nombres de los hubs que el Escudo cerró de verdad en la réplica 0 (puede estar vacío) */
   critical_hubs_intervened: string[];
