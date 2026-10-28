@@ -5,12 +5,14 @@
  *   1) Semilla y escenario base, 2) Parámetros biológicos, 3) Recursos y costos.
  * Cada control muestra valor actual, unidad y qué representa. Todos los valores
  * se envían tal cual al backend (SimulationParams); no hay datos simulados aquí.
+ *
+ * Estilo: menú de opciones del tema pixel (src/index.css).
  */
 import React from 'react';
-import { Biohazard, Hash, Loader2, MapPin, Play, RotateCcw, ShieldCheck } from 'lucide-react';
 import type { SimulationParams, StartHubOption } from '../types/simulation';
 import { DEFAULT_SIMULATION_PARAMS } from '../types/simulation';
 import { SURPRISE_PRESETS } from '../data/surprisePresets';
+import { PixelIcon } from './PixelIcon';
 
 interface FieldProps {
   label: string;
@@ -37,9 +39,9 @@ function Field({ label, hint, unit, value, min, max, step, format, onChange }: F
   };
   return (
     <div>
-      <div className="mb-1 flex items-baseline justify-between gap-2 text-[11px]">
-        <span className="font-medium text-[#111a4a]">{label}</span>
-        <span className="font-mono text-[#167e6c]">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <span className="text-[20px] leading-tight text-mc-ink">{label}</span>
+        <span className="font-pixel text-[10px] text-mc-ink">
           {format ? format(value) : value}
           {unit ? ` ${unit}` : ''}
         </span>
@@ -51,12 +53,12 @@ function Field({ label, hint, unit, value, min, max, step, format, onChange }: F
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-2 w-full cursor-pointer appearance-none rounded-lg"
-        style={{ background: `linear-gradient(to right, #167e6c 0%, #167e6c ${pct}%, #e3e4e8 ${pct}%, #e3e4e8 100%)` }}
+        className="w-full cursor-pointer appearance-none"
+        style={{ background: `linear-gradient(to right, #4f8f2f 0%, #4f8f2f ${pct}%, #373737 ${pct}%, #373737 100%)` }}
         aria-label={label}
       />
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <span className="text-[10px] leading-tight text-[#7c7f88]">{hint}</span>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <span className="text-[18px] leading-tight text-mc-muted">{hint}</span>
         <input
           type="number"
           min={min}
@@ -69,7 +71,7 @@ function Field({ label, hint, unit, value, min, max, step, format, onChange }: F
             if (e.key === 'Enter') commit();
             if (e.key === 'Escape') setDraft(null);
           }}
-          className="w-20 shrink-0 rounded-md border border-[#e3e4e8] bg-white px-2 py-1 text-right font-mono text-[11px] text-[#111a4a] outline-none focus:border-[#111a4a]"
+          className="mc-slot-dark w-24 shrink-0 px-2 py-0.5 text-right text-[20px] text-white outline-none"
           aria-label={`${label} (valor exacto)`}
         />
       </div>
@@ -79,15 +81,15 @@ function Field({ label, hint, unit, value, min, max, step, format, onChange }: F
 
 function Section({ icon, kicker, title, children }: { icon: React.ReactNode; kicker: string; title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <section className="mc-panel p-4">
+      <div className="mc-panel-dark mb-4 flex items-center justify-between gap-3 px-3 py-2">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">{kicker}</p>
-          <h2 className="mt-1 text-lg font-semibold text-[#111a4a]">{title}</h2>
+          <p className="mc-label text-[#d8d8d8]">{kicker}</p>
+          <h2 className="mc-title mt-1 text-[16px]">{title}</h2>
         </div>
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#111a4a]">{icon}</div>
+        <div className="mc-slot flex h-10 w-10 shrink-0 items-center justify-center">{icon}</div>
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-5">{children}</div>
     </section>
   );
 }
@@ -116,24 +118,26 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
   const usd = (v: number) => `$${v.toLocaleString()}`;
 
   return (
-    <div className="min-h-screen bg-[#f6f6f8] px-4 py-10 text-[#111a4a]">
-      <div className="mx-auto max-w-4xl rounded-lg border border-[#e3e4e8] bg-white p-8 shadow-xl">
-        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7c7f88]">Operación Cortafuegos Manta · SpookyThon 2026 · Track B</p>
-        <h1 className="mt-1 text-2xl font-semibold">Parámetros de Contención Epidemiológica</h1>
-        <p className="mt-2 text-sm text-[#3b3e47]">
-          Todos los valores son libres y se envían al motor Monte Carlo (AWS o servidor local). Con la misma semilla el resultado es idéntico.
-        </p>
+    <div className="min-h-screen px-4 py-10 text-white">
+      <div className="mc-panel mx-auto max-w-4xl p-4 sm:p-6">
+        <div className="mc-panel-dark px-4 py-4">
+          <p className="mc-label text-[#d8d8d8]">Paso 1 · Operación Cortafuegos Manta · SpookyThon 2026 · Track B</p>
+          <h1 className="mc-title mt-2 text-[22px] sm:text-[26px]">Parámetros de Contención Epidemiológica</h1>
+          <p className="mt-3 text-[20px] leading-tight text-white">
+            Todos los valores son libres y se envían al motor Monte Carlo (AWS o servidor local). Con la misma semilla el resultado es idéntico.
+          </p>
+        </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={() => setParams({ ...DEFAULT_SIMULATION_PARAMS })}
-            className="flex items-center justify-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-4 py-2.5 text-[11px] font-medium shadow-sm transition hover:bg-[#f6f6f8]"
+            className="mc-button mc-button-primary"
           >
-            <ShieldCheck className="h-4 w-4 text-[#167e6c]" />
+            <PixelIcon name="shield" size={16} />
             Escenario base (semilla 2026)
           </button>
-          <span className="ml-1 text-[11px] font-semibold uppercase tracking-wider text-[#7c7f88]">Brotes Sorpresa:</span>
+          <span className="mc-label ml-1 text-mc-ink">Brotes Sorpresa:</span>
           {/* Solo cambian los parámetros (sin simular), para poder combinarlos antes de lanzar */}
           {SURPRISE_PRESETS.map((p) => (
             <button
@@ -141,22 +145,22 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
               type="button"
               onClick={() => set(p.changes)}
               title={p.description}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#e3e4e8] bg-white px-3 py-2.5 text-[11px] font-medium shadow-sm transition hover:bg-[#f6f6f8]"
+              className="mc-button mc-button-danger"
             >
-              <p.icon className="h-3.5 w-3.5" aria-hidden="true" />
+              <p.icon className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={3} />
               {p.label}
             </button>
           ))}
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-2">
-          <Section icon={<MapPin className="h-4 w-4" />} kicker="Escenario" title="Semilla y escenario base">
+          <Section icon={<PixelIcon name="pin" size={24} />} kicker="Escenario" title="Semilla y escenario base">
             <label className="block">
-              <span className="mb-1 block text-[11px] font-medium">Epicentro inicial (paciente cero)</span>
+              <span className="mb-2 block text-[20px] leading-tight text-mc-ink">Epicentro inicial (paciente cero)</span>
               <select
                 value={params.start_hub}
                 onChange={(e) => set({ start_hub: e.target.value as StartHubOption })}
-                className="w-full cursor-pointer rounded-lg border border-[#e3e4e8] bg-white px-3 py-2 text-sm outline-none focus:border-[#111a4a]"
+                className="mc-slot-dark w-full cursor-pointer px-3 py-1.5 text-[20px] text-white outline-none"
               >
                 {START_HUBS.map((h) => (
                   <option key={h.id} value={h.id}>
@@ -173,17 +177,17 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
           </Section>
 
           <div className="space-y-6">
-            <Section icon={<Biohazard className="h-4 w-4" />} kicker="Plaga" title="Parámetros biológicos">
+            <Section icon={<PixelIcon name="zombie" size={24} />} kicker="Plaga" title="Parámetros biológicos">
               <Field label="Contagio diurno (β día)" hint="Hubs, buses, mercados y aulas" value={params.beta_day} min={0.02} max={0.4} step={0.005} format={(v) => v.toFixed(3)} onChange={(v) => set({ beta_day: v })} />
               <Field label="Contagio nocturno (β noche)" hint="Hogares y barrios" value={params.beta_night} min={0.02} max={0.4} step={0.005} format={(v) => v.toFixed(3)} onChange={(v) => set({ beta_night: v })} />
               <Field label="Incubación" hint="Días como Mordido antes de contagiar" unit="días" value={params.incubation_days} min={1} max={7} step={1} onChange={(v) => set({ incubation_days: v })} />
               <Field label="Fase infecciosa" hint="Días como Zombie contagiando" unit="días" value={params.infectious_days} min={2} max={10} step={1} onChange={(v) => set({ infectious_days: v })} />
             </Section>
 
-            <Section icon={<Hash className="h-4 w-4" />} kicker="Escudo Manta" title="Recursos limitados y costos">
+            <Section icon={<PixelIcon name="coin" size={24} />} kicker="Escudo Manta" title="Recursos limitados y costos">
               <Field label="Eficacia de la vacuna" hint="Probabilidad de inmunizar a un sano" value={params.vaccine_efficacy} min={0.05} max={1} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => set({ vaccine_efficacy: v })} />
               <Field label="Presupuesto diario" hint="Ingresa cada día al COE" unit="USD/día" value={params.daily_budget} min={100} max={3000} step={50} format={usd} onChange={(v) => set({ daily_budget: v })} />
-              <Field label="Presupuesto total" hint="Techo para toda la campaña" unit="USD" value={params.total_budget} min={1000} max={50000} step={500} format={usd} onChange={(v) => set({ total_budget: v })} />
+              <Field label="Presupuesto total" hint={`Techo para toda la campaña · alcanza para unas ${Math.floor(params.total_budget / Math.max(params.vaccine_cost, 1)).toLocaleString()} vacunas`} unit="USD" value={params.total_budget} min={1000} max={50000} step={500} format={usd} onChange={(v) => set({ total_budget: v })} />
               <Field label="Costo por vacuna" hint="Por dosis aplicada" unit="USD" value={params.vaccine_cost} min={1} max={100} step={1} format={usd} onChange={(v) => set({ vaccine_cost: v })} />
               <Field label="Costo por brigada" hint="Por brigada de contención" unit="USD" value={params.brigade_cost} min={5} max={300} step={5} format={usd} onChange={(v) => set({ brigade_cost: v })} />
               <Field label="Costo de cierre de hub" hint="Por hub y por día de cortafuegos" unit="USD/día" value={params.hub_closure_cost} min={20} max={1000} step={10} format={usd} onChange={(v) => set({ hub_closure_cost: v })} />
@@ -191,25 +195,31 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
           </div>
         </div>
 
-        {error && <p className="mt-4 rounded-lg border border-[#f0d7a8] bg-[#fffaf2] p-3 text-sm text-[#7c5a1a]">{error}</p>}
+        {error && (
+          <p className="mc-slot-light mt-4 flex items-center gap-3 p-3 text-[20px] leading-tight">
+            <PixelIcon name="warning" size={16} />
+            {error}
+          </p>
+        )}
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
           <button
             type="button"
             onClick={onLaunch}
             disabled={loading}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#ec652b] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#dc5725] disabled:cursor-not-allowed disabled:opacity-60"
+            data-sound="custom"
+            className="mc-button mc-button-primary flex-1 py-3 text-[11px]"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-            {loading ? 'Ejecutando simulación Monte Carlo…' : 'Ejecutar simulación Monte Carlo'}
+            {loading ? <PixelIcon name="hourglass" size={16} className="mc-loading" /> : <PixelIcon name="play" size={16} />}
+            {loading ? 'Ejecutando simulación Monte Carlo…' : '[ EJECUTAR SIMULACIÓN DE CONTENCIÓN ]'}
           </button>
           {hasResult && (
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-5 py-3 text-sm font-medium text-[#3b3e47] transition hover:bg-[#f6f6f8]"
+              className="mc-button py-3 text-[11px]"
             >
-              <RotateCcw className="h-4 w-4" />
+              <PixelIcon name="reset" size={16} />
               Volver al resultado actual
             </button>
           )}

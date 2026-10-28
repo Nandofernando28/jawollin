@@ -291,6 +291,23 @@ El botón de informe genera una **propuesta de decreto del COE** en lenguaje sim
 
 **Amazon Bedrock es opcional y está apagado por defecto** (`UseBedrock=false` en [`infra/template.yaml`](infra/template.yaml)). Lo dejamos así por dos razones: nuestra cuenta de AWS es nueva y no tiene acceso a los modelos fundacionales, y el informe heurístico no puede inventar cifras, mientras que un modelo de lenguaje sí podría. Si se activa, el modelo recibe solo los datos de la simulación; si falla, tarda más de 8 s o responde algo que no cumple el formato, se usa el informe heurístico.
 
+### Detector del modelo de expansión
+
+La consola describe con una fórmula **qué forma tiene la expansión**. Ajusta tres funciones clásicas a la curva de **contagiados acumulados** C(t) que produjo la simulación ([`frontend/src/analysis/expansionFit.ts`](frontend/src/analysis/expansionFit.ts)):
+
+| Modelo | Fórmula | Qué significa |
+|---|---|---|
+| Exponencial | C(t) = a · e^(b·t) | Crece sin freno; los contagios se duplican cada ln 2 / b días |
+| Logística | C(t) = K / (1 + e^(−r·(t − t0))) | Curva en S: se frena al acercarse al techo K; t0 es el día de expansión más rápida |
+| Logarítmica | C(t) = a + b · ln(t + 1) | Crece rápido al principio y se frena pronto |
+
+- **Cómo se ajusta:** mínimos cuadrados. La exponencial y la logarítmica se linealizan. En la logística se prueba una serie de techos K, desde el máximo observado hasta la población, y se queda el de menor error.
+- **Cómo se elige:** por el R² ajustado. Si la logística apenas mejora a un modelo más simple (menos de 0,01), se elige el simple, porque su techo sería una extrapolación que los datos aún no muestran.
+- **En vivo:** durante la simulación se ajusta solo con los días ya transcurridos, así que el modelo detectado puede cambiar. Por ejemplo, sin intervención la curva se ve **exponencial** los primeros días y pasa a **logística** cuando empieza a frenarse.
+- **Resultados con los valores por defecto (30 días):** sin intervención, **logística** (techo ≈ 1 040 personas, expansión más rápida hacia el día 23, R² 0,999); al azar, **exponencial** (se duplica cada ≈ 10 días); Cortafuegos Manta, **logarítmica** (la plaga se frena desde el principio).
+
+**Importante:** estas fórmulas **describen** la curva; **no son el modelo**. La simulación sigue siendo un SEIR estocástico sobre la red de contactos de Manta. El ajuste se comprobó con curvas sintéticas de parámetros conocidos (las tres se recuperan con R² = 1,000).
+
 ### Limitaciones del modelo
 
 Todo modelo simplifica la realidad. Estas son las simplificaciones conocidas del nuestro:
@@ -376,6 +393,17 @@ _Fuente: [docs/arquitectura.svg](docs/arquitectura.svg)._
 
 Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos los números que muestra vienen del backend: si AWS no responde se usa el servidor local, y si ninguno responde aparece un aviso de error con **Reintentar** (no hay datos simulados en el navegador).
 
+**Tema visual.** Estética retro pixel art inspirada en los menús e inventarios de los juegos de bloques: paneles grises con bisel 3D, botones de piedra, sin esquinas redondeadas ni sombras difuminadas, el mapa como un mapa de papel con cuadrícula de bloques y las gráficas con líneas en escalón y barras como pilares de bloques. Los colores de los datos son materiales (pasto, oro, redstone, diamante). Todos los iconos y texturas son **originales**, dibujados con CSS y SVG ([`PixelIcon.tsx`](frontend/src/components/PixelIcon.tsx), [`index.css`](frontend/src/index.css)). Fuentes: Silkscreen (títulos), Press Start 2P (botones y cifras) y VT323 (texto). Los textos principales cumplen un contraste de al menos 4,5:1.
+
+**Recorrido.** La consola se usa en cuatro pantallas, unidas por una transición de bloques:
+
+1. **Presentación "El Ataque Nocturno":** noche cerrada con estrellas y luna pixel. Tras el primer clic o tecla (los navegadores no permiten sonido antes) se oyen grillos y viento; de repente cae un rayo con su trueno y aparece un letrero de madera flotante: *"La noche ha caído sobre Manta. Los aldeanos han sido mordidos"*. Una barra *"Generando terreno... 100%"* se llena y, al terminar, suena un mordisco de manzana y se entra solo a los parámetros. Se salta con **Esc** o con el botón *Saltar*.
+2. **Paso 1 · Parámetros:** la pantalla de parámetros de siempre (contagio, presupuesto, eficacia de la vacuna, punto de inicio, semilla…) y el botón *[ EJECUTAR SIMULACIÓN DE CONTENCIÓN ]*.
+3. **Paso 2 · Simulación en vivo:** el mapa se reproduce solo día a día, con un marcador de cuántas personas hay en cada estado (sanos, mordidos, zombies, aislados y exorcizados) y la estrategia que se quiere ver.
+4. **Paso 3 · Resultados:** un pergamino compara el Escudo con las dos líneas base (contagiados con su rango P10–P90, pico de zombies y contagios evitados) en tabla y en pilares de bloques, con acceso directo al informe para el alcalde. Debajo siguen los indicadores, el mapa y las gráficas completas.
+
+**Sonido.** Cinco efectos con elementos `<audio>` de HTML5: grillos y viento, trueno, mordisco de manzana, clic de madera en **todos** los botones y una campanilla al lanzar la simulación. Son **originales**: se sintetizan con `python scripts/generar_sonidos.py` (osciladores, ruido y filtros, sin audios de videojuegos). Los navegadores no permiten sonido hasta el primer clic o tecla, y se puede silenciar desde la cabecera o la presentación.
+
 **Cabecera.** Estado del motor de simulación (_Conectado_ o _Sin conexión_) y los botones **Parámetros**, **Restaurar** (vuelve al escenario base, semilla 2026), **Boletín COE** y **Simular**. Debajo, una barra con el identificador de la simulación (`sim_hash`), si se calculó ahora o vino **desde caché**, el tiempo de cómputo, la población, las repeticiones y la semilla.
 
 **Indicadores.** Cuatro tarjetas con la media de las repeticiones y su rango P10–P90:
@@ -389,7 +417,7 @@ Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos lo
 
 **Estrategia en el visor y Brotes Sorpresa.** Se elige qué estrategia muestra el mapa (_Cortafuegos Manta_, _Al Azar_ o _Sin Intervención_). Los botones de **Brote Sorpresa** aplican y simulan los escenarios del reto: _Contagio ×2_, _Mitad de vacunas_, _Brote en Mercado Central_ y _Vacuna a medias_ (los valores están en [`frontend/src/data/surprisePresets.ts`](frontend/src/data/surprisePresets.ts) y coinciden con [docs/calibracion.md](docs/calibracion.md)). Se pueden combinar.
 
-**Mapa de Manta.** Reproducción día a día (play, pausa, velocidad ×1/×2/×5 y slider). Cada parroquia se colorea por el porcentaje de su población con infección activa (menos de 2%, de 2% a 10%, más de 10%). Cada hub se marca en azul si tiene el cortafuegos activo ese día, en verde si hay vacunación en anillo alrededor y en naranja si está abierto; al hacer clic muestra sus casos activos. Debajo del mapa, una tabla con cada hub y cada parroquia en el día elegido y el gasto acumulado.
+**Mapa de Manta.** Reproducción día a día (play, pausa, velocidad ×1/×2/×5 y slider). Cada parroquia se colorea por el porcentaje de su población con infección activa (menos de 2%, de 2% a 10%, más de 10%). Cada hub se marca con un icono: un escudo si tiene el cortafuegos activo ese día, un bloque de diamante si hay vacunación en anillo alrededor y una antorcha si está abierto; al hacer clic muestra sus casos activos. Debajo del mapa, una tabla con cada hub y cada parroquia en el día elegido y el gasto acumulado.
 
 **Gráficas.** (1) Zombies activos o contagiados acumulados por día de las tres estrategias, con la zona P10–P90 sombreada; (2) cómo se reparte la población entre los 5 estados con el Escudo; (3) gasto diario del Escudo en vacunas, brigadas y cierres. Una línea vertical marca el día del mapa.
 

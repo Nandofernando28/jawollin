@@ -25,21 +25,23 @@ Font.registerHyphenationCallback((word) => [word]);
 const pdfText = (text: string) => text.replace(/[  ]/g, ' ');
 const fmt = (value: number | null | undefined, decimals = 0) => pdfText(fmtOrDash(value, decimals));
 
+// Paleta del tema pixel (src/index.css). El PDF mantiene Helvetica porque es un documento
+// oficial para imprimir; solo adopta los colores de materiales y las esquinas rectas.
 const C = {
-  navy: '#111a4a',
-  ink: '#3b3e47',
-  muted: '#7c7f88',
-  line: '#e3e4e8',
-  panel: '#f6f6f8',
-  teal: '#167e6c',
-  orange: '#ec652b',
-  blue: '#1e4199',
+  navy: '#1b1b1b', // piedra oscura: títulos y franjas
+  ink: '#2b2b2b',
+  muted: '#5a5a5a',
+  line: '#8b8b8b',
+  panel: '#ececec',
+  teal: '#4f8f2f', // pasto
+  orange: '#c96a14',
+  blue: '#2a4ea8', // lapislázuli
 };
 
 const PRIORITY_COLOR: Record<string, string> = {
-  CRITICA: '#c62828',
+  CRITICA: '#c0281e', // redstone
   ALTA: C.orange,
-  MEDIA: '#b7860b',
+  MEDIA: '#a5781a', // oro oscuro, legible sobre blanco
 };
 
 const s = StyleSheet.create({
@@ -53,7 +55,7 @@ const s = StyleSheet.create({
     color: C.ink,
   },
   // Encabezado institucional
-  band: { height: 4, backgroundColor: C.navy, marginBottom: 18 },
+  band: { height: 6, backgroundColor: C.navy, borderBottomWidth: 2, borderBottomColor: C.teal, marginBottom: 18 },
   eyebrow: { fontSize: 7.5, letterSpacing: 1.6, color: C.muted, textTransform: 'uppercase' },
   docType: { fontFamily: 'Helvetica-Bold', fontSize: 18, color: C.navy, marginTop: 4 },
   headline: { fontFamily: 'Helvetica-Bold', fontSize: 11, color: C.navy, marginTop: 10, lineHeight: 1.35 },
@@ -61,7 +63,7 @@ const s = StyleSheet.create({
   rule: { borderBottomWidth: 1, borderBottomColor: C.line, marginVertical: 16 },
   // Indicadores
   kpiRow: { flexDirection: 'row', gap: 8 },
-  kpi: { flex: 1, borderWidth: 1, borderColor: C.line, backgroundColor: C.panel, borderRadius: 4, padding: 8 },
+  kpi: { flex: 1, borderWidth: 2, borderColor: C.navy, backgroundColor: C.panel, borderRadius: 0, padding: 8 },
   kpiLabel: { fontSize: 6.5, letterSpacing: 1, color: C.muted, textTransform: 'uppercase' },
   kpiValue: { fontFamily: 'Helvetica-Bold', fontSize: 13, color: C.navy, marginTop: 4 },
   kpiUnit: { fontSize: 7, color: C.muted, marginTop: 2 },
