@@ -20,10 +20,10 @@ La estrategia, **Escudo Manta**, elige cada día la acción que más contagios e
 
 **Resultado con los valores por defecto (semilla 2026):**
 
-| | Sin intervención | Al azar | **Escudo Manta** |
-|---|---|---|---|
-| Personas contagiadas (de 1 200) | 842 (70%) | 51 | **14,5** |
-| Pico de zombies a la vez | 279,6 | 16,3 | **5,0** |
+|                                 | Sin intervención | Al azar | **Escudo Manta** |
+| ------------------------------- | ---------------- | ------- | ---------------- |
+| Personas contagiadas (de 1 200) | 842 (70%)        | 51      | **14,5**         |
+| Pico de zombies a la vez        | 279,6            | 16,3    | **5,0**          |
 
 El Escudo evita el **98%** de los contagios frente a no hacer nada y el **72%** frente al azar, sin vacunar nunca a quien ya está infectado o es inmune. Escalado a los 271 000 habitantes de Manta, son unos **187 000 contagios evitados**.
 
@@ -39,13 +39,13 @@ Una plaga zombie ficticia, de contagio directo entre personas. Su contagiosidad 
 
 Cada persona está siempre en uno de estos 5 estados:
 
-| Código | Estado | Qué significa | Cuánto dura |
-|---|---|---|---|
-| 0 | 🟢 Sano | Puede contagiarse | Hasta que lo muerden o lo vacunan |
-| 1 | 🟡 Mordido | Infectado en incubación: todavía no contagia y nadie sabe que está infectado | 2 días (`incubation_days`) |
-| 2 | 🔴 Zombie | Contagia a sus contactos | 5 días (`infectious_days`) |
-| 3 | 🟣 Aislado | Zombie retirado por una brigada: ya no contagia | Hasta completar sus 5 días |
-| 4 | 🔵 Exorcizado / Inmune | Recuperado, o vacunado con éxito. No vuelve a contagiarse | Permanente |
+| Código | Estado                 | Qué significa                                                                | Cuánto dura                       |
+| ------ | ---------------------- | ---------------------------------------------------------------------------- | --------------------------------- |
+| 0      | 🟢 Sano                | Puede contagiarse                                                            | Hasta que lo muerden o lo vacunan |
+| 1      | 🟡 Mordido             | Infectado en incubación: todavía no contagia y nadie sabe que está infectado | 2 días (`incubation_days`)        |
+| 2      | 🔴 Zombie              | Contagia a sus contactos                                                     | 5 días (`infectious_days`)        |
+| 3      | 🟣 Aislado             | Zombie retirado por una brigada: ya no contagia                              | Hasta completar sus 5 días        |
+| 4      | 🔵 Exorcizado / Inmune | Recuperado, o vacunado con éxito. No vuelve a contagiarse                    | Permanente                        |
 
 Caminos posibles:
 
@@ -53,41 +53,41 @@ Caminos posibles:
 - 🔴 Zombie → 🟣 Aislado (brigada) → 🔵 Inmune
 - 🟢 Sano → 🔵 Inmune (vacuna, funciona en el 85% de los casos)
 
-
 ### La población: red de contactos de Manta
+
 La organización no entrega datos, así que generamos una **población sintética de Manta** (por defecto, 1 200 personas) como una red de contactos. Cada persona es un punto y cada contacto es una línea con un **peso** entre 0 y 1,45: cuanto más alto, más cercano es el contacto y más fácil el contagio. Código: [`src/engine/graph_manta.py`](src/engine/graph_manta.py).
 
 **Parroquias urbanas.** Cada persona vive en una de las 5 parroquias, repartidas según su peso de población:
 
-| Parroquia | Población |
-|---|---|
-| Tarqui | 38% |
-| Eloy Alfaro | 24% |
-| Manta Centro | 22% |
-| Los Esteros | 11% |
-| San Mateo | 5% |
+| Parroquia    | Población |
+| ------------ | --------- |
+| Tarqui       | 38%       |
+| Eloy Alfaro  | 24%       |
+| Manta Centro | 22%       |
+| Los Esteros  | 11%       |
+| San Mateo    | 5%        |
 
 **Hogares.** Las personas de una misma parroquia se agrupan en familias de 3 a 6 integrantes.
 
 **Roles y hubs.** Cada persona tiene un rol, que decide a qué lugar de alta afluencia (hub) va durante el día:
 
-| Rol | % de la población | Adónde va de día |
-|---|---|---|
-| Estudiante | 22% | ULEAM (70%) o un colegio de su barrio (30%) |
-| Comerciante | 18% | El mercado más cercano a su parroquia |
-| Transportista | 10% | Terminal Terrestre, y además conduce buses |
-| Obrero atunero | 20% | Zona industrial / Empacadoras de Los Esteros |
-| Residente | 30% | El mercado más cercano (60%) o se queda en su barrio (40%) |
+| Rol            | % de la población | Adónde va de día                                           |
+| -------------- | ----------------- | ---------------------------------------------------------- |
+| Estudiante     | 22%               | ULEAM (70%) o un colegio de su barrio (30%)                |
+| Comerciante    | 18%               | El mercado más cercano a su parroquia                      |
+| Transportista  | 10%               | Terminal Terrestre, y además conduce buses                 |
+| Obrero atunero | 20%               | Zona industrial / Empacadoras de Los Esteros               |
+| Residente      | 30%               | El mercado más cercano (60%) o se queda en su barrio (40%) |
 
 Los 5 hubs y qué tan contagioso es cada uno (multiplicador del peso de sus contactos):
 
-| Hub | Parroquia | Multiplicador |
-|---|---|---|
-| Mercado de Tarqui | Tarqui | 1,45 |
-| Terminal Terrestre | Eloy Alfaro | 1,40 |
-| Empacadoras | Los Esteros | 1,35 |
-| ULEAM | Manta Centro | 1,30 |
-| Mercado Central | Manta Centro | 1,25 |
+| Hub                | Parroquia    | Multiplicador |
+| ------------------ | ------------ | ------------- |
+| Mercado de Tarqui  | Tarqui       | 1,45          |
+| Terminal Terrestre | Eloy Alfaro  | 1,40          |
+| Empacadoras        | Los Esteros  | 1,35          |
+| ULEAM              | Manta Centro | 1,30          |
+| Mercado Central    | Manta Centro | 1,25          |
 
 **Dos capas de contactos:**
 
@@ -101,6 +101,7 @@ En promedio, cada persona tiene unos **9 contactos de día y 5 de noche**.
 La red es **determinista**: con la misma semilla se genera siempre exactamente la misma ciudad.
 
 ### Cómo se contagia
+
 La simulación avanza **día a día** (por defecto, 30 días). Código: [`src/engine/simulator.py`](src/engine/simulator.py).
 
 **Día 0.** Se eligen los pacientes cero (por defecto 4) entre las personas que van al hub de inicio (por defecto, el Mercado de Tarqui). Se prefiere a quien tiene más contactos, porque un brote real suele empezar por quien más se mueve.
@@ -109,7 +110,7 @@ La simulación avanza **día a día** (por defecto, 30 días). Código: [`src/en
 
 1. **Llega el presupuesto** del COE (400 $/día, sin pasar el techo total de 8 000 $). Lo que no se gasta se guarda para el día siguiente.
 2. **Vigilancia:** cada Zombie que todavía no ha sido reportado tiene un **35% de probabilidad** de ser detectado ese día. El COE solo conoce a los Zombies detectados; los Mordidos en incubación son invisibles.
-3. **El COE decide** qué hacer con el dinero, según la estrategia (ver *Estrategia Escudo Manta*).
+3. **El COE decide** qué hacer con el dinero, según la estrategia (ver _Estrategia Escudo Manta_).
 4. **Contagio de día** (hubs, barrio y buses).
 5. **Contagio de noche** (casa y barrio), solo para quienes siguieron sanos durante el día.
 6. **Avanza la enfermedad:** los Mordidos pasan a Zombie tras 2 días; los Zombies y los Aislados pasan a Inmunes tras 5 días.
@@ -131,6 +132,7 @@ donde:
 Con esta fórmula, un Sano con muchos contactos Zombie casi seguro se contagia, y uno con un solo contacto lejano tiene poca probabilidad. Ni los Mordidos ni los Aislados contagian: solo los Zombies activos.
 
 ### Estrategia Escudo Manta
+
 **Idea central:** cada día, el COE compra **una a una** las acciones que **evitan más contagios por cada dólar**, hasta quedarse sin presupuesto. Es un algoritmo voraz de retorno marginal por dólar (ROI).
 
 $$\text{ROI}(\text{acción}) = \frac{\text{contagios que se espera evitar}}{\text{costo de la acción}}$$
@@ -139,15 +141,15 @@ El COE solo usa la información que tendría en la realidad: los **Zombies detec
 
 ![Flujo diario del Escudo Manta: llega el presupuesto, se detectan casos, se evalúa el retorno por dólar de las 3 defensas y luego ocurre el contagio de día y de noche](docs/flujo_defensas.svg)
 
-*Un día de simulación: el COE recibe el presupuesto, ve los casos detectados, compra las acciones con más contagios evitados por dólar y después ocurre el contagio de día y de noche. Fuente: [docs/flujo_defensas.svg](docs/flujo_defensas.svg). Vista general del sistema en [docs/mapa_mental.svg](docs/mapa_mental.svg).*
+_Un día de simulación: el COE recibe el presupuesto, ve los casos detectados, compra las acciones con más contagios evitados por dólar y después ocurre el contagio de día y de noche. Fuente: [docs/flujo_defensas.svg](docs/flujo_defensas.svg). Vista general del sistema en [docs/mapa_mental.svg](docs/mapa_mental.svg)._
 
 **Las 3 defensas:**
 
-| Defensa | Costo | Qué hace | Contagios que se espera evitar |
-|---|---|---|---|
-| 🔥 **Cortafuegos en un hub** | 220 $ por día | Cierra o fumiga un hub ese día: sus contactos contagian un 88% menos | Riesgo de hoy entre los Zombies detectados del hub y sus contactos Sanos, × 0,88, × 2 (por los Zombies que aún nadie ha reportado) |
-| 🚑 **Brigada de aislamiento** | 65 $ | Aísla a un Zombie detectado: deja de contagiar | Riesgo diario de ese Zombie hacia sus contactos Sanos (día + noche) × los días de contagio que le quedan |
-| 💉 **Vacuna anillo + puente** | 15 $ | Vacuna a una persona Sana; funciona en el 85% de los casos y la vuelve Inmune | 0,85 × (65% por su cercanía a Zombies detectados + 35% por su centralidad puente) × β |
+| Defensa                       | Costo         | Qué hace                                                                      | Contagios que se espera evitar                                                                                                     |
+| ----------------------------- | ------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 🔥 **Cortafuegos en un hub**  | 220 $ por día | Cierra o fumiga un hub ese día: sus contactos contagian un 88% menos          | Riesgo de hoy entre los Zombies detectados del hub y sus contactos Sanos, × 0,88, × 2 (por los Zombies que aún nadie ha reportado) |
+| 🚑 **Brigada de aislamiento** | 65 $          | Aísla a un Zombie detectado: deja de contagiar                                | Riesgo diario de ese Zombie hacia sus contactos Sanos (día + noche) × los días de contagio que le quedan                           |
+| 💉 **Vacuna anillo + puente** | 15 $          | Vacuna a una persona Sana; funciona en el 85% de los casos y la vuelve Inmune | 0,85 × (65% por su cercanía a Zombies detectados + 35% por su centralidad puente) × β                                              |
 
 **Vacunación anillo + puente.** Para cada persona Sana se combinan dos cosas:
 
@@ -161,13 +163,14 @@ El COE solo usa la información que tendría en la realidad: los **Zombies detec
 **Cuándo usa cada defensa.** Con brotes controlables, le rinden más las brigadas (65 $) y las vacunas (15 $). Cerrar un hub cuesta 220 $ y solo protege un día, así que solo lo hace cuando la epidemia se descontrola y hay muchos contagios dentro de un mismo lugar (ver [docs/calibracion.md](docs/calibracion.md), fila 8).
 
 ### Líneas base y Monte Carlo
+
 **Dos líneas base**, como pide el reto. Las tres estrategias se simulan con exactamente las mismas condiciones:
 
-| Estrategia | Qué hace |
-|---|---|
-| 🙅 **Sin intervención** (`none`) | No gasta nada. Muestra qué pasa si nadie actúa. |
+| Estrategia                             | Qué hace                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🙅 **Sin intervención** (`none`)       | No gasta nada. Muestra qué pasa si nadie actúa.                                                                                                                                                                                                                                                                              |
 | 🎲 **Intervención al azar** (`random`) | Recibe **el mismo presupuesto** cada día y **la misma información** (los mismos Zombies detectados) que el Escudo. Cada compra es al azar: elige un tipo de acción cualquiera (hub, brigada o vacuna) y un objetivo cualquiera, sin mirar anillos ni puentes. También respeta la regla de oro: solo vacuna a personas Sanas. |
-| 🛡️ **Escudo Manta** (`shield`) | La estrategia descrita arriba. |
+| 🛡️ **Escudo Manta** (`shield`)         | La estrategia descrita arriba.                                                                                                                                                                                                                                                                                               |
 
 Si el Escudo supera al azar, es porque **elige mejor**, no porque tenga más recursos.
 
@@ -176,54 +179,55 @@ Si el Escudo supera al azar, es porque **elige mejor**, no porque tenga más rec
 - La **media** de cada día.
 - El rango **P10–P90**: P10 es un escenario favorable (solo el 10% de las repeticiones salió mejor), P50 el típico y P90 un escenario desfavorable.
 
-**Comparación justa: números aleatorios comunes.** En la repetición número *k*, las tres estrategias usan la misma semilla derivada (`seed × 1000 + k`). Así comparten **el mismo paciente cero** y **la misma suerte en la detección de casos**. La diferencia entre ellas se debe a la estrategia, no al azar. Las vidas salvadas se calculan **repetición por repetición** (infectados del azar − infectados del Escudo) y luego se promedian.
+**Comparación justa: números aleatorios comunes.** En la repetición número _k_, las tres estrategias usan la misma semilla derivada (`seed × 1000 + k`). Así comparten **el mismo paciente cero** y **la misma suerte en la detección de casos**. La diferencia entre ellas se debe a la estrategia, no al azar. Las vidas salvadas se calculan **repetición por repetición** (infectados del azar − infectados del Escudo) y luego se promedian.
 
 **Reproducible.** Con la misma configuración y la misma semilla, el resultado es **exactamente el mismo**, en local o en AWS. Está verificado con pruebas automáticas (`tests/test_simulator.py`).
 
 **En AWS**, las repeticiones se reparten en lotes que corren en paralelo en varias funciones Lambda (`run_batch_simulations`) y luego se juntan (`aggregate_batch_results`). El resultado es idéntico al de correrlas todas juntas en local.
 
 ### Parámetros por defecto y semilla
+
 **Semilla oficial: `2026`.** Todos los valores están en `DEFAULT_SIMULATION_PARAMS` de [`src/engine/simulator.py`](src/engine/simulator.py).
 
 **La simulación**
 
-| Parámetro | Valor | Por qué |
-|---|---|---|
-| `seed` | 2026 | Año del evento. Cualquier semilla sirve: el Escudo supera a las líneas base con todas las que probamos. |
-| `n_nodes` | 1 200 personas | Muestra a escala de Manta (271 145 hab.) con estructura suficiente de hogares, hubs y buses, y que corre en ~1 s, dentro de los 5 min del Brote Sorpresa. |
-| `days` | 30 | Un mes: el tiempo en que la plaga se desarrolla y el presupuesto se agota (día 20). |
-| `monte_carlo_runs` | 30 | Repeticiones por estrategia: suficiente para medias y rangos P10–P90 estables, en ~1 s. |
-| `start_hub` | Mercado de Tarqui | El hub más concurrido (multiplicador 1,45) de la parroquia más poblada. |
-| `initial_infected` | 4 | Un brote pequeño, como los que detecta un sistema de salud al inicio. |
+| Parámetro          | Valor             | Por qué                                                                                                                                                   |
+| ------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `seed`             | 2026              | Año del evento. Cualquier semilla sirve: el Escudo supera a las líneas base con todas las que probamos.                                                   |
+| `n_nodes`          | 1 200 personas    | Muestra a escala de Manta (271 145 hab.) con estructura suficiente de hogares, hubs y buses, y que corre en ~1 s, dentro de los 5 min del Brote Sorpresa. |
+| `days`             | 30                | Un mes: el tiempo en que la plaga se desarrolla y el presupuesto se agota (día 20).                                                                       |
+| `monte_carlo_runs` | 30                | Repeticiones por estrategia: suficiente para medias y rangos P10–P90 estables, en ~1 s.                                                                   |
+| `start_hub`        | Mercado de Tarqui | El hub más concurrido (multiplicador 1,45) de la parroquia más poblada.                                                                                   |
+| `initial_infected` | 4                 | Un brote pequeño, como los que detecta un sistema de salud al inicio.                                                                                     |
 
 **La plaga**
 
-| Parámetro | Valor | Por qué |
-|---|---|---|
-| `beta_day` | 0,05 | Junto con `beta_night`, da un R₀ ≈ 2,9, comparable a la COVID-19 original (ver *Calibración*). |
-| `beta_night` | 0,07 | Mayor que de día: en casa el contacto es más cercano y largo. |
-| `incubation_days` | 2 | Tiempos cortos, del orden de los de la influenza, para que el brote se desarrolle en 30 días. |
-| `infectious_days` | 5 | Ídem. |
+| Parámetro         | Valor | Por qué                                                                                        |
+| ----------------- | ----- | ---------------------------------------------------------------------------------------------- |
+| `beta_day`        | 0,05  | Junto con `beta_night`, da un R₀ ≈ 2,9, comparable a la COVID-19 original (ver _Calibración_). |
+| `beta_night`      | 0,07  | Mayor que de día: en casa el contacto es más cercano y largo.                                  |
+| `incubation_days` | 2     | Tiempos cortos, del orden de los de la influenza, para que el brote se desarrolle en 30 días.  |
+| `infectious_days` | 5     | Ídem.                                                                                          |
 
 **Recursos y costos** (escenario ficticio; lo importante es la proporción entre costos)
 
-| Parámetro | Valor | Por qué |
-|---|---|---|
-| `daily_budget` | 400 $/día | El dinero llega por días, como en una emergencia real. |
-| `total_budget` | 8 000 $ | Dura 20 de los 30 días y no alcanza para todos: recursos realmente limitados. |
-| `vaccine_cost` | 15 $ | La acción más barata e individual. |
-| `brigade_cost` | 65 $ | Equipo de personas varios días aislando a un caso: ≈ 4 vacunas. |
-| `hub_closure_cost` | 220 $ por día | Cerrar o fumigar un lugar con cientos de personas: la acción más cara. Abaratarlo favorecía al azar (ver *Calibración*). |
-| `vaccine_efficacy` | 0,85 | Supuesto: una vacuna buena pero no perfecta. |
-| `hub_firewall_reduction` | 0,88 | Un cierre no elimina todo el contacto (personal, abastecimiento): reduce el contagio un 88%. |
+| Parámetro                | Valor         | Por qué                                                                                                                  |
+| ------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `daily_budget`           | 400 $/día     | El dinero llega por días, como en una emergencia real.                                                                   |
+| `total_budget`           | 8 000 $       | Dura 20 de los 30 días y no alcanza para todos: recursos realmente limitados.                                            |
+| `vaccine_cost`           | 15 $          | La acción más barata e individual.                                                                                       |
+| `brigade_cost`           | 65 $          | Equipo de personas varios días aislando a un caso: ≈ 4 vacunas.                                                          |
+| `hub_closure_cost`       | 220 $ por día | Cerrar o fumigar un lugar con cientos de personas: la acción más cara. Abaratarlo favorecía al azar (ver _Calibración_). |
+| `vaccine_efficacy`       | 0,85          | Supuesto: una vacuna buena pero no perfecta.                                                                             |
+| `hub_firewall_reduction` | 0,88          | Un cierre no elimina todo el contacto (personal, abastecimiento): reduce el contagio un 88%.                             |
 
 **Constantes internas del modelo** (en `simulator.py`)
 
-| Constante | Valor | Qué significa |
-|---|---|---|
-| `DETECTION_PROB` | 0,35 | Probabilidad diaria de que un Zombie sea reportado: tarda en promedio 2–3 días. |
-| `HIDDEN_CASE_FACTOR` | 2,0 | Al valorar un cierre de hub, por cada Zombie detectado se estima otro oculto. |
-| `RING_SECOND_HOP_WEIGHT` | 0,25 | Peso de los contactos a 2 saltos en la vacunación en anillo. |
+| Constante                | Valor | Qué significa                                                                   |
+| ------------------------ | ----- | ------------------------------------------------------------------------------- |
+| `DETECTION_PROB`         | 0,35  | Probabilidad diaria de que un Zombie sea reportado: tarda en promedio 2–3 días. |
+| `HIDDEN_CASE_FACTOR`     | 2,0   | Al valorar un cierre de hub, por cada Zombie detectado se estima otro oculto.   |
+| `RING_SECOND_HOP_WEIGHT` | 0,25  | Peso de los contactos a 2 saltos en la vacunación en anillo.                    |
 
 **Cómo reproducir los resultados**
 
@@ -233,22 +237,21 @@ python scripts/calibrar.py
 
 Con los valores por defecto y la semilla 2026, el resultado debe ser exactamente:
 
-| Sin intervención | Al azar | Escudo Manta | Escudo vs azar | Vacunas desperdiciadas |
-|---|---|---|---|---|
-| 842 infectados (70%) | 51,4 | 14,5 | 71,79% menos contagios | 0 |
+| Sin intervención     | Al azar | Escudo Manta | Escudo vs azar         | Vacunas desperdiciadas |
+| -------------------- | ------- | ------------ | ---------------------- | ---------------------- |
+| 842 infectados (70%) | 51,4    | 14,5         | 71,79% menos contagios | 0                      |
 
 **Comparación de las 3 estrategias** (media de 30 repeticiones; rango P10–P90 entre paréntesis; 1 200 personas, 30 días):
 
-| Estrategia | Contagiados | Pico de zombies | Gasto | Vacunas | Brigadas | Días de hubs cerrados |
-|---|---|---|---|---|---|---|
-| 🙅 Sin intervención | 842,5 (753–922) | 279,6 | 0 $ | 0 | 0 | 0 |
-| 🎲 Al azar (mismo presupuesto) | 51,4 (5–119) | 16,3 | 7 995 $ | 178 | 15,7 | 19,6 |
-| 🛡️ **Escudo Manta** | **14,5 (6–25)** | **5,0** | 7 996 $ | 487 | 10,7 | 0 |
+| Estrategia                     | Contagiados     | Pico de zombies | Gasto   | Vacunas | Brigadas | Días de hubs cerrados |
+| ------------------------------ | --------------- | --------------- | ------- | ------- | -------- | --------------------- |
+| 🙅 Sin intervención            | 842,5 (753–922) | 279,6           | 0 $     | 0       | 0        | 0                     |
+| 🎲 Al azar (mismo presupuesto) | 51,4 (5–119)    | 16,3            | 7 995 $ | 178     | 15,7     | 19,6                  |
+| 🛡️ **Escudo Manta**            | **14,5 (6–25)** | **5,0**         | 7 996 $ | 487     | 10,7     | 0                     |
 
 Contagios evitados por el Escudo, comparados réplica a réplica: **828 frente a no hacer nada** (P10–P90: 738 a 909) y **36,9 frente al azar** (P10–P90: −8 a 101). El rango frente al azar empieza en negativo: en las repeticiones más favorables para el azar, el Escudo queda unas pocas personas por detrás, pero en promedio evita el 72% de los contagios que deja el azar. El azar gasta casi lo mismo, pero una buena parte en cerrar hubs al azar (19,6 días), que es la acción más cara.
 
 Para probar otra configuración, se escriben los cambios como `nombre=valor`, por ejemplo: `python scripts/calibrar.py seed=42 vaccine_efficacy=0.5`.
-
 
 ### Calibración y verificación
 
@@ -266,18 +269,19 @@ El detalle completo de cada experimento está en [docs/calibracion.md](docs/cali
 
 **Verificación 2: Brote Sorpresa.** Probamos los cambios que el reto pone de ejemplo, con la semilla 2026:
 
-| Escenario | Sin intervención | Al azar | Escudo Manta |
-|---|---|---|---|
-| El doble de contagiosa | 1 188 | 816 | **194** |
-| La mitad de las vacunas | 842 | 85 | **22** |
-| El brote empieza en el Mercado Central (por defecto empieza en el de Tarqui) | 675 | 15 | **13** |
-| La vacuna cubre a medias | 842 | 64 | **21** |
+| Escenario                                                                    | Sin intervención | Al azar | Escudo Manta |
+| ---------------------------------------------------------------------------- | ---------------- | ------- | ------------ |
+| El doble de contagiosa                                                       | 1 188            | 816     | **194**      |
+| La mitad de las vacunas                                                      | 842              | 85      | **22**       |
+| El brote empieza en el Mercado Central (por defecto empieza en el de Tarqui) | 675              | 15      | **13**       |
+| La vacuna cubre a medias                                                     | 842              | 64      | **21**       |
 
 En todos los casos el Escudo supera a las dos líneas base sin cambiar el código, y con **0 vacunas desperdiciadas**.
 
 El caso más ajustado es el brote en el Mercado Central (13 frente a 15 con la semilla 2026): el brote queda más pequeño y el azar también lo contiene bastante. Lo repetimos con las 10 semillas y el Escudo gana en todas, con una mejora frente al azar de entre el 10% y el 70%.
 
 ### Informe para el alcalde
+
 El botón de informe genera una **propuesta de decreto del COE** en lenguaje simple ([`src/handlers/mayor_report.py`](src/handlers/mayor_report.py)), con tres secciones (situación, qué hacer y balance de recursos) y tres acciones inmediatas.
 
 - **Sale de los resultados, no de plantillas fijas.** Las acciones se ordenan según el dinero que el Escudo puso en cada defensa. Un hub solo aparece como cerrado si la simulación lo cerró; si no, el informe explica que cerrar no compensa y recomienda vigilarlo.
@@ -288,6 +292,7 @@ El botón de informe genera una **propuesta de decreto del COE** en lenguaje sim
 **Amazon Bedrock es opcional y está apagado por defecto** (`UseBedrock=false` en [`infra/template.yaml`](infra/template.yaml)). Lo dejamos así por dos razones: nuestra cuenta de AWS es nueva y no tiene acceso a los modelos fundacionales, y el informe heurístico no puede inventar cifras, mientras que un modelo de lenguaje sí podría. Si se activa, el modelo recibe solo los datos de la simulación; si falla, tarda más de 8 s o responde algo que no cumple el formato, se usa el informe heurístico.
 
 ### Limitaciones del modelo
+
 Todo modelo simplifica la realidad. Estas son las simplificaciones conocidas del nuestro:
 
 **Población**
@@ -328,20 +333,20 @@ Todo es **serverless** en la región **`us-east-1`** (N. Virginia) y se desplieg
 
 ![Arquitectura serverless en AWS: navegador, Amplify, API Gateway, Lambda orquestadora, Step Functions con workers en paralelo, DynamoDB, S3 y Bedrock opcional](docs/arquitectura.svg)
 
-*Fuente: [docs/arquitectura.svg](docs/arquitectura.svg).*
+_Fuente: [docs/arquitectura.svg](docs/arquitectura.svg)._
 
-| Servicio | Para qué | Público |
-|---|---|---|
-| **AWS Amplify Hosting** | Sirve la consola React ([`amplify.yml`](amplify.yml)). | Sí (URL pública) |
-| **Amazon API Gateway (HTTP API)** | `GET /health`, `POST /simulate`, `GET /simulations/{simHash}`, `POST /mayor-report`. | Sí |
-| **AWS Lambda – orquestador** | Normaliza los parámetros, calcula el `sim_hash`, busca en caché y lanza Step Functions. | No |
-| **AWS Step Functions (Express, `Map`)** | Reparte las repeticiones en lotes de 5 y los corre en paralelo (hasta 40 a la vez). | No |
-| **AWS Lambda – workers** | Cada uno corre un lote de repeticiones de las 3 estrategias y guarda el resultado en S3 (Step Functions limita su salida a 256 KiB). | No |
-| **Amazon DynamoDB (On-Demand)** | Caché de resultados por `sim_hash`, con expiración a 14 días: la misma configuración y semilla devuelve el mismo resultado al instante. | No |
-| **Amazon S3** | Resultados completos, series del mapa y lotes de los workers; acceso público bloqueado, cifrado y expiración a 14 días. | No |
-| **AWS Lambda – informe** | Redacta la propuesta de decreto para el alcalde. Usa **Amazon Bedrock** solo si `UseBedrock=true` (apagado por defecto). | No |
-| **Amazon CloudWatch** | Logs de las Lambdas y de Step Functions (los de Step Functions con retención de 7 días). | No |
-| **AWS Budgets** | Presupuesto mensual de 5 $ con alertas por correo al 50% y al 80%. | No |
+| Servicio                                | Para qué                                                                                                                                | Público          |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| **AWS Amplify Hosting**                 | Sirve la consola React ([`amplify.yml`](amplify.yml)).                                                                                  | Sí (URL pública) |
+| **Amazon API Gateway (HTTP API)**       | `GET /health`, `POST /simulate`, `GET /simulations/{simHash}`, `POST /mayor-report`.                                                    | Sí               |
+| **AWS Lambda – orquestador**            | Normaliza los parámetros, calcula el `sim_hash`, busca en caché y lanza Step Functions.                                                 | No               |
+| **AWS Step Functions (Express, `Map`)** | Reparte las repeticiones en lotes de 5 y los corre en paralelo (hasta 40 a la vez).                                                     | No               |
+| **AWS Lambda – workers**                | Cada uno corre un lote de repeticiones de las 3 estrategias y guarda el resultado en S3 (Step Functions limita su salida a 256 KiB).    | No               |
+| **Amazon DynamoDB (On-Demand)**         | Caché de resultados por `sim_hash`, con expiración a 14 días: la misma configuración y semilla devuelve el mismo resultado al instante. | No               |
+| **Amazon S3**                           | Resultados completos, series del mapa y lotes de los workers; acceso público bloqueado, cifrado y expiración a 14 días.                 | No               |
+| **AWS Lambda – informe**                | Redacta la propuesta de decreto para el alcalde. Usa **Amazon Bedrock** solo si `UseBedrock=true` (apagado por defecto).                | No               |
+| **Amazon CloudWatch**                   | Logs de las Lambdas y de Step Functions (los de Step Functions con retención de 7 días).                                                | No               |
+| **AWS Budgets**                         | Presupuesto mensual de 5 $ con alertas por correo al 50% y al 80%.                                                                      | No               |
 
 **Flujo de una simulación.** El navegador llama a `POST /simulate` → el orquestador normaliza los parámetros y calcula el `sim_hash` → si está en DynamoDB, responde desde la caché → si no, Step Functions lanza los workers en paralelo → cada worker guarda su lote en S3 → el orquestador junta los lotes, calcula medias y P10–P90, guarda el resultado en DynamoDB y S3, y responde. Si Step Functions falla, el orquestador calcula todo él mismo.
 
@@ -356,18 +361,18 @@ Todo es **serverless** en la región **`us-east-1`** (N. Virginia) y se desplieg
 
 Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos los números que muestra vienen del backend: si AWS no responde se usa el servidor local, y si ninguno responde aparece un aviso de error con **Reintentar** (no hay datos simulados en el navegador).
 
-**Cabecera.** Estado del motor de simulación (*Conectado* o *Sin conexión*) y los botones **Parámetros**, **Restaurar** (vuelve al escenario base, semilla 2026), **Boletín COE** y **Simular**. Debajo, una barra con el identificador de la simulación (`sim_hash`), si se calculó ahora o vino **desde caché**, el tiempo de cómputo, la población, las repeticiones y la semilla.
+**Cabecera.** Estado del motor de simulación (_Conectado_ o _Sin conexión_) y los botones **Parámetros**, **Restaurar** (vuelve al escenario base, semilla 2026), **Boletín COE** y **Simular**. Debajo, una barra con el identificador de la simulación (`sim_hash`), si se calculó ahora o vino **desde caché**, el tiempo de cómputo, la población, las repeticiones y la semilla.
 
 **Indicadores.** Cuatro tarjetas con la media de las repeticiones y su rango P10–P90:
 
-| Tarjeta | Qué dice |
-|---|---|
-| Contagios evitados | Frente a no hacer nada, escalado a los 271 000 habitantes de Manta (y la cifra de la muestra). |
-| Frente a actuar al azar | Lo que aporta elegir bien con el mismo presupuesto. |
-| Pico de zombies | Cuánto baja el máximo de casos simultáneos, y el pico de cada estrategia. |
-| Gasto ejecutado | Gasto, dosis, brigadas, días de cierre, costo por contagio evitado y dosis desperdiciadas (siempre 0). |
+| Tarjeta                 | Qué dice                                                                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| Contagios evitados      | Frente a no hacer nada, escalado a los 271 000 habitantes de Manta (y la cifra de la muestra).         |
+| Frente a actuar al azar | Lo que aporta elegir bien con el mismo presupuesto.                                                    |
+| Pico de zombies         | Cuánto baja el máximo de casos simultáneos, y el pico de cada estrategia.                              |
+| Gasto ejecutado         | Gasto, dosis, brigadas, días de cierre, costo por contagio evitado y dosis desperdiciadas (siempre 0). |
 
-**Estrategia en el visor y Brotes Sorpresa.** Se elige qué estrategia muestra el mapa (*Cortafuegos Manta*, *Al Azar* o *Sin Intervención*). Los botones de **Brote Sorpresa** aplican y simulan los escenarios del reto: *Contagio ×2*, *Mitad de vacunas*, *Brote en Mercado Central* y *Vacuna a medias* (los valores están en [`frontend/src/data/surprisePresets.ts`](frontend/src/data/surprisePresets.ts) y coinciden con [docs/calibracion.md](docs/calibracion.md)). Se pueden combinar.
+**Estrategia en el visor y Brotes Sorpresa.** Se elige qué estrategia muestra el mapa (_Cortafuegos Manta_, _Al Azar_ o _Sin Intervención_). Los botones de **Brote Sorpresa** aplican y simulan los escenarios del reto: _Contagio ×2_, _Mitad de vacunas_, _Brote en Mercado Central_ y _Vacuna a medias_ (los valores están en [`frontend/src/data/surprisePresets.ts`](frontend/src/data/surprisePresets.ts) y coinciden con [docs/calibracion.md](docs/calibracion.md)). Se pueden combinar.
 
 **Mapa de Manta.** Reproducción día a día (play, pausa, velocidad ×1/×2/×5 y slider). Cada parroquia se colorea por el porcentaje de su población con infección activa (menos de 2%, de 2% a 10%, más de 10%). Cada hub se marca en azul si tiene el cortafuegos activo ese día, en verde si hay vacunación en anillo alrededor y en naranja si está abierto; al hacer clic muestra sus casos activos. Debajo del mapa, una tabla con cada hub y cada parroquia en el día elegido y el gasto acumulado.
 
@@ -393,10 +398,10 @@ Luego abrir `http://localhost:5173`. La consola usa **siempre AWS** (la URL de `
 
 **Estado actual:** desplegado en la cuenta `341775378238`, región `us-east-1`, con el usuario IAM `spookython-dev` (perfil `spookython` de la AWS CLI):
 
-| Pieza | Dónde |
-|---|---|
-| Backend (stack `spookython-cortafuegos-manta`) | API: `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` |
-| Frontend (Amplify, app `cortafuegos-manta-web`, conectada a GitHub, rama `main`) | https://main.d2rdluo4raik0f.amplifyapp.com |
+| Pieza                                                                            | Dónde                                                              |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Backend (stack `spookython-cortafuegos-manta`)                                   | API: `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` |
+| Frontend (Amplify, app `cortafuegos-manta-web`, conectada a GitHub, rama `main`) | https://main.d2rdluo4raik0f.amplifyapp.com                         |
 
 **Requisitos para volver a desplegar:** AWS CLI con el perfil `spookython`, [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html), **Docker** (para construir las Lambdas arm64 en la imagen oficial de Lambda, aunque el equipo no tenga Python 3.12) y Node.js 20 o superior.
 
@@ -418,11 +423,11 @@ O con el script, que hace lo mismo y escribe la URL de la API en `frontend/.env.
 
 Con `-AlertEmail correo@dominio.com` crea además el **AWS Budget** de 5 $ con alertas al 50% y 80%. La URL de la API aparece en las salidas del stack como `HttpApiUrl`.
 
-**2. Frontend.** La app de Amplify `cortafuegos-manta-web` está **conectada al repositorio de GitHub**: cada push a `main` la vuelve a construir y publicar sola, con [`amplify.yml`](amplify.yml) (monorepo con carpeta raíz `frontend`). La URL de la API se le pasa con la variable de entorno **`VITE_API_URL`** = `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` (*Amplify → cortafuegos-manta-web → Hosting → Environment variables*). Si cambia la API, hay que actualizar esa variable y volver a desplegar la rama.
+**2. Frontend.** La app de Amplify `cortafuegos-manta-web` está **conectada al repositorio de GitHub**: cada push a `main` la vuelve a construir y publicar sola, con [`amplify.yml`](amplify.yml) (monorepo con carpeta raíz `frontend`). La URL de la API se le pasa con la variable de entorno **`VITE_API_URL`** = `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` (_Amplify → cortafuegos-manta-web → Hosting → Environment variables_). Si cambia la API, hay que actualizar esa variable y volver a desplegar la rama.
 
-Para crear la app desde cero en otra cuenta: *Amplify → Create new app → GitHub* → autorizar el repositorio → rama `main` → marcar **"My app is a monorepo"** con carpeta `frontend` → añadir `VITE_API_URL` en *Advanced settings* → *Save and deploy*.
+Para crear la app desde cero en otra cuenta: _Amplify → Create new app → GitHub_ → autorizar el repositorio → rama `main` → marcar **"My app is a monorepo"** con carpeta `frontend` → añadir `VITE_API_URL` en _Advanced settings_ → _Save and deploy_.
 
-**Límite de concurrencia de Lambda.** Las cuentas nuevas tienen **10 ejecuciones simultáneas** de Lambda. Por eso la máquina de estados corre como máximo **8 workers a la vez** ([`infra/statemachine/monte_carlo_express.asl.json`](infra/statemachine/monte_carlo_express.asl.json)) y reintenta con espera creciente si Lambda responde 429. Con 100 repeticiones y 90 días tarda unos 7 s. Si se amplía la cuota (Service Quotas → AWS Lambda → *Concurrent executions*), se puede subir `MaxConcurrency`.
+**Límite de concurrencia de Lambda.** Las cuentas nuevas tienen **10 ejecuciones simultáneas** de Lambda. Por eso la máquina de estados corre como máximo **8 workers a la vez** ([`infra/statemachine/monte_carlo_express.asl.json`](infra/statemachine/monte_carlo_express.asl.json)) y reintenta con espera creciente si Lambda responde 429. Con 100 repeticiones y 90 días tarda unos 7 s. Si se amplía la cuota (Service Quotas → AWS Lambda → _Concurrent executions_), se puede subir `MaxConcurrency`.
 
 **Bedrock (opcional).** Para que el informe del alcalde lo redacte un modelo, desplegar con `--parameter-overrides UseBedrock=true` (la cuenta necesita acceso al modelo `amazon.nova-micro-v1:0`). Sin eso, el informe lo redacta el motor analítico del COE.
 
@@ -434,7 +439,7 @@ Para crear la app desde cero en otra cuenta: *Amplify → Create new app → Git
 python -m unittest discover -s tests -t .
 ```
 
-**Resultado de referencia** (debe coincidir con la tabla de *Parámetros por defecto y semilla*):
+**Resultado de referencia** (debe coincidir con la tabla de _Parámetros por defecto y semilla_):
 
 ```bash
 python scripts/calibrar.py
@@ -458,7 +463,7 @@ curl http://localhost:8000/health
 docker compose up --build
 ```
 
-**Prueba de fuego en vivo:** elegir una semilla en *Parámetros*, simular y comprobar que el Escudo queda por debajo de las dos líneas base; luego aplicar los botones de **Brote Sorpresa** (también combinados). Los resultados esperados de cada escenario están en [docs/calibracion.md](docs/calibracion.md).
+**Prueba de fuego en vivo:** elegir una semilla en _Parámetros_, simular y comprobar que el Escudo queda por debajo de las dos líneas base; luego aplicar los botones de **Brote Sorpresa** (también combinados). Los resultados esperados de cada escenario están en [docs/calibracion.md](docs/calibracion.md).
 
 ## Costos
 
@@ -472,4 +477,4 @@ Cálculo completo en [docs/costos.md](docs/costos.md).
 
 Hoy la cuenta tiene el presupuesto **"My Zero-Spend Budget" (1 $ al mes)**, que avisa en cuanto haya cualquier gasto. Al desplegar con `AlertEmail` se crea además un **AWS Budget mensual de 5 $** con alertas por correo al 50% y al 80% (recurso `SpookyThonCostBudget` del template).
 
-**Pendiente:** añadir la captura de la consola de AWS Budgets en `docs/budget.png` y enlazarla aquí.
+![AWS Budget](docs/budget.png)
