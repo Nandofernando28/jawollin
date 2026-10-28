@@ -1,12 +1,10 @@
 /**
- * FASE 6 — Servicio API con Switch Híbrido AWS ↔ Local
- * =====================================================
- * Switch selector:  'aws'   → API Gateway (us-east-1)
- *                   'local' → http://localhost:8000
- *
- * Todos los datos vienen del backend (motor SEIR y boletín del COE). Si el modo
- * AWS no responde se intenta el servidor local; si ninguno responde, la llamada
- * falla y la UI muestra el error en lugar de inventar resultados.
+ * FASE 6 — Servicio API: AWS con respaldo local silencioso
+ * ========================================================
+ * Siempre se usa AWS (API Gateway en us-east-1, VITE_API_URL). Si AWS no está
+ * configurado o no responde, se usa en silencio el servidor local
+ * (python src/local_server.py, puerto 8000). Si ninguno responde, la llamada falla
+ * y la UI muestra el error en lugar de inventar resultados.
  *
  * SpookyThon 2026 · Track B — Operación Cortafuegos Manta
  */
@@ -25,13 +23,16 @@ import type {
 
 // Acepta VITE_API_URL (documentada en .env.example) y VITE_AWS_API_URL (nombre antiguo).
 const AWS_API_URL = (import.meta.env.VITE_API_URL ?? import.meta.env.VITE_AWS_API_URL ?? '').replace(/\/$/, '');
-const LOCAL_API_URL = 'http://localhost:8000';
+// En desarrollo Vite, '/api' se redirige al servidor local (ver vite.config.ts)
+const LOCAL_API_URL = import.meta.env.DEV ? '/api' : 'http://localhost:8000';
 
-function getBaseUrl(mode: BackendMode): string {
-  if (mode === 'aws' && AWS_API_URL) return AWS_API_URL;
-  // En desarrollo Vite, '/api' se proxy-ea a localhost:8000
-  return import.meta.env.DEV ? '/api' : LOCAL_API_URL;
-}
+/** Backends en orden de preferencia: AWS primero (si está configurado) y el local de respaldo. */
+const BACKENDS: { mode: BackendMode; url: string }[] = [
+  ...(AWS_API_URL ? [{ mode: 'aws' as const, url: AWS_API_URL }] : []),
+  { mode: 'local', url: LOCAL_API_URL },
+];
+
+const baseUrl = (mode: BackendMode) => BACKENDS.find((b) => b.mode === mode)?.url ?? LOCAL_API_URL;
 
 /** Texto legible de un error, sin el prefijo "Error:" que añade String(err). */
 export function errorMessage(err: unknown): string {
@@ -74,35 +75,43 @@ async function postJson<T>(url: string, body: unknown, timeoutMs: number): Promi
 // API pública
 // ============================================================================
 
-/** Ejecuta la simulación Monte Carlo contra el backend activo (AWS y, si falla, el servidor local). */
-export async function runSimulation(
-  params: SimulationParams,
-  mode: BackendMode,
-): Promise<SimulationResponse> {
-  const attempts: BackendMode[] = mode === 'aws' ? ['aws', 'local'] : ['local'];
+/**
+ * Prueba cada backend en orden (AWS y, si falla, el local) y devuelve la primera
+ * respuesta válida junto con el backend que respondió.
+ */
+async function firstAvailable<T>(request: (url: string) => Promise<T>): Promise<{ data: T; mode: BackendMode }> {
   let lastError: unknown = null;
-  for (const attempt of attempts) {
-    if (attempt === 'aws' && !AWS_API_URL) continue;
+  for (const backend of BACKENDS) {
     try {
-      const data = await postJson<SimulationResponse>(`${getBaseUrl(attempt)}/simulate`, params, 60000);
-      return { ...data, backend_mode: attempt };
+      return { data: await request(backend.url), mode: backend.mode };
     } catch (err) {
-      console.warn(`[api] Backend '${attempt}' no disponible:`, err);
+      console.warn(`[api] Backend '${backend.mode}' no disponible, se prueba el siguiente:`, err);
       lastError = err;
     }
   }
-  throw new Error(`No se pudo conectar con el backend de simulación (${errorMessage(lastError)}).`);
+  throw lastError;
 }
 
-/** Pide al backend el Boletín para el Alcalde (heurístico del COE o Amazon Bedrock si está activo). */
-export async function generateMayorReport(
-  simulationResult: SimulationResponse,
-  mode: BackendMode,
-): Promise<MayorReportResponse> {
+/** Ejecuta la simulación Monte Carlo (AWS y, si falla, el servidor local). */
+export async function runSimulation(params: SimulationParams): Promise<SimulationResponse> {
+  try {
+    // 35 s: API Gateway corta a los 30 s, así que más espera no sirve
+    const { data, mode } = await firstAvailable((url) => postJson<SimulationResponse>(`${url}/simulate`, params, 35000));
+    return { ...data, backend_mode: mode };
+  } catch (err) {
+    throw new Error(`No se pudo conectar con el backend de simulación (${errorMessage(err)}).`);
+  }
+}
+
+/**
+ * Pide el Boletín para el Alcalde al mismo backend que calculó la simulación
+ * (así puede encontrarla en su caché por sim_hash).
+ */
+export async function generateMayorReport(simulationResult: SimulationResponse): Promise<MayorReportResponse> {
   try {
     // El handler del backend lee `simulation` (o `sim_hash` para buscarlo en caché).
     return await postJson<MayorReportResponse>(
-      `${getBaseUrl(simulationResult.backend_mode ?? mode)}/mayor-report`,
+      `${baseUrl(simulationResult.backend_mode)}/mayor-report`,
       { simulation: simulationResult, sim_hash: simulationResult.sim_hash },
       30000,
     );
@@ -111,18 +120,20 @@ export async function generateMayorReport(
   }
 }
 
-/** Verifica el estado de salud del backend */
-export async function checkHealth(mode: BackendMode): Promise<HealthCheckResponse> {
-  const base = getBaseUrl(mode);
+/** Estado del backend: AWS y, si no responde, el local. */
+export async function checkHealth(): Promise<HealthCheckResponse> {
   try {
-    const res = await fetchWithTimeout(`${base}/health`, { method: 'GET' }, 4000);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as HealthCheckResponse;
+    const { data } = await firstAvailable(async (url) => {
+      const res = await fetchWithTimeout(`${url}/health`, { method: 'GET' }, 4000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return (await res.json()) as HealthCheckResponse;
+    });
+    return data;
   } catch {
     return {
       status: 'degraded',
-      backend_mode: mode,
-      execution_mode: mode === 'aws' ? 'aws-serverless' : 'local-hybrid',
+      backend_mode: BACKENDS[0].mode,
+      execution_mode: BACKENDS[0].mode === 'aws' ? 'aws-serverless' : 'local-hybrid',
       dynamodb_connected: false,
       s3_connected: false,
       step_functions_connected: false,

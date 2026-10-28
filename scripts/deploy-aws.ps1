@@ -20,7 +20,9 @@ Push-Location "$PSScriptRoot\..\infra"
 
 try {
     Write-Host "`n1. Empaquetando funciones AWS Lambda (Python 3.12 ARM64 + NumPy)..." -ForegroundColor Green
-    sam build --template-file template.yaml --cached --parallel
+    # --use-container: construye en la imagen oficial de Lambda (Python 3.12, arm64), asi NumPy
+    # sale compilado para Linux ARM aunque el equipo tenga otra version de Python (requiere Docker)
+    sam build --template-file template.yaml --use-container
 
     Write-Host "`n2. Desplegando Stack CloudFormation/SAM en $Region..." -ForegroundColor Green
     $paramOverrides = "EnvironmentName=$EnvironmentName"
@@ -29,7 +31,7 @@ try {
     }
 
     sam deploy `
-        --stack-name "spookython-cortafuegos-manta-$EnvironmentName" `
+        --stack-name "spookython-cortafuegos-manta" `
         --region $Region `
         --profile $ProfileName `
         --capabilities CAPABILITY_IAM `
@@ -39,7 +41,7 @@ try {
 
     Write-Host "`n3. Obteniendo URL publica del Amazon API Gateway (HTTP API)..." -ForegroundColor Green
     $apiUrl = aws cloudformation describe-stacks `
-        --stack-name "spookython-cortafuegos-manta-$EnvironmentName" `
+        --stack-name "spookython-cortafuegos-manta" `
         --region $Region `
         --profile $ProfileName `
         --query "Stacks[0].Outputs[?OutputKey=='HttpApiUrl'].OutputValue" `

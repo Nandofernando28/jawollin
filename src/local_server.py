@@ -6,8 +6,10 @@ Uso:
     python src/local_server.py [puerto]      # o variable de entorno PORT
 """
 
+import contextlib
 import json
 import os
+import socket
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict
@@ -120,10 +122,33 @@ def _print_banner(port: int) -> None:
     )
 
 
+class DualStackServer(ThreadingHTTPServer):
+    """
+    Escucha en IPv6 e IPv4 a la vez. En Windows `localhost` se resuelve primero como
+    ::1; con un servidor solo IPv4 cada petición esperaba ~2 s antes de reintentar.
+    """
+
+    address_family = socket.AF_INET6
+    daemon_threads = True
+
+    def server_bind(self) -> None:
+        with contextlib.suppress(Exception):
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        super().server_bind()
+
+
+def _create_server(port: int) -> ThreadingHTTPServer:
+    try:
+        return DualStackServer(("::", port), CortafuegosLocalHandler)
+    except OSError:  # equipo sin IPv6: solo IPv4
+        server = ThreadingHTTPServer(("0.0.0.0", port), CortafuegosLocalHandler)
+        server.daemon_threads = True
+        return server
+
+
 def main() -> None:
     port = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.environ.get("PORT", DEFAULT_PORT))
-    server = ThreadingHTTPServer(("0.0.0.0", port), CortafuegosLocalHandler)
-    server.daemon_threads = True
+    server = _create_server(port)
     _print_banner(port)
     try:
         server.serve_forever()

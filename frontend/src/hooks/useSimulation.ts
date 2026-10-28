@@ -8,7 +8,6 @@ import type {
   SimulationParams,
   SimulationResponse,
   MayorReportResponse,
-  BackendMode,
 } from '../types/simulation';
 import { DEFAULT_SIMULATION_PARAMS } from '../types/simulation';
 import { runSimulation, generateMayorReport, checkHealth, errorMessage } from '../services/api';
@@ -18,9 +17,7 @@ export interface UseSimulationReturn {
   // Parámetros
   params: SimulationParams;
   setParams: React.Dispatch<React.SetStateAction<SimulationParams>>;
-  // Backend
-  backendMode: BackendMode;
-  setBackendMode: (m: BackendMode) => void;
+  // Backend (AWS con respaldo local silencioso)
   backendHealthy: boolean | null;
   // Simulación
   result: SimulationResponse | null;
@@ -47,7 +44,6 @@ export interface UseSimulationReturn {
 
 export function useSimulation(): UseSimulationReturn {
   const [params, setParams] = useState<SimulationParams>(DEFAULT_SIMULATION_PARAMS);
-  const [backendMode, setBackendMode] = useState<BackendMode>('local');
   const [backendHealthy, setBackendHealthy] = useState<boolean | null>(null);
   const [result, setResult] = useState<SimulationResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -69,8 +65,8 @@ export function useSimulation(): UseSimulationReturn {
 
   // Verificar health del backend al arrancar
   useEffect(() => {
-    checkHealth(backendMode).then((h) => setBackendHealthy(h.status === 'ok'));
-  }, [backendMode]);
+    checkHealth().then((h) => setBackendHealthy(h.status === 'ok'));
+  }, []);
 
   const execute = useCallback(
     async (override?: SimulationParams) => {
@@ -78,7 +74,7 @@ export function useSimulation(): UseSimulationReturn {
       setLoading(true);
       setError(null);
       try {
-        const data = await runSimulation(p, backendMode);
+        const data = await runSimulation(p);
         setResult(data);
         setCurrentDay(0);
         setPlaying(false);
@@ -88,7 +84,7 @@ export function useSimulation(): UseSimulationReturn {
         setLoading(false);
       }
     },
-    [params, backendMode],
+    [params],
   );
 
   // Aplica un Brote Sorpresa (data/surprisePresets.ts) sobre los parámetros actuales y simula.
@@ -129,7 +125,7 @@ export function useSimulation(): UseSimulationReturn {
     if (!result) return;
     setReportLoading(true);
     try {
-      const r = await generateMayorReport(result, backendMode);
+      const r = await generateMayorReport(result);
       setReport(r);
       setShowReport(true);
     } catch (e) {
@@ -137,13 +133,13 @@ export function useSimulation(): UseSimulationReturn {
     } finally {
       setReportLoading(false);
     }
-  }, [result, backendMode]);
+  }, [result]);
 
   const closeReport = useCallback(() => setShowReport(false), []);
 
   return {
     params, setParams,
-    backendMode, setBackendMode, backendHealthy,
+    backendHealthy,
     result, loading, error, execute, applyPreset, resetAll,
     currentDay, setCurrentDay,
     playing, playbackSpeed, setPlaybackSpeed, togglePlay, resetDay,

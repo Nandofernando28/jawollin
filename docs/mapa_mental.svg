@@ -38,15 +38,15 @@
   <text x="30" y="385" font-size="9.8" fill="#1e293b">• 🟡 <tspan font-weight="bold">Mordido (E):</tspan> Incubando sin síntomas aún</text>
   <text x="30" y="402" font-size="9.8" fill="#1e293b">• 🔴 <tspan font-weight="bold">Zombie (I):</tspan> Infeccioso activo que propaga</text>
   <text x="30" y="419" font-size="9.8" fill="#1e293b">• 🟣 <tspan font-weight="bold">Aislado (Q):</tspan> Contenido por brigada sanitaria</text>
-  <text x="30" y="436" font-size="9.8" fill="#1e293b">• 🔵 <tspan font-weight="bold">Exorcizado (R/V):</tspan> Inmune por vacuna o antídoto</text>
+  <text x="30" y="436" font-size="9.8" fill="#1e293b">• 🔵 <tspan font-weight="bold">Exorcizado (R/V):</tspan> Recuperado o vacunado con éxito</text>
 
   <!-- Branch 4: Motor de Defensa (Top Right) -->
   <rect x="675" y="25" width="325" height="195" rx="10" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
   <text x="837" y="47" font-size="11.5" font-weight="bold" fill="#047857" text-anchor="middle">🛡️ 4. Defensas Combinadas ("Escudo Manta")</text>
   <text x="688" y="69" font-size="9.8" fill="#1e293b" font-weight="bold">1) LA RED: Cortafuegos / Fumigación de Hubs</text>
-  <text x="698" y="84" font-size="9.3" fill="#334155">Clausura o desinfecta mercados/ULEAM en alerta roja,</text>
-  <text x="698" y="98" font-size="9.3" fill="#334155">cortando el 85% de los contagios diurnos de golpe.</text>
-  <text x="688" y="118" font-size="9.8" fill="#1e293b" font-weight="bold">2) LA LANZA: Brigadas de Aislamiento / Antídoto</text>
+  <text x="698" y="84" font-size="9.3" fill="#334155">Cierra o fumiga un hub cuando es lo que más rinde,</text>
+  <text x="698" y="98" font-size="9.3" fill="#334155">y reduce un 88% el contagio dentro del hub ese día.</text>
+  <text x="688" y="118" font-size="9.8" fill="#1e293b" font-weight="bold">2) LA LANZA: Brigadas de Aislamiento</text>
   <text x="698" y="133" font-size="9.3" fill="#334155">Neutraliza a los 🔴 Zombies con más conexiones activas.</text>
   <text x="688" y="153" font-size="9.8" fill="#1e293b" font-weight="bold">3) EL ESCUDO: Vacunación Anillo + Puente</text>
   <text x="698" y="168" font-size="9.3" fill="#334155">Filtra SOLO nodos 🟢 Sanos (0% desperdicio) a 1–2</text>
@@ -63,6 +63,6 @@
   <text x="688" y="358" font-size="9.8" fill="#1e293b">• <tspan font-weight="bold">Semilla Fija Reproducible (PCG64):</tspan></text>
   <text x="698" y="373" font-size="9.3" fill="#334155">Misma semilla + parámetros = idéntico resultado exacto.</text>
   <text x="688" y="393" font-size="9.8" fill="#1e293b">• <tspan font-weight="bold">🎃 Blindaje ante el Brote Sorpresa (5 min):</tspan></text>
-  <text x="698" y="408" font-size="9.3" fill="#334155">Si bajan vacunas o eficacia, el algoritmo reasigna</text>
-  <text x="698" y="422" font-size="9.3" fill="#334155">el presupuesto a Cierre de Hubs + Brigadas al instante.</text>
+  <text x="698" y="408" font-size="9.3" fill="#334155">Si cambia el brote, cada día recalcula qué rinde</text>
+  <text x="698" y="422" font-size="9.3" fill="#334155">más por dólar: vacunas, brigadas o cierres.</text>
 </svg>

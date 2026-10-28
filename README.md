@@ -2,9 +2,34 @@
 
 > SpookyThon 2026 · Track B · La Plaga Zombie 🧟‍♀️
 
+**🌐 Aplicación desplegada en AWS:** https://main.d2xnw5a1o65wwk.amplifyapp.com
+
+**API (Amazon API Gateway, `us-east-1`):** `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` (por ejemplo, [`/health`](https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod/health))
+
 ## Qué hace el proyecto
 
-_Pendiente (todo el equipo)._
+**El problema.** Cuando llega un brote, el Comité de Operaciones de Emergencia (COE) de Manta tiene que decidir rápido y con poco dinero a quién vacunar, a quién aislar y qué lugares cerrar. Gastar mal ese dinero se paga en contagios.
+
+**Lo que hicimos.** Una herramienta que simula día a día cómo se propaga una plaga por una red de contactos de Manta (hogares, barrios, mercados, la ULEAM, las empacadoras, el terminal y los buses) y que, con un presupuesto que llega por días, decide cada día qué comprar:
+
+- 💉 **vacunas** para las personas sanas que rodean a los casos y para quienes conectan barrios;
+- 🚑 **brigadas** que aíslan a los casos detectados con más contactos;
+- 🔥 **cierres o fumigaciones** de hubs cuando la epidemia se descontrola.
+
+La estrategia, **Escudo Manta**, elige cada día la acción que más contagios evita por dólar. Se compara siempre contra **no hacer nada** y contra **gastar el mismo dinero al azar**, con 30 simulaciones por estrategia, promedios y rangos P10–P90.
+
+**Resultado con los valores por defecto (semilla 2026):**
+
+| | Sin intervención | Al azar | **Escudo Manta** |
+|---|---|---|---|
+| Personas contagiadas (de 1 200) | 842 (70%) | 51 | **14,5** |
+| Pico de zombies a la vez | 279,6 | 16,3 | **5,0** |
+
+El Escudo evita el **98%** de los contagios frente a no hacer nada y el **72%** frente al azar, sin vacunar nunca a quien ya está infectado o es inmune. Escalado a los 271 000 habitantes de Manta, son unos **187 000 contagios evitados**.
+
+**Cómo se usa.** Una consola web (ver [Interfaz](#interfaz)) permite cambiar el contagio, las vacunas, el presupuesto y el punto de inicio, aplicar los **🎃 Brotes Sorpresa** del reto con un clic, ver el avance en un mapa de Manta y generar una propuesta de decreto para el alcalde en lenguaje simple. El cálculo corre en AWS (Lambda + Step Functions) o en un servidor local de respaldo.
+
+**Utilidad real.** Es, en pequeño, lo que usan los ministerios de salud para planificar vacunación, cierres o fumigación con recursos limitados.
 
 ## Modelo epidemiológico
 
@@ -112,6 +137,10 @@ $$\text{ROI}(\text{acción}) = \frac{\text{contagios que se espera evitar}}{\tex
 
 El COE solo usa la información que tendría en la realidad: los **Zombies detectados**. No sabe quién está Mordido.
 
+![Flujo diario del Escudo Manta: llega el presupuesto, se detectan casos, se evalúa el retorno por dólar de las 3 defensas y luego ocurre el contagio de día y de noche](docs/flujo_defensas.svg)
+
+*Un día de simulación: el COE recibe el presupuesto, ve los casos detectados, compra las acciones con más contagios evitados por dólar y después ocurre el contagio de día y de noche. Fuente: [docs/flujo_defensas.svg](docs/flujo_defensas.svg). Vista general del sistema en [docs/mapa_mental.svg](docs/mapa_mental.svg).*
+
 **Las 3 defensas:**
 
 | Defensa | Costo | Qué hace | Contagios que se espera evitar |
@@ -208,6 +237,16 @@ Con los valores por defecto y la semilla 2026, el resultado debe ser exactamente
 |---|---|---|---|---|
 | 842 infectados (70%) | 51,4 | 14,5 | 71,79% menos contagios | 0 |
 
+**Comparación de las 3 estrategias** (media de 30 repeticiones; rango P10–P90 entre paréntesis; 1 200 personas, 30 días):
+
+| Estrategia | Contagiados | Pico de zombies | Gasto | Vacunas | Brigadas | Días de hubs cerrados |
+|---|---|---|---|---|---|---|
+| 🙅 Sin intervención | 842,5 (753–922) | 279,6 | 0 $ | 0 | 0 | 0 |
+| 🎲 Al azar (mismo presupuesto) | 51,4 (5–119) | 16,3 | 7 995 $ | 178 | 15,7 | 19,6 |
+| 🛡️ **Escudo Manta** | **14,5 (6–25)** | **5,0** | 7 996 $ | 487 | 10,7 | 0 |
+
+Contagios evitados por el Escudo, comparados réplica a réplica: **828 frente a no hacer nada** (P10–P90: 738 a 909) y **36,9 frente al azar** (P10–P90: −8 a 101). El rango frente al azar empieza en negativo: en las repeticiones más favorables para el azar, el Escudo queda unas pocas personas por detrás, pero en promedio evita el 72% de los contagios que deja el azar. El azar gasta casi lo mismo, pero una buena parte en cerrar hubs al azar (19,6 días), que es la acción más cara.
+
 Para probar otra configuración, se escriben los cambios como `nombre=valor`, por ejemplo: `python scripts/calibrar.py seed=42 vaccine_efficacy=0.5`.
 
 
@@ -285,13 +324,39 @@ Todo modelo simplifica la realidad. Estas son las simplificaciones conocidas del
 
 ## Arquitectura en AWS
 
-_Pendiente (Integrante 2)._
+Todo es **serverless** en la región **`us-east-1`** (N. Virginia) y se despliega con **AWS SAM** desde [`infra/template.yaml`](infra/template.yaml). No hay servidores encendidos: si nadie usa la herramienta, el costo es prácticamente cero.
+
+![Arquitectura serverless en AWS: navegador, Amplify, API Gateway, Lambda orquestadora, Step Functions con workers en paralelo, DynamoDB, S3 y Bedrock opcional](docs/arquitectura.svg)
+
+*Fuente: [docs/arquitectura.svg](docs/arquitectura.svg).*
+
+| Servicio | Para qué | Público |
+|---|---|---|
+| **AWS Amplify Hosting** | Sirve la consola React ([`amplify.yml`](amplify.yml)). | Sí (URL pública) |
+| **Amazon API Gateway (HTTP API)** | `GET /health`, `POST /simulate`, `GET /simulations/{simHash}`, `POST /mayor-report`. | Sí |
+| **AWS Lambda – orquestador** | Normaliza los parámetros, calcula el `sim_hash`, busca en caché y lanza Step Functions. | No |
+| **AWS Step Functions (Express, `Map`)** | Reparte las repeticiones en lotes de 5 y los corre en paralelo (hasta 40 a la vez). | No |
+| **AWS Lambda – workers** | Cada uno corre un lote de repeticiones de las 3 estrategias y guarda el resultado en S3 (Step Functions limita su salida a 256 KiB). | No |
+| **Amazon DynamoDB (On-Demand)** | Caché de resultados por `sim_hash`, con expiración a 14 días: la misma configuración y semilla devuelve el mismo resultado al instante. | No |
+| **Amazon S3** | Resultados completos, series del mapa y lotes de los workers; acceso público bloqueado, cifrado y expiración a 14 días. | No |
+| **AWS Lambda – informe** | Redacta la propuesta de decreto para el alcalde. Usa **Amazon Bedrock** solo si `UseBedrock=true` (apagado por defecto). | No |
+| **Amazon CloudWatch** | Logs de las Lambdas y de Step Functions (los de Step Functions con retención de 7 días). | No |
+| **AWS Budgets** | Presupuesto mensual de 5 $ con alertas por correo al 50% y al 80%. | No |
+
+**Flujo de una simulación.** El navegador llama a `POST /simulate` → el orquestador normaliza los parámetros y calcula el `sim_hash` → si está en DynamoDB, responde desde la caché → si no, Step Functions lanza los workers en paralelo → cada worker guarda su lote en S3 → el orquestador junta los lotes, calcula medias y P10–P90, guarda el resultado en DynamoDB y S3, y responde. Si Step Functions falla, el orquestador calcula todo él mismo.
+
+**Seguridad.**
+
+- **Sin llaves de AWS en el código:** las Lambdas usan los roles que crea SAM. La única clave en el frontend es la de los tiles de CARTO, que es pública por naturaleza: el navegador la envía en cada petición de mapa.
+- **Un rol por función** con políticas acotadas al recurso que usa cada una (su tabla, su bucket, su máquina de estados).
+- **S3** con acceso público bloqueado y cifrado; **DynamoDB** con cifrado en reposo.
+- **Pendiente de ajustar** (lo sabemos): CORS acepta cualquier origen (`*`), la máquina de estados tiene `CloudWatchLogsFullAccess` y el permiso de Bedrock usa `Resource: "*"`. Lo ideal es limitar CORS al dominio de Amplify, usar una política de logs propia y restringir Bedrock al ARN del modelo.
 
 ## Interfaz
 
 Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos los números que muestra vienen del backend: si AWS no responde se usa el servidor local, y si ninguno responde aparece un aviso de error con **Reintentar** (no hay datos simulados en el navegador).
 
-**Cabecera.** Selector **AWS / Local** (qué backend usar) con su estado (*Conectado* o *Sin conexión*), y los botones **Parámetros**, **Restaurar** (vuelve al escenario base, semilla 2026), **Boletín COE** y **Simular**. Debajo, una barra con el identificador de la simulación (`sim_hash`), si se calculó ahora o vino **desde caché**, el tiempo de cómputo, la población, las repeticiones y la semilla.
+**Cabecera.** Estado del motor de simulación (*Conectado* o *Sin conexión*) y los botones **Parámetros**, **Restaurar** (vuelve al escenario base, semilla 2026), **Boletín COE** y **Simular**. Debajo, una barra con el identificador de la simulación (`sim_hash`), si se calculó ahora o vino **desde caché**, el tiempo de cómputo, la población, las repeticiones y la semilla.
 
 **Indicadores.** Cuatro tarjetas con la media de las repeticiones y su rango P10–P90:
 
@@ -322,20 +387,93 @@ python src/local_server.py
 npm --prefix frontend run dev
 ```
 
-Luego abrir `http://localhost:5173` y elegir **Local** en la cabecera. Para usar AWS, poner la URL del API Gateway en `VITE_API_URL` (ver [`frontend/.env.example`](frontend/.env.example)).
+Luego abrir `http://localhost:5173`. La consola usa **siempre AWS** (la URL de `VITE_API_URL`, ver [`frontend/.env.example`](frontend/.env.example)) y, si AWS no está configurado o no responde, el servidor local en silencio.
 
 ## Cómo desplegarlo
 
-_Pendiente._
+**Estado actual:** desplegado en la cuenta `341775378238`, región `us-east-1`, con el usuario IAM `spookython-dev` (perfil `spookython` de la AWS CLI):
+
+| Pieza | Dónde |
+|---|---|
+| Backend (stack `spookython-cortafuegos-manta`) | API: `https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod` |
+| Frontend (Amplify, app `cortafuegos-manta`, rama `main`) | https://main.d2xnw5a1o65wwk.amplifyapp.com |
+
+**Requisitos para volver a desplegar:** AWS CLI con el perfil `spookython`, [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html), **Docker** (para construir las Lambdas arm64 en la imagen oficial de Lambda, aunque el equipo no tenga Python 3.12) y Node.js 20 o superior.
+
+**1. Backend.** Desde la carpeta `infra/` (usa [`infra/samconfig.toml`](infra/samconfig.toml)):
+
+```bash
+sam build --use-container
+```
+
+```bash
+sam deploy --profile spookython --region us-east-1
+```
+
+O con el script, que hace lo mismo y escribe la URL de la API en `frontend/.env.production`:
+
+```powershell
+.\scripts\deploy-aws.ps1 -ProfileName spookython
+```
+
+Con `-AlertEmail correo@dominio.com` crea además el **AWS Budget** de 5 $ con alertas al 50% y 80%. La URL de la API aparece en las salidas del stack como `HttpApiUrl`.
+
+**2. Frontend.** Se publica en Amplify como **despliegue manual** (se sube la web ya construida; no hace falta conectar GitHub). Desde `frontend/`, construir con la URL de la API:
+
+```powershell
+$env:VITE_API_URL = "https://efrokac0z1.execute-api.us-east-1.amazonaws.com/prod"; npm run build
+```
+
+Luego comprimir el **contenido** de `frontend/dist/` en un zip (con `index.html` en la raíz) y subirlo en la consola de **AWS Amplify → cortafuegos-manta → main → Deploy updates** (arrastrar el zip). Por CLI: `aws amplify create-deployment --app-id d2xnw5a1o65wwk --branch-name main`, subir el zip a la `zipUploadUrl` que devuelve y `aws amplify start-deployment` con su `jobId`.
+
+**Límite de concurrencia de Lambda.** Las cuentas nuevas tienen **10 ejecuciones simultáneas** de Lambda. Por eso la máquina de estados corre como máximo **8 workers a la vez** ([`infra/statemachine/monte_carlo_express.asl.json`](infra/statemachine/monte_carlo_express.asl.json)) y reintenta con espera creciente si Lambda responde 429. Con 100 repeticiones y 90 días tarda unos 7 s. Si se amplía la cuota (Service Quotas → AWS Lambda → *Concurrent executions*), se puede subir `MaxConcurrency`.
+
+**Bedrock (opcional).** Para que el informe del alcalde lo redacte un modelo, desplegar con `--parameter-overrides UseBedrock=true` (la cuenta necesita acceso al modelo `amazon.nova-micro-v1:0`). Sin eso, el informe lo redacta el motor analítico del COE.
 
 ## Cómo probarlo
 
-_Pendiente._
+**Tests automáticos** (desde la raíz; 103 pruebas del motor, los handlers, el informe y el contrato con el frontend):
+
+```bash
+python -m unittest discover -s tests -t .
+```
+
+**Resultado de referencia** (debe coincidir con la tabla de *Parámetros por defecto y semilla*):
+
+```bash
+python scripts/calibrar.py
+```
+
+**Servidor local** (misma API que AWS, en el puerto 8000, sin cuenta de AWS):
+
+```bash
+python src/local_server.py
+```
+
+```bash
+curl http://localhost:8000/health
+```
+
+**Consola en local:** con el servidor local corriendo, `npm --prefix frontend run dev` y abrir `http://localhost:5173` (ver [Interfaz](#interfaz)).
+
+**Todo en contenedores** (backend en el puerto 8000 y consola en el 3000):
+
+```bash
+docker compose up --build
+```
+
+**Prueba de fuego en vivo:** elegir una semilla en *Parámetros*, simular y comprobar que el Escudo queda por debajo de las dos líneas base; luego aplicar los botones de **Brote Sorpresa** (también combinados). Los resultados esperados de cada escenario están en [docs/calibracion.md](docs/calibracion.md).
 
 ## Costos
 
-_Pendiente. Ver [docs/costos.md](docs/costos.md)._
+Cálculo completo en [docs/costos.md](docs/costos.md).
+
+- **Durante el evento:** todo cabe en la capa gratuita; el uso estimado es de unos 0,01 $. **Pendiente:** el gasto real tomado de AWS Billing (Cost Explorer).
+- **En producción** (10 000 simulaciones de 100 repeticiones al mes): unos **7,1 $/mes** sin capa gratuita y unos **1,7 $/mes** con la capa gratuita de Lambda. Lo que más pesa es el cómputo de los workers y las escrituras de lotes en S3.
+- Bedrock está apagado por defecto, así que no suma costo.
 
 ## AWS Budget
 
-_Pendiente: captura del AWS Budget con alerta._
+Hoy la cuenta tiene el presupuesto **"My Zero-Spend Budget" (1 $ al mes)**, que avisa en cuanto haya cualquier gasto. Al desplegar con `AlertEmail` se crea además un **AWS Budget mensual de 5 $** con alertas por correo al 50% y al 80% (recurso `SpookyThonCostBudget` del template).
+
+**Pendiente:** añadir la captura de la consola de AWS Budgets en `docs/budget.png` y enlazarla aquí.

@@ -4,9 +4,9 @@
   "States": {
     "RunMonteCarloBatchesInParallel": {
       "Type": "Map",
-      "Comment": "Ejecuta lotes de simulaciones SEIR-VQ en paralelo usando semillas deterministas base_seed + run_id",
+      "Comment": "Ejecuta lotes de simulaciones SEIR-VQ en paralelo usando semillas deterministas base_seed + run_id. MaxConcurrency 8: las cuentas nuevas tienen 10 ejecuciones simultaneas de Lambda; quedan 2 para el orquestador y el informe. Subirlo si se amplia la cuota de concurrencia.",
       "ItemsPath": "$.batches",
-      "MaxConcurrency": 40,
+      "MaxConcurrency": 8,
       "ItemProcessor": {
         "ProcessorConfig": {
           "Mode": "INLINE"
@@ -23,11 +23,20 @@
             },
             "Retry": [
               {
+                "Comment": "Lambda rechaza por limite de concurrencia (429): reintentar con espera creciente",
+                "ErrorEquals": [
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 6,
+                "BackoffRate": 2.0,
+                "JitterStrategy": "FULL"
+              },
+              {
                 "ErrorEquals": [
                   "Lambda.ServiceException",
                   "Lambda.AWSLambdaException",
-                  "Lambda.SdkClientException",
-                  "Lambda.TooManyRequestsException"
+                  "Lambda.SdkClientException"
                 ],
                 "IntervalSeconds": 1,
                 "MaxAttempts": 2,

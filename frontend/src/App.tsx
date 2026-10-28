@@ -27,8 +27,6 @@ export default function App() {
   const {
     params,
     setParams,
-    backendMode,
-    setBackendMode,
     backendHealthy,
     result,
     loading,
@@ -110,12 +108,10 @@ export default function App() {
         loading={loading}
         reportLoading={reportLoading}
         hasResult={result !== null}
-        backendMode={backendMode}
         backendHealthy={backendHealthy}
         onRun={() => execute()}
         onReset={resetAll}
         onReport={openReport}
-        onModeChange={setBackendMode}
         onOpenSetup={() => setIsSetupOpen(true)}
       />
 
@@ -172,7 +168,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-[#ecfdf7] px-2.5 py-0.5 text-[11px] font-medium text-[#167e6c]">
                 <CheckCircle2 className="h-3 w-3" />
-                Datos reales de {result.backend_mode === 'aws' ? 'AWS Lambda' : 'Servidor Local'}
+                Datos reales del motor SEIR
               </span>
             </div>
           </div>

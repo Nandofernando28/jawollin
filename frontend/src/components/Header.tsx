@@ -8,23 +8,18 @@ import {
   RotateCcw,
   FileText,
   Loader2,
-  Server,
-  Cloud,
   Activity,
   SlidersHorizontal,
 } from 'lucide-react';
-import type { BackendMode } from '../types/simulation';
 
 interface HeaderProps {
   loading: boolean;
   reportLoading: boolean;
   hasResult: boolean;
-  backendMode: BackendMode;
   backendHealthy: boolean | null;
   onRun: () => void;
   onReset: () => void;
   onReport: () => void;
-  onModeChange: (m: BackendMode) => void;
   onOpenSetup?: () => void;
 }
 
@@ -32,12 +27,10 @@ export function Header({
   loading,
   reportLoading,
   hasResult,
-  backendMode,
   backendHealthy,
   onRun,
   onReset,
   onReport,
-  onModeChange,
   onOpenSetup,
 }: HeaderProps) {
   const healthDot =
@@ -61,33 +54,10 @@ export function Header({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Estado del backend del modo elegido (el selector ya dice cuál). Solo en xl: por
-              debajo no cabe junto al resto de la cabecera (ancho máximo 1200 px). */}
-          <div
-            className="hidden items-center gap-2 rounded-full border border-[#e3e4e8] bg-[#f6f6f8] px-3 py-1.5 xl:flex"
-            title={backendMode === 'aws' ? 'AWS us-east-1' : 'Servidor local :8000'}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${healthDot}`} />
-            <span className="whitespace-nowrap text-[11px] text-[#7c7f88]">{healthLabel}</span>
-          </div>
-
-          <div className="flex overflow-hidden rounded-lg border border-[#e3e4e8] bg-[#f6f6f8]">
-            {(['aws', 'local'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => onModeChange(m)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium transition-colors ${
-                  backendMode === m
-                    ? 'bg-[#111a4a] text-white'
-                    : 'bg-transparent text-[#7c7f88] hover:text-[#3b3e47]'
-                }`}
-              >
-                {m === 'aws' ? <Cloud className="h-3.5 w-3.5" /> : <Server className="h-3.5 w-3.5" />}
-                {m === 'aws' ? 'AWS' : 'Local'}
-              </button>
-            ))}
-          </div>
+        {/* Estado del motor de simulación: AWS y, si no responde, el servidor local en silencio */}
+        <div className="hidden items-center gap-2 rounded-full border border-[#e3e4e8] bg-[#f6f6f8] px-3 py-1.5 md:flex">
+          <span className={`h-1.5 w-1.5 rounded-full ${healthDot}`} />
+          <span className="whitespace-nowrap text-[11px] text-[#7c7f88]">{healthLabel}</span>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
