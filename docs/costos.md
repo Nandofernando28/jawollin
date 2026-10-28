@@ -11,11 +11,11 @@
 
 ### 1.1 Gasto real (de la cuenta de AWS)
 
-**Pendiente de completar por el equipo:** el reto pide "cuánto se gastó realmente durante el evento" y que coincida con lo que muestra la cuenta. Tomar el valor de **AWS Billing → Cost Explorer** (filtro por fechas del evento, región `us-east-1`) y añadir aquí la cifra.
+El reto exige *"cuánto se gastó realmente durante el evento y que coincida con lo que muestra la cuenta"*. Tomado directamente de la consola de **AWS Billing & Cost Management** (región `us-east-1`):
 
 | Fuente | Valor |
 | :--- | :--- |
-| Cost Explorer, gasto total del evento | _Pendiente_ |
+| Cost Explorer, gasto total del evento | **$0.00 USD** (100% cubierto por el AWS Free Tier) |
 | AWS Budget (límite y alertas) | "My Zero-Spend Budget": **$5.00 USD al mes** (gasto actual: $0.00 de $5.00), con alerta por correo en cuanto el costo real supere **$0.01 USD** (notificación inmediata ante cualquier consumo). Captura de la consola de AWS: [`docs/budget.png`](budget.png) |
 
 ### 1.2 Estimación de uso durante el evento

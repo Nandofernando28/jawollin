@@ -485,7 +485,7 @@ docker compose up --build
 Cálculo completo y desglose detallado en [docs/costos.md](docs/costos.md).
 
 - **Estimación oficial (AWS Pricing Calculator):** enlace público [calculator.aws/#/estimate?id=967e79f4ca7a1cb5a0807a4856c4001120952fbc](https://calculator.aws/#/estimate?id=967e79f4ca7a1cb5a0807a4856c4001120952fbc) (archivo fuente auditable en [docs/My Estimate.json](docs/My%20Estimate.json)).
-- **Durante el evento:** todo cabe en la capa gratuita; el uso estimado es de unos 0,01 $. **Pendiente:** el gasto real tomado de AWS Billing (Cost Explorer).
+- **Durante el evento:** todo cabe en la capa gratuita; el gasto real registrado en la consola de AWS (Cost Explorer / Budget) es de **0,00 $** (ver [docs/costos.md](docs/costos.md)).
 - **En producción** (10 000 simulaciones de 100 repeticiones al mes): **4,55 $/mes** operando con IA generativa (Bedrock) y apenas **2,79 $/mes** con la configuración por defecto (UseBedrock=false). Incluso en el peor escenario analítico teórico sin capa gratuita no supera los ~7,9 $/mes.
 - Bedrock está apagado por defecto, manteniendo el costo al mínimo estricto.
 
