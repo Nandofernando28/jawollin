@@ -156,16 +156,10 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-2">
-              {result.data_source === 'mock' ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#fff3ef] px-2.5 py-0.5 text-[11px] font-medium text-[#ec652b]">
-                  Contingencia offline (Mock)
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#ecfdf7] px-2.5 py-0.5 text-[11px] font-medium text-[#167e6c]">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Datos reales de {backendMode === 'aws' ? 'AWS Lambda' : 'Servidor Local'}
-                </span>
-              )}
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#ecfdf7] px-2.5 py-0.5 text-[11px] font-medium text-[#167e6c]">
+                <CheckCircle2 className="h-3 w-3" />
+                Datos reales de {result.backend_mode === 'aws' ? 'AWS Lambda' : 'Servidor Local'}
+              </span>
             </div>
           </div>
         )}
@@ -233,10 +227,10 @@ export default function App() {
               </span>
               {(
                 [
-                  { id: 'double_beta', label: '⚡ Contagio ×2', desc: 'Duplica tasa diurna y nocturna' },
-                  { id: 'half_vaccines', label: '📉 50% Presupuesto', desc: 'Reduce el flujo diario a la mitad' },
-                  { id: 'market_outbreak', label: '📍 Brote en Tarqui', desc: '10 infectados en Mercado de Tarqui' },
-                  { id: 'weak_vaccine', label: '💉 Vacuna 40%', desc: 'Reduce eficacia al 40%' },
+                  { id: 'double_beta', label: '⚡ Contagio ×2', desc: 'El doble de contagiosa: β día 0,10 y β noche 0,14' },
+                  { id: 'half_vaccines', label: '💉 Mitad de vacunas', desc: 'Cada dosis cuesta el doble (30 $): con el mismo dinero alcanza la mitad' },
+                  { id: 'market_outbreak', label: '📍 Brote en Mercado Central', desc: 'El brote empieza en el Mercado Central de Manta' },
+                  { id: 'weak_vaccine', label: '🧬 Vacuna a medias', desc: 'Variante que la vacuna cubre a medias: eficacia 50%' },
                 ] as const
               ).map((p) => (
                 <button

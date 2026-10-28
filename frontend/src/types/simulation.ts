@@ -177,13 +177,13 @@ export interface SummaryKPIs {
   total_infected_none: number;
   total_infected_random: number;
   total_infected_shield: number;
-  // Rango P10-P90 entre réplicas (opcional: el mock offline no lo calcula)
-  total_infected_none_p10?: number;
-  total_infected_none_p90?: number;
-  total_infected_random_p10?: number;
-  total_infected_random_p90?: number;
-  total_infected_shield_p10?: number;
-  total_infected_shield_p90?: number;
+  // Rango P10-P90 entre réplicas
+  total_infected_none_p10: number;
+  total_infected_none_p90: number;
+  total_infected_random_p10: number;
+  total_infected_random_p90: number;
+  total_infected_shield_p10: number;
+  total_infected_shield_p90: number;
 
   // Pico Máximo de Zombies Activos y Reducción
   peak_zombies_none: number;
@@ -217,11 +217,6 @@ export interface SimulationResponse {
   execution_time_ms: number;
   backend_mode: BackendMode;
   timestamp: string;
-
-  /** Origen real de los datos: respuesta del backend o mock local de contingencia. */
-  data_source?: 'backend' | 'mock';
-  /** Modo solicitado originalmente cuando hubo que conmutar (ej. 'aws' -> 'local'). */
-  fallback_from?: BackendMode;
 
   params: SimulationParams;
   summary_kpis: SummaryKPIs;
@@ -291,6 +286,8 @@ export interface HealthCheckResponse {
 // ============================================================================
 // 9. VALORES POR DEFECTO RECOMENDADOS (Semilla Oficial: 2026)
 // ============================================================================
+// Deben coincidir con DEFAULT_SIMULATION_PARAMS de src/engine/simulator.py
+// (valores calibrados, ver docs/calibracion.md). Un test del backend lo comprueba.
 
 export const DEFAULT_SIMULATION_PARAMS: SimulationParams = {
   n_nodes: 1200,
@@ -299,13 +296,13 @@ export const DEFAULT_SIMULATION_PARAMS: SimulationParams = {
   initial_infected: 4,
   days: 30,
   monte_carlo_runs: 30,
-  beta_day: 0.085,
-  beta_night: 0.110,
+  beta_day: 0.05,
+  beta_night: 0.07,
   incubation_days: 2,
   infectious_days: 5,
   vaccine_efficacy: 0.85,
-  daily_budget: 600.0,
-  total_budget: 12000.0,
+  daily_budget: 400.0,
+  total_budget: 8000.0,
   vaccine_cost: 15.0,
   brigade_cost: 65.0,
   hub_closure_cost: 220.0,

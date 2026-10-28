@@ -11,7 +11,7 @@ import type {
   BackendMode,
 } from '../types/simulation';
 import { DEFAULT_SIMULATION_PARAMS } from '../types/simulation';
-import { runSimulation, generateMayorReport, checkHealth } from '../services/api';
+import { runSimulation, generateMayorReport, checkHealth, errorMessage } from '../services/api';
 
 export type SurprisePreset = 'double_beta' | 'half_vaccines' | 'market_outbreak' | 'weak_vaccine';
 
@@ -84,7 +84,7 @@ export function useSimulation(): UseSimulationReturn {
         setCurrentDay(0);
         setPlaying(false);
       } catch (e) {
-        setError(String(e));
+        setError(errorMessage(e));
       } finally {
         setLoading(false);
       }
@@ -92,32 +92,22 @@ export function useSimulation(): UseSimulationReturn {
     [params, backendMode],
   );
 
+  // Brotes Sorpresa del reto, iguales a los escenarios documentados en el README y
+  // docs/calibracion.md. Se aplican sobre los parámetros actuales, así que se pueden combinar.
   const applyPreset = useCallback(
     (preset: SurprisePreset) => {
-      setParams((prev) => {
-        let next = { ...prev };
-        switch (preset) {
-          case 'double_beta':
-            next = { ...next, beta_day: 0.165, beta_night: 0.210 };
-            break;
-          case 'half_vaccines':
-            next = { ...next, daily_budget: Math.round(prev.daily_budget * 0.5) };
-            break;
-          case 'market_outbreak':
-            next = { ...next, start_hub: 'mercado_tarqui', initial_infected: 10 };
-            break;
-          case 'weak_vaccine':
-            next = { ...next, vaccine_efficacy: 0.40 };
-            break;
-        }
-        // Ejecutar con los nuevos parámetros inmediatamente
-        runSimulation(next, backendMode)
-          .then((data) => { setResult(data); setCurrentDay(0); setPlaying(false); })
-          .catch((e) => setError(String(e)));
-        return next;
-      });
+      const D = DEFAULT_SIMULATION_PARAMS;
+      const changes: Record<SurprisePreset, Partial<SimulationParams>> = {
+        double_beta: { beta_day: D.beta_day * 2, beta_night: D.beta_night * 2 },
+        half_vaccines: { vaccine_cost: D.vaccine_cost * 2 },
+        market_outbreak: { start_hub: 'mercado_central' },
+        weak_vaccine: { vaccine_efficacy: 0.5 },
+      };
+      const next = { ...params, ...changes[preset] };
+      setParams(next);
+      execute(next);
     },
-    [backendMode],
+    [params, execute],
   );
 
   const resetAll = useCallback(() => {
@@ -152,7 +142,7 @@ export function useSimulation(): UseSimulationReturn {
       setReport(r);
       setShowReport(true);
     } catch (e) {
-      setError(String(e));
+      setError(errorMessage(e));
     } finally {
       setReportLoading(false);
     }
