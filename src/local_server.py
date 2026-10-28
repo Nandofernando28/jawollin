@@ -16,7 +16,10 @@ from urllib.parse import urlsplit
 # Permite ejecutar `python src/local_server.py` desde cualquier directorio.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from handlers import mayor_report, orchestrator  # noqa: E402
+import handlers  # noqa: E402,F401  registra el alias del paquete `src` si hace falta
+# Se importa como src.handlers.*, igual que mayor_report importa al orquestador: asi hay
+# una sola copia del modulo y una sola cache en memoria para /simulate y /mayor-report.
+from src.handlers import mayor_report, orchestrator  # noqa: E402
 
 DEFAULT_PORT = 8000
 
