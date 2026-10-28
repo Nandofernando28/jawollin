@@ -9,16 +9,16 @@ param(
 )
 
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host " 🧟‍♂️ OPERACION CORTAFUEGOS MANTA - Configuracion de Cuenta AWS" -ForegroundColor Cyan
+Write-Host " OPERACION CORTAFUEGOS MANTA - Configuracion de Cuenta AWS" -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 
 if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
-    Write-Host "⚠️ AWS CLI v2 no detectado en el PATH. Instalando con winget..." -ForegroundColor Yellow
+    Write-Host "[AVISO] AWS CLI v2 no detectado en el PATH. Instalando con winget..." -ForegroundColor Yellow
     winget install -e --id Amazon.AWSCLI --accept-source-agreements --accept-package-agreements
 }
 
 if (-not (Get-Command sam -ErrorAction SilentlyContinue)) {
-    Write-Host "⚠️ AWS SAM CLI no detectado en el PATH. Instalando con winget..." -ForegroundColor Yellow
+    Write-Host "[AVISO] AWS SAM CLI no detectado en el PATH. Instalando con winget..." -ForegroundColor Yellow
     winget install -e --id Amazon.SAM-CLI --accept-source-agreements --accept-package-agreements
 }
 
@@ -31,5 +31,5 @@ aws configure set output json --profile $ProfileName
 Write-Host "`n2. Verificando identidad de la cuenta AWS..." -ForegroundColor Green
 aws sts get-caller-identity --profile $ProfileName
 
-Write-Host "`n✅ Cuenta lista. Para desplegar toda la infraestructura Serverless ejecuta:" -ForegroundColor Green
+Write-Host "`n[OK] Cuenta lista. Para desplegar toda la infraestructura Serverless ejecuta:" -ForegroundColor Green
 Write-Host "   .\scripts\deploy-aws.ps1 -ProfileName $ProfileName -AlertEmail tu_correo@ejemplo.com" -ForegroundColor Yellow

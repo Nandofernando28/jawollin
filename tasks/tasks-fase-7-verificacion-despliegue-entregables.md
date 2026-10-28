@@ -22,7 +22,7 @@
   2. *¿Tienen las dos líneas base obligatorias?* → Sí, cada ejecución compara simultáneamente contra `Sin Intervención` e `Intervención al Azar` con exactamente el mismo presupuesto.
   3. *¿De dónde salen los números y parámetros?* → Documentados en el `README.md` con base en proporciones parroquiales del Censo INEC para Manta y tiempos epidemiológicos de arbovirosis/virus respiratorios en Manabí.
   4. *¿Vacunan a quien ya está infectado o es inmune?* → Jamás: el filtro `state == STATE_SANO` garantiza `0` vacunas desperdiciadas, auditado en código y en tests.
-  5. *¿Se rompe la estrategia con el 🎃 Brote Sorpresa?* → No: el optimizador de ROI marginal recalcula en cada día qué defensa rinde más por dólar; si la vacuna pierde eficacia o el contagio se duplica, el presupuesto migra automáticamente hacia Cortafuegos de Hubs y Brigadas de Aislamiento.
+  5. *¿Se rompe la estrategia con el Brote Sorpresa?* → No: el optimizador de ROI marginal recalcula en cada día qué defensa rinde más por dólar; si la vacuna pierde eficacia o el contagio se duplica, el presupuesto migra automáticamente hacia Cortafuegos de Hubs y Brigadas de Aislamiento.
 
 ## Instructions for Completing Tasks
 
@@ -43,7 +43,7 @@ Update the file after completing each sub-task, not just after completing an ent
     - Determinismo exacto de `build_manta_multilayer_network` y `run_monte_carlo_ensemble` ante la semilla oficial `seed = 2026`.
     - `wasted_vaccines_count == 0` en todas las simulaciones.
     - Superioridad estadística de `shield` (*Cortafuegos Manta*) sobre `random` y `none`.
-  - [x] 1.2 Ejecutar pruebas de estrés para los escenarios típicos del **🎃 Brote Sorpresa** (verificando que se completen en $< 3\text{ segundos}$ para $M=30$ réplicas):
+  - [x] 1.2 Ejecutar pruebas de estrés para los escenarios típicos del **Brote Sorpresa** (verificando que se completen en $< 3\text{ segundos}$ para $M=30$ réplicas):
     - *Escenario Sorpresa 1 (Doble de contagiosa):* `beta_day = 0.17`, `beta_night = 0.22`.
     - *Escenario Sorpresa 2 (Mitad de presupuesto/vacunas):* `daily_budget = 300`, `total_budget = 6000`.
     - *Escenario Sorpresa 3 (Variante resistente a vacuna):* `vaccine_efficacy = 0.40`.
@@ -92,7 +92,7 @@ Update the file after completing each sub-task, not just after completing an ent
 - [x] 3.0 Documentar exhaustivamente el `README.md` según la Rúbrica Oficial de SpookyThon 2026
   - [x] 3.1 *(Sección "Qué hace el proyecto".)* Redactar en `README.md` la sección **1. Resumen Ejecutivo y Propuesta de Valor** explicando cómo *Operación Cortafuegos Manta* resuelve el problema real de asignación de recursos sanitarios limitados en Manta.
   - [x] 3.2 *(Ya cubierta por "Modelo epidemiológico": la plaga, la población y "Cómo se contagia" con las fórmulas λᵢ y pᵢ.)* Redactar la sección **2. Escenario, Población (INEC) y Modelo Matemático SEIR-VQ Multicapa** detallando las ecuaciones de fuerza de infección diurna/nocturna, los 5 estados y las fuentes de calibración demográfica de las 5 parroquias y 5 hubs.
-  - [x] 3.3 *(Sección "Estrategia Escudo Manta", con `docs/flujo_defensas.svg` incrustado y enlace a `docs/mapa_mental.svg`. Se corrigieron en los SVG textos que no coincidían con el código: umbral de cierre, 80–95% y 85% en lugar de 88%, antídoto, cierres "al instante".)* Redactar la sección **3. Estrategia "Escudo Manta" (3 Defensas Combinadas + ROI Marginal)** e incrustar `docs/flujo_defensas.svg` y `docs/mapa_mental.svg`, explicando por qué nunca vacuna infectados/inmunes y cómo se adapta dinámicamente al **🎃 Brote Sorpresa**.
+  - [x] 3.3 *(Sección "Estrategia Escudo Manta", con `docs/flujo_defensas.svg` incrustado y enlace a `docs/mapa_mental.svg`. Se corrigieron en los SVG textos que no coincidían con el código: umbral de cierre, 80–95% y 85% en lugar de 88%, antídoto, cierres "al instante".)* Redactar la sección **3. Estrategia "Escudo Manta" (3 Defensas Combinadas + ROI Marginal)** e incrustar `docs/flujo_defensas.svg` y `docs/mapa_mental.svg`, explicando por qué nunca vacuna infectados/inmunes y cómo se adapta dinámicamente al **Brote Sorpresa**.
   - [x] 3.4 *("Parámetros por defecto y semilla" + tabla comparativa de las 3 estrategias con media, P10–P90, pico, gasto y acciones.)* Redactar la sección **4. Parámetros por Defecto y Semilla Oficial para Reproducibilidad (`seed = 2026`)** con la tabla comparativa de resultados obtenidos por las 3 estrategias (`Sin Intervención`, `Intervención al Azar`, `Cortafuegos Manta`).
   - [x] 3.5 *(Secciones "Arquitectura en AWS" (con `docs/arquitectura.svg` corregido: Leaflet, workers por lotes, Bedrock opcional), seguridad, "Costos" y "AWS Budget". `docs/costos.md` completado con estimación oficial de AWS Calculator a $4.55/mes, captura `docs/budget.png` ($5.00 USD) y gasto real en $0.00 USD.)* Redactar la sección **5. Arquitectura Serverless en AWS (`us-east-1`), Seguridad y Declaración de Costos**, enlazando `docs/arquitectura.svg`, `docs/costos.md` y la evidencia del AWS Budget de $5.00 USD.
   - [x] 3.6 *(Secciones "Cómo desplegarlo" (script, SAM, Amplify, Bedrock opcional) y "Cómo probarlo" (tests, calibrar.py, servidor local, Docker y prueba de fuego).)* Redactar la sección **6. Guía Paso a Paso de Pruebas Locales y Despliegue en AWS** (`sam build && sam deploy`, `scripts/deploy-aws.ps1`, `docker-compose up` y ejecución híbrida).

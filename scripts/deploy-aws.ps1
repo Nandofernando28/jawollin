@@ -13,7 +13,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host " 🚀 DESPLEGANDO INFRAESTRUCTURA AWS (OPERACION CORTAFUEGOS MANTA)" -ForegroundColor Cyan
+Write-Host " DESPLEGANDO INFRAESTRUCTURA AWS (OPERACION CORTAFUEGOS MANTA)" -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 
 Push-Location "$PSScriptRoot\..\infra"
@@ -49,7 +49,7 @@ try {
 
     if ($apiUrl) {
         Set-Content -Path "$PSScriptRoot\..\frontend\.env.production" -Value "VITE_API_URL=$apiUrl"
-        Write-Host "✅ Archivo frontend/.env.production actualizado con VITE_API_URL=$apiUrl" -ForegroundColor Green
+        Write-Host "[OK] Archivo frontend/.env.production actualizado con VITE_API_URL=$apiUrl" -ForegroundColor Green
     }
 }
 finally {

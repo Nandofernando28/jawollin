@@ -9,7 +9,7 @@ Con los valores iniciales el modelo funcionaba, pero tenía dos supuestos poco c
 1. **La epidemia era demasiado explosiva:** sin intervenir se infectaba el 97% de Manta en 30 días.
 2. **Los recursos no eran realmente limitados:** con 12 000 $ se podían comprar más de 700 vacunas para 1 200 personas, casi una por cada dos habitantes.
 
-El reto pide que la estrategia **supere a las dos líneas base** (no intervenir e intervenir al azar con los mismos recursos) con la semilla que elija el jurado y también en el 🎃 Brote Sorpresa. El reto **no** exige un porcentaje concreto de mejora. Por eso, después de calibrar, verificamos que el Escudo gane con muchas semillas y escenarios distintos (ver más abajo).
+El reto pide que la estrategia **supere a las dos líneas base** (no intervenir e intervenir al azar con los mismos recursos) con la semilla que elija el jurado y también en el Brote Sorpresa. El reto **no** exige un porcentaje concreto de mejora. Por eso, después de calibrar, verificamos que el Escudo gane con muchas semillas y escenarios distintos (ver más abajo).
 
 Método: cambiar **un solo parámetro cada vez**, correr `python scripts/calibrar.py` (30 réplicas Monte Carlo, semilla 2026) y anotar el resultado. Las cifras de infectados son el promedio de las 30 réplicas sobre 1 200 personas.
 
@@ -51,16 +51,16 @@ Valores elegidos, 30 réplicas por semilla:
 
 | Semilla | Sin hacer nada | Azar | Escudo | Escudo vs azar | ¿Supera a las dos líneas base? |
 |---|---|---|---|---|---|
-| 1 | 830 | 40.1 | 17.7 | 56% | ✅ |
-| 7 | 846 | 36.6 | 12.6 | 66% | ✅ |
-| 42 | 837 | 52.8 | 14.6 | 72% | ✅ |
-| 55 | 879 | 56.9 | 15.1 | 74% | ✅ |
-| 100 | 881 | 64.9 | 16.0 | 75% | ✅ |
-| 123 | 880 | 35.0 | 13.7 | 61% | ✅ |
-| 777 | 888 | 55.2 | 14.7 | 73% | ✅ |
-| 999 | 875 | 50.5 | 13.9 | 73% | ✅ |
-| 2026 | 842 | 51.4 | 14.5 | 72% | ✅ |
-| 31337 | 894 | 31.7 | 17.4 | 45% | ✅ |
+| 1 | 830 | 40.1 | 17.7 | 56% | Sí |
+| 7 | 846 | 36.6 | 12.6 | 66% | Sí |
+| 42 | 837 | 52.8 | 14.6 | 72% | Sí |
+| 55 | 879 | 56.9 | 15.1 | 74% | Sí |
+| 100 | 881 | 64.9 | 16.0 | 75% | Sí |
+| 123 | 880 | 35.0 | 13.7 | 61% | Sí |
+| 777 | 888 | 55.2 | 14.7 | 73% | Sí |
+| 999 | 875 | 50.5 | 13.9 | 73% | Sí |
+| 2026 | 842 | 51.4 | 14.5 | 72% | Sí |
+| 31337 | 894 | 31.7 | 17.4 | 45% | Sí |
 
 **Resultado:** el Escudo supera a las dos líneas base con las 10 semillas. La mejora frente al azar varía entre el 45% y el 75% según la suerte de cada semilla; por eso no usamos un porcentaje fijo como meta.
 
@@ -70,11 +70,11 @@ Los ejemplos de cambio que menciona el reto, con semilla 2026:
 
 | Escenario | Cambio aplicado | Sin hacer nada | Azar | Escudo | Escudo vs azar | ¿Supera? |
 |---|---|---|---|---|---|---|
-| El doble de contagiosa | beta_day=0.10 beta_night=0.14 | 1188 | 816 | 194 | 76% | ✅ |
-| La mitad de las vacunas | vaccine_cost=30 | 842 | 85 | 22 | 75% | ✅ |
-| La mitad del presupuesto | daily_budget=200 total_budget=4000 | 842 | 76 | 39 | 49% | ✅ |
-| Empieza en el mercado | start_hub=mercado_central | 675 | 15 | 13 | 10% | ✅ |
-| La vacuna cubre a medias | vaccine_efficacy=0.5 | 842 | 64 | 21 | 67% | ✅ |
+| El doble de contagiosa | beta_day=0.10 beta_night=0.14 | 1188 | 816 | 194 | 76% | Sí |
+| La mitad de las vacunas | vaccine_cost=30 | 842 | 85 | 22 | 75% | Sí |
+| La mitad del presupuesto | daily_budget=200 total_budget=4000 | 842 | 76 | 39 | 49% | Sí |
+| Empieza en el mercado | start_hub=mercado_central | 675 | 15 | 13 | 10% | Sí |
+| La vacuna cubre a medias | vaccine_efficacy=0.5 | 842 | 64 | 21 | 67% | Sí |
 
 **Resultado:** el Escudo supera a las dos líneas base en todos los escenarios, sin cambiar el código.
 
@@ -97,7 +97,7 @@ Herramienta: `python scripts/estimar_r0.py beta_day=0.05 beta_night=0.07` (2 000
 | Valores iniciales | 0.085 / 0.110 | 4.44 | 2 a 7 | Más que la COVID-19 original |
 | Fila 1 | 0.06 / 0.08 | 3.35 | 1 a 6 | |
 | **Valores elegidos** | **0.05 / 0.07** | **2.92** | **1 a 5** | **COVID-19 cepa original: mediana ≈ 2.8** |
-| Brote Sorpresa "el doble de contagiosa" | 0.10 / 0.14 | 5.16 | 2 a 8 | Variante Delta de la COVID-19: ≈ 5 |
+| Brote Sorpresa"el doble de contagiosa" | 0.10 / 0.14 | 5.16 | 2 a 8 | Variante Delta de la COVID-19: ≈ 5 |
 
 Valores de referencia publicados (a verificar con la fuente antes del pitch):
 

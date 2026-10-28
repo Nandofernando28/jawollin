@@ -53,7 +53,7 @@ Update the file after completing each sub-task, not just after completing an ent
 
 - [x] 3.0 Implementar el Generador Heurístico Estructurado de Respaldo (`build_heuristic_mayor_report`)
   - [x] 3.1 Implementar `build_heuristic_mayor_report(context_data: Dict[str, Any]) -> Dict[str, Any]` que redacte de forma determinista y rica en datos las 3 secciones ejecutivas (`situacion_critica`, `directivas_operativas`, `balance_recursos`), una lista de **3 Acciones Inmediatas con Prioridad Alta** (`action_items`) y el titular del boletín (`headline`).
-  - [x] 3.2 Incluir lógica adaptativa según el escenario detectado (por ejemplo, si la eficacia de la vacuna es baja $< 55\%$ o la tasa de contagio es muy alta como en el "🎃 Brote Sorpresa", destacar explícitamente en el boletín que el sistema redirigió recursos hacia el **Cierre Quirúrgico de Hubs** y **Brigadas de Contención Directa** para compensar la pérdida de eficacia vacunal).
+  - [x] 3.2 Incluir lógica adaptativa según el escenario detectado (por ejemplo, si la eficacia de la vacuna es baja $< 55\%$ o la tasa de contagio es muy alta como en el "Brote Sorpresa", destacar explícitamente en el boletín que el sistema redirigió recursos hacia el **Cierre Quirúrgico de Hubs** y **Brigadas de Contención Directa** para compensar la pérdida de eficacia vacunal).
 
 - [x] 4.0 Implementar el Endpoint `POST /mayor-report` en `src/handlers/mayor_report.py`
   - [x] 4.1 Implementar `lambda_handler(event: Dict[str, Any], context: Any = None) -> Dict[str, Any]` aceptando en el body JSON ya sea el objeto `simulation` completo o un `sim_hash` para buscarlo en el caché de DynamoDB/memoria.

@@ -19,7 +19,7 @@ Para cumplir con la regla de la competencia (*"Repositorio público con un histo
 
 ## Detalle de Tareas por Integrante
 
-### 🧠 Integrante 1: Especialista en Modelado Epidemiológico y Algoritmo *Escudo Manta*
+### Integrante 1: Especialista en Modelado Epidemiológico y Algoritmo *Escudo Manta*
 **Objetivo:** Construir el corazón matemático del simulador y demostrar que la estrategia combinada supera entre un 35% y 70% a actuar al azar sin desperdiciar una sola vacuna.
 
 - **Rama sugerida:** `feature/engine-seir-manta`
@@ -32,11 +32,11 @@ Para cumplir con la regla de la competencia (*"Repositorio público con un histo
   - [ ] **Tarea 3.1 – 3.4:** Programar las 3 defensas de *Escudo Manta* (Cortafuegos en Hubs, Brigadas de Aislamiento y Vacunación Anillo+Puente con filtro estricto `state == STATE_SANO`) y el **Optimizador Voraz de ROI Marginal por Dólar**.
   - [ ] **Tarea 4.1 – 7.2:** Implementar las dos líneas base (`none` y `random`), el ciclo de transmisión día/noche, el agregador Monte Carlo (media y percentiles `P10`, `P50`, `P90`) y las pruebas unitarias en `tests/test_simulator.py`.
 - **En Fase 7 ([tasks-fase-7-verificacion-despliegue-entregables.md](./tasks-fase-7-verificacion-despliegue-entregables.md)):**
-  - [ ] Validar tiempos y resultados de los 4 escenarios del **🎃 Brote Sorpresa** y documentar el modelo matemático y los supuestos en `README.md`.
+  - [ ] Validar tiempos y resultados de los 4 escenarios del **Brote Sorpresa** y documentar el modelo matemático y los supuestos en `README.md`.
 
 ---
 
-### ☁️ Integrante 2: Especialista en AWS Serverless, Step Functions, Caché y Amazon Bedrock
+### Integrante 2: Especialista en AWS Serverless, Step Functions, Caché y Amazon Bedrock
 **Objetivo:** Exponer el motor a través de una arquitectura 100% Serverless en AWS (`us-east-1`), integrar IA Generativa para el Alcalde y proveer el servidor híbrido local de respaldo.
 
 - **Rama sugerida:** `feature/aws-backend-bedrock`
@@ -53,7 +53,7 @@ Para cumplir con la regla de la competencia (*"Repositorio público con un histo
 
 ---
 
-### 🗺️ Integrante 3: Especialista en Frontend React 19, Mapa Real de Manta (OSM) y Visualización
+### Integrante 3: Especialista en Frontend React 19, Mapa Real de Manta (OSM) y Visualización
 **Objetivo:** Construir el Centro de Control Epidemiológico interactivo para que cualquier persona o jurado pueda operarlo sin explicación y recalcular el Brote Sorpresa en menos de 5 segundos.
 
 - **Rama sugerida:** `feature/frontend-manta-control`
@@ -64,7 +64,7 @@ Para cumplir con la regla de la competencia (*"Repositorio público con un histo
   - [ ] **Tarea 1.1 – 1.4:** Implementar `frontend/src/services/api.ts` con el **Switch Híbrido (`AWS Cloud` / `Local Server`)** y fallback automático.
   - [ ] **Tarea 2.1 – 2.4:** Construir el mapa interactivo `frontend/src/components/MantaMap.tsx` con reproductor temporal día a día (Play, Pause, Scrubber 0–30), mapa de calor por parroquia y estado de cortafuegos en Hubs.
   - [ ] **Tarea 3.1 – 4.2:** Construir las gráficas epidemiológicas con bandas P10–P90 (`frontend/src/components/EpidemicCharts.tsx`) y el modal del Boletín del Alcalde (`frontend/src/components/MayorReportModal.tsx`).
-  - [ ] **Tarea 5.1 – 6.1:** Ensamblar la consola de 3 columnas en `frontend/src/App.tsx` con todos los sliders e inputs libres para el **🎃 Brote Sorpresa** y tarjetas KPI de vidas salvadas.
+  - [ ] **Tarea 5.1 – 6.1:** Ensamblar la consola de 3 columnas en `frontend/src/App.tsx` con todos los sliders e inputs libres para el **Brote Sorpresa** y tarjetas KPI de vidas salvadas.
 - **En Fase 7 ([tasks-fase-7-verificacion-despliegue-entregables.md](./tasks-fase-7-verificacion-despliegue-entregables.md)):**
   - [ ] Validar el build de producción (`npm run build`), conectar con AWS Amplify / API Gateway y liderar la demostración visual del Pitch.
 
