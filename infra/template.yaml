@@ -27,6 +27,16 @@ Parameters:
     Default: amazon.nova-micro-v1:0
     Description: ID del modelo en Amazon Bedrock para el Informe del Alcalde (ej. amazon.nova-micro-v1:0 o anthropic.claude-3-haiku-20240307-v1:0)
 
+  UseBedrock:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: >
+      Activa Amazon Bedrock para redactar el Informe del Alcalde. Apagado por defecto: el boletin
+      heuristico es determinista y no depende del acceso a modelos de la cuenta.
+
 Conditions:
   HasAlertEmail: !Not [!Equals [!Ref AlertEmail, ""]]
 
@@ -235,6 +245,7 @@ Resources:
       Environment:
         Variables:
           BEDROCK_MODEL_ID: !Ref BedrockModelId
+          USE_BEDROCK: !Ref UseBedrock
           SIMULATIONS_TABLE_NAME: !Ref SimulationsCacheTable
       Policies:
         - DynamoDBReadPolicy:

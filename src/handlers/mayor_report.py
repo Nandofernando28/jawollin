@@ -4,9 +4,12 @@ SpookyThon 2026 · Track B (Operación Cortafuegos Manta).
 
 Fase 4:
 - Tarea 1.0: Extracción y síntesis de indicadores estratégicos para el Alcalde.
-- Tarea 2.0: Integración con Amazon Bedrock (Converse API / amazon.nova-micro-v1:0).
-- Tarea 3.0: Generador Heurístico Estructurado de Respaldo (heuristic-coe-fallback).
+- Tarea 2.0: Integración opcional con Amazon Bedrock (Converse API / amazon.nova-micro-v1:0).
+- Tarea 3.0: Generador Heurístico Estructurado (heuristic-coe-fallback).
 - Tarea 4.0: Endpoint POST /mayor-report con manejo resiliente de cuota y CORS.
+
+Regla del boletín: solo dice lo que la simulación hizo. Ningún hub, cifra o
+institución aparece si no sale de los resultados del modelo.
 """
 
 import base64
@@ -18,185 +21,221 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.engine.graph_manta import HUB_IDS, MANTA_HUBS, MANTA_PARISHES, PARISH_IDS
+from src.engine.simulator import DEFAULT_SIMULATION_PARAMS
 from src.handlers.orchestrator import get_cached_simulation
 
 logger = logging.getLogger(__name__)
+
+# Mismo factor de escala que usa el frontend (KpiCards): 271 000 / n_nodes
+MANTA_POPULATION = 271_000
+# Por debajo de esta eficacia la vacuna "cubre a medias" (Brote Sorpresa)
+SURPRISE_EFFICACY_THRESHOLD = 0.55
+VALID_PRIORITIES = ("CRITICA", "ALTA", "MEDIA")
 
 
 # ============================================================================
 # TAREA 1.0: EXTRACCIÓN Y SÍNTESIS DE INDICADORES ESTRATÉGICOS
 # ============================================================================
 
+def _param(params: Dict[str, Any], key: str) -> Any:
+    value = params.get(key)
+    return DEFAULT_SIMULATION_PARAMS[key] if value is None else value
+
+
+def _hub_name(hub_id: str) -> str:
+    return MANTA_HUBS[hub_id]["name"] if hub_id in MANTA_HUBS else "un punto al azar de la ciudad"
+
+
+def _most_infected_parish(timeline_none: List[Dict[str, Any]], start_hub: str) -> Tuple[str, int]:
+    """
+    Parroquia con más personas contagiadas al final del escenario sin intervención
+    (población de la parroquia menos los Sanos del último día). Se usa el número de
+    personas y no el porcentaje: una parroquia pequeña no debe pasar por la más golpeada.
+    """
+    if timeline_none:
+        last = timeline_none[-1].get("parishes") or {}
+        infected = {
+            p_id: int(p.get("total_population", 0)) - int(p.get("sanos", 0))
+            for p_id, p in last.items() if p_id in MANTA_PARISHES
+        }
+        if infected:
+            best = max(PARISH_IDS, key=lambda p: infected.get(p, -1))
+            return best, infected.get(best, 0)
+    if start_hub in MANTA_HUBS:
+        return MANTA_HUBS[start_hub]["parish"], 0
+    return "tarqui", 0
+
+
+def _busiest_hub(timeline: List[Dict[str, Any]], start_hub: str) -> str:
+    """Hub con más casos activos acumulados en la serie; si no hay serie, el del inicio."""
+    totals = {h: 0 for h in HUB_IDS}
+    for snap in timeline:
+        for h_id, h in (snap.get("hubs") or {}).items():
+            if h_id in totals:
+                totals[h_id] += int(h.get("active_cases", 0))
+    if any(totals.values()):
+        return max(HUB_IDS, key=lambda h: totals[h])
+    return start_hub if start_hub in MANTA_HUBS else "mercado_tarqui"
+
+
+def _closed_hubs(timeline_shield: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Hubs que el Escudo cerró de verdad en la réplica 0 y en qué días."""
+    detail = []
+    for h_id in HUB_IDS:
+        days = [int(s.get("day", 0)) for s in timeline_shield
+                if ((s.get("hubs") or {}).get(h_id) or {}).get("firewall_active")]
+        if days:
+            detail.append({
+                "hub_id": h_id,
+                "name": MANTA_HUBS[h_id]["name"],
+                "parish_name": MANTA_PARISHES[MANTA_HUBS[h_id]["parish"]]["name"],
+                "days_closed": days,
+            })
+    return detail
+
+
+def detect_scenario_changes(params: Dict[str, Any]) -> List[str]:
+    """
+    Describe en lenguaje simple qué condiciones cambiaron frente al escenario base
+    (los cambios típicos del Brote Sorpresa). Lista vacía = escenario base.
+    """
+    d = DEFAULT_SIMULATION_PARAMS
+    changes: List[str] = []
+
+    ratio = max(float(_param(params, "beta_day")) / d["beta_day"],
+                float(_param(params, "beta_night")) / d["beta_night"])
+    if ratio >= 1.2:
+        changes.append(f"la plaga contagia {_n(ratio, 1)} veces más que en el escenario base")
+
+    efficacy = float(_param(params, "vaccine_efficacy"))
+    if efficacy < SURPRISE_EFFICACY_THRESHOLD:
+        changes.append(f"aparece una variante que la vacuna cubre a medias (protege al {efficacy * 100:.0f}% de los vacunados)")
+    elif efficacy < d["vaccine_efficacy"] - 0.05:
+        changes.append(f"la vacuna protege menos (al {efficacy * 100:.0f}% de los vacunados)")
+
+    vaccine_cost = float(_param(params, "vaccine_cost"))
+    if vaccine_cost > d["vaccine_cost"] * 1.1:
+        changes.append(f"las vacunas cuestan {vaccine_cost:.0f} $: con el mismo dinero alcanzan para "
+                       f"{100 * d['vaccine_cost'] / vaccine_cost:.0f}% de las dosis")
+
+    daily, total = float(_param(params, "daily_budget")), float(_param(params, "total_budget"))
+    if daily < d["daily_budget"] * 0.9 or total < d["total_budget"] * 0.9:
+        changes.append(f"el presupuesto baja a {_n(daily)} $ por día y {_n(total)} $ en total")
+
+    start_hub = str(_param(params, "start_hub"))
+    if start_hub != d["start_hub"]:
+        changes.append(f"el brote empieza en {_hub_name(start_hub)}")
+
+    initial = int(_param(params, "initial_infected"))
+    if initial > d["initial_infected"]:
+        changes.append(f"el brote empieza con {initial} casos en lugar de {d['initial_infected']}")
+    return changes
+
+
 def extract_executive_context(sim_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extrae y sintetiza las métricas clave de la simulación para construir
-    el Boletín Ejecutivo Oficial del COE Cantonal de Manta.
+    el Boletín Ejecutivo del COE Cantonal de Manta.
 
     Acepta un diccionario de simulación completo (SimulationResponse) o
     un diccionario con parámetros y KPIs agregados.
 
-    Retorna un diccionario normalizado con:
-    - Parroquia más crítica y hubs intervenidos con días pico de cierre/fumigación.
-    - Vidas salvadas vs azar y vs no hacer nada.
-    - Reducción del pico epidémico (%).
-    - Desglose de recursos (vacunas aplicadas con 0 desperdicio, brigadas, días-hub).
-    - Métricas formateadas para el contrato TypeScript MayorReportResponse (metrics_snapshot).
+    Todo lo que devuelve sale de la simulación: parroquia con más contagios,
+    hubs realmente cerrados, reparto real del gasto y cambios del escenario.
     """
     params = sim_data.get("params") or {}
     kpis = sim_data.get("summary_kpis") or {}
     spatial_timelines = sim_data.get("spatial_timelines") or sim_data.get("spatial") or {}
     sim_hash = str(sim_data.get("sim_hash") or params.get("sim_hash") or "cf-manta-sim")
 
-    total_pop = int(kpis.get("total_population") or params.get("n_nodes") or 1200)
-
-    # 1. Vidas salvadas y reducción de picos
-    lives_saved_none = round(float(kpis.get("lives_saved_vs_none", 0.0)), 2)
-    lives_saved_random = round(float(kpis.get("lives_saved_vs_random", 0.0)), 2)
-    lives_saved_none_pct = round(float(kpis.get("lives_saved_vs_none_pct", 0.0)), 1)
-    lives_saved_random_pct = round(float(kpis.get("lives_saved_vs_random_pct", 0.0)), 1)
-    peak_reduct_none_pct = round(float(kpis.get("peak_reduction_vs_none_pct", 0.0)), 1)
-    peak_reduct_random_pct = round(float(kpis.get("peak_reduction_vs_random_pct", 0.0)), 1)
-
-    # 2. Análisis espacial: Parroquia más crítica
-    # Si hay serie temporal espacial de la línea base 'none' o 'shield',
-    # calculamos cuál parroquia sufrió el pico más alto de infección activa.
-    most_critical_parish_id = "tarqui"  # Por defecto Parroquia Tarqui (38% población)
+    total_pop = int(kpis.get("total_population") or _param(params, "n_nodes"))
+    scale = MANTA_POPULATION / max(total_pop, 1)
+    start_hub = str(_param(params, "start_hub"))
     timeline_none = spatial_timelines.get("none") or []
     timeline_shield = spatial_timelines.get("shield") or []
 
-    if timeline_none:
-        # Medir la máxima prevalencia alcanzada por parroquia sin contención
-        max_prev_by_parish: Dict[str, float] = {p: 0.0 for p in PARISH_IDS}
-        for day_snap in timeline_none:
-            parishes_data = day_snap.get("parishes") or {}
-            for p_id, p_info in parishes_data.items():
-                prev = float(p_info.get("prevalence_pct", 0.0))
-                if prev > max_prev_by_parish.get(p_id, 0.0):
-                    max_prev_by_parish[p_id] = prev
-        most_critical_parish_id = max(max_prev_by_parish, key=lambda k: max_prev_by_parish[k])
-    elif params.get("start_hub") and params["start_hub"] in MANTA_HUBS:
-        most_critical_parish_id = MANTA_HUBS[params["start_hub"]]["parish"]
+    # 1. Contagios evitados y reducción del pico
+    lives_saved_none = round(float(kpis.get("lives_saved_vs_none", 0.0)), 2)
+    lives_saved_random = round(float(kpis.get("lives_saved_vs_random", 0.0)), 2)
+    infected_none = round(float(kpis.get("total_infected_none", 0.0)), 1)
 
-    most_critical_parish_name = MANTA_PARISHES.get(
-        most_critical_parish_id, {}
-    ).get("name", "Tarqui")
+    # 2. Parroquia con más contagios sin intervención
+    parish_id, parish_infected = _most_infected_parish(timeline_none, start_hub)
+    parish_name = MANTA_PARISHES[parish_id]["name"]
 
-    # 3. Hubs críticos intervenidos y días pico de cortafuegos
-    critical_hubs_intervened: List[str] = []
-    hubs_detail: List[Dict[str, Any]] = []
-
-    if timeline_shield:
-        for h_id in HUB_IDS:
-            hub_name = MANTA_HUBS[h_id]["name"]
-            days_closed: List[int] = []
-            max_cases = -1
-            peak_day = 0
-            for snap in timeline_shield:
-                h_data = (snap.get("hubs") or {}).get(h_id) or {}
-                if h_data.get("firewall_active"):
-                    days_closed.append(int(snap.get("day", 0)))
-                cases = int(h_data.get("active_cases", 0))
-                if cases > max_cases:
-                    max_cases = cases
-                    peak_day = int(snap.get("day", 0))
-
-            if days_closed:
-                critical_hubs_intervened.append(hub_name)
-                hubs_detail.append({
-                    "hub_id": h_id,
-                    "name": hub_name,
-                    "parish_id": MANTA_HUBS[h_id]["parish"],
-                    "parish_name": MANTA_PARISHES[MANTA_HUBS[h_id]["parish"]]["name"],
-                    "days_closed": days_closed,
-                    "closure_count": len(days_closed),
-                    "peak_day": peak_day,
-                    "peak_cases": max_cases,
-                })
-
-    # Si no hubo serie espacial o no se cerraron hubs en la simulación 0,
-    # incluir al menos el start_hub y el hub más conectado
-    if not critical_hubs_intervened:
-        start_h = params.get("start_hub", "mercado_tarqui")
-        fallback_hubs = [start_h]
-        if start_h != "uleam":
-            fallback_hubs.append("uleam")
-        for f_id in fallback_hubs:
-            if f_id in MANTA_HUBS:
-                name = MANTA_HUBS[f_id]["name"]
-                if name not in critical_hubs_intervened:
-                    critical_hubs_intervened.append(name)
-                    hubs_detail.append({
-                        "hub_id": f_id,
-                        "name": name,
-                        "parish_id": MANTA_HUBS[f_id]["parish"],
-                        "parish_name": MANTA_PARISHES[MANTA_HUBS[f_id]["parish"]]["name"],
-                        "days_closed": [1, 2, 3] if kpis.get("total_hub_days_closed", 0) > 0 else [],
-                        "closure_count": int(kpis.get("total_hub_days_closed", 0)),
-                        "peak_day": 3,
-                        "peak_cases": 12,
-                    })
-
-    # 4. Desglose de recursos y auditoría de desperdicio cero
-    total_spent = round(float(kpis.get("total_budget_spent", 0.0)), 2)
-    cost_per_life = round(float(kpis.get("cost_per_life_saved_vs_random", 0.0)), 2)
-    if cost_per_life <= 0 and lives_saved_none > 0:
-        cost_per_life = round(total_spent / lives_saved_none, 2)
-
-    total_vaccines = round(float(kpis.get("total_vaccines_used", 0.0)), 1)
-    wasted_vaccines = int(kpis.get("wasted_vaccines_count", 0))
-    total_brigades = round(float(kpis.get("total_brigades_used", 0.0)), 1)
+    # 3. Hubs: solo los que el Escudo cerró de verdad
+    hubs_detail = _closed_hubs(timeline_shield)
     hub_days_closed = round(float(kpis.get("total_hub_days_closed", 0.0)), 1)
-    budget_remaining = round(float(kpis.get("remaining_budget", 0.0)), 2)
+    watch_hub = _busiest_hub(timeline_shield or timeline_none, start_hub)
 
-    # 5. Detección de escenario (Normal vs Brote Sorpresa)
-    vaccine_eff = float(params.get("vaccine_efficacy", 0.85))
-    beta_day = float(params.get("beta_day", 0.085))
-    is_surprise = bool(vaccine_eff < 0.60 or beta_day > 0.15 or params.get("surprise_mode"))
+    # 4. Reparto real del gasto entre las tres defensas
+    total_vaccines = round(float(kpis.get("total_vaccines_used", 0.0)), 1)
+    total_brigades = round(float(kpis.get("total_brigades_used", 0.0)), 1)
+    spend = {
+        "vaccine": total_vaccines * float(_param(params, "vaccine_cost")),
+        "brigade": total_brigades * float(_param(params, "brigade_cost")),
+        "hub": hub_days_closed * float(_param(params, "hub_closure_cost")),
+    }
+    spend_total = sum(spend.values())
+    spend_share = {k: round(100 * v / spend_total, 1) if spend_total > 0 else 0.0 for k, v in spend.items()}
 
-    start_hub_id = params.get("start_hub", "mercado_tarqui")
-    start_hub_name = MANTA_HUBS.get(start_hub_id, {}).get("name", "Mercado Central de Tarqui")
+    total_spent = round(float(kpis.get("total_budget_spent", 0.0)), 2)
+    cost_per_life = round(float(kpis.get("cost_per_life_saved_vs_random", 0.0)), 2) if lives_saved_random > 0 else 0.0
+    efficacy = float(_param(params, "vaccine_efficacy"))
+    changes = detect_scenario_changes(params)
 
     # Contrato exacto para el frontend React (MayorReportResponse.metrics_snapshot)
     metrics_snapshot = {
         "lives_saved_vs_random": lives_saved_random,
-        "peak_reduction_pct": peak_reduct_none_pct,
+        "peak_reduction_pct": round(float(kpis.get("peak_reduction_vs_none_pct", 0.0)), 1),
         "budget_spent_usd": total_spent,
         "cost_per_life_saved_usd": cost_per_life,
-        "most_critical_parish": most_critical_parish_name,
-        "critical_hubs_intervened": critical_hubs_intervened,
+        "most_critical_parish": parish_name,
+        "critical_hubs_intervened": [h["name"] for h in hubs_detail],
     }
 
     return {
         "sim_hash": sim_hash,
+        "seed": _param(params, "seed"),
+        "monte_carlo_runs": _param(params, "monte_carlo_runs"),
+        "days": _param(params, "days"),
         "total_population": total_pop,
+        "scale_factor": scale,
+        "total_infected_none": infected_none,
+        "total_infected_none_pct": round(100 * infected_none / max(total_pop, 1), 1),
         "lives_saved_vs_none": lives_saved_none,
-        "lives_saved_vs_none_pct": lives_saved_none_pct,
+        "lives_saved_vs_none_pct": round(float(kpis.get("lives_saved_vs_none_pct", 0.0)), 1),
         "lives_saved_vs_random": lives_saved_random,
-        "lives_saved_vs_random_pct": lives_saved_random_pct,
-        "peak_reduction_vs_none_pct": peak_reduct_none_pct,
-        "peak_reduction_vs_random_pct": peak_reduct_random_pct,
-        "most_critical_parish_id": most_critical_parish_id,
-        "most_critical_parish": most_critical_parish_name,
-        "critical_hubs_intervened": critical_hubs_intervened,
+        "lives_saved_vs_random_pct": round(float(kpis.get("lives_saved_vs_random_pct", 0.0)), 1),
+        "peak_reduction_vs_none_pct": metrics_snapshot["peak_reduction_pct"],
+        "most_critical_parish_id": parish_id,
+        "most_critical_parish": parish_name,
+        "most_critical_parish_infected": parish_infected,
+        "critical_hubs_intervened": metrics_snapshot["critical_hubs_intervened"],
         "hubs_detail": hubs_detail,
+        "watch_hub_name": MANTA_HUBS[watch_hub]["name"],
         "total_vaccines_used": total_vaccines,
-        "wasted_vaccines": wasted_vaccines,
-        "zero_wasted_verified": wasted_vaccines == 0,
+        "wasted_vaccines": int(kpis.get("wasted_vaccines_count", 0)),
         "total_brigades_used": total_brigades,
         "total_hub_days_closed": hub_days_closed,
+        "spend_share_pct": spend_share,
         "budget_spent_usd": total_spent,
-        "remaining_budget_usd": budget_remaining,
+        "total_budget_usd": float(_param(params, "total_budget")),
+        "daily_budget_usd": float(_param(params, "daily_budget")),
+        "remaining_budget_usd": round(float(kpis.get("remaining_budget", 0.0)), 2),
+        "hub_closure_cost_usd": float(_param(params, "hub_closure_cost")),
         "cost_per_life_saved_usd": cost_per_life,
-        "start_hub": start_hub_id,
-        "start_hub_name": start_hub_name,
-        "vaccine_efficacy": vaccine_eff,
-        "is_surprise_outbreak": is_surprise,
+        "start_hub": start_hub,
+        "start_hub_name": _hub_name(start_hub),
+        "vaccine_efficacy": efficacy,
+        "scenario_changes": changes,
+        "is_surprise_outbreak": bool(changes),
         "metrics_snapshot": metrics_snapshot,
     }
 
 
 # ============================================================================
-# TAREA 2.0: INTEGRACIÓN CON AMAZON BEDROCK (CONVERSE API)
+# TAREA 2.0: INTEGRACIÓN OPCIONAL CON AMAZON BEDROCK (CONVERSE API)
 # ============================================================================
 
 DEFAULT_BEDROCK_MODEL_ID = "amazon.nova-micro-v1:0"
@@ -204,12 +243,21 @@ _BEDROCK_CLIENT = None
 
 
 def _get_bedrock_client():
+    """
+    Cliente con timeouts cortos: si Bedrock tarda, se cae al boletín heurístico
+    mucho antes de que la Lambda (25 s) corte la respuesta.
+    """
     global _BEDROCK_CLIENT
     if _BEDROCK_CLIENT is None:
         import boto3
+        from botocore.config import Config
 
         region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
-        _BEDROCK_CLIENT = boto3.client("bedrock-runtime", region_name=region)
+        _BEDROCK_CLIENT = boto3.client(
+            "bedrock-runtime",
+            region_name=region,
+            config=Config(connect_timeout=3, read_timeout=8, retries={"max_attempts": 1}),
+        )
     return _BEDROCK_CLIENT
 
 
@@ -219,59 +267,84 @@ def build_bedrock_prompts(ctx: Dict[str, Any]) -> Tuple[str, str]:
     Alcalde de Manta y el COE Cantonal, exigiendo exactamente 3 secciones y JSON válido.
     """
     system_prompt = (
-        "Eres el Asesor Epidemiológico Principal del Comité de Operaciones de Emergencia "
-        "(COE Cantonal) de Manta para el Alcalde del Cantón Manta, Ecuador.\n"
-        "Tu misión es redactar un Decreto/Boletín Ejecutivo Oficial urgente y de alta autoridad moral, "
-        "sin tecnicismos matemáticos (no menciones SEIR, R0 ni teoría de grafos), utilizando nombres "
-        "propios geográficos reales de Manta (Parroquias: Tarqui, Eloy Alfaro, Manta Centro, Los Esteros, San Mateo; "
-        "Hubs: Mercado Central de Tarqui, ULEAM, Terminal Terrestre, Empacadoras de Atún).\n"
-        "Debes responder EXCLUSIVAMENTE con un objeto JSON válido con la siguiente estructura exacta:\n"
+        "Eres el asesor epidemiológico del Comité de Operaciones de Emergencia (COE Cantonal) "
+        "de Manta, Ecuador. Redactas para el Alcalde una propuesta de decreto en lenguaje simple, "
+        "sin tecnicismos (no menciones SEIR, R0 ni grafos).\n"
+        "REGLAS ESTRICTAS:\n"
+        "- Usa solo los datos que te doy. No inventes cifras, hospitales, instituciones ni números de decreto.\n"
+        "- Si los días de cierre de hubs son 0, NO recomiendes cerrar hubs: recomienda vigilarlos.\n"
+        "- Las cifras son de una muestra a escala; usa las equivalencias para Manta que te doy.\n"
+        "Responde EXCLUSIVAMENTE con un objeto JSON válido con esta estructura:\n"
         "{\n"
-        '  "headline": "Titular oficial contundente del decreto municipal",\n'
-        '  "situacion_critica": "Diagnóstico inmediato en Manta: vidas en riesgo, parroquia más golpeada y gravedad del brote.",\n'
-        '  "directivas_operativas": "Directivas tácticas claras: hubs a intervenir o cerrar hoy, a quién vacunar primero (anillos sanos de contactos y transportistas con 0 desperdicio) y despliegue de brigadas.",\n'
-        '  "balance_recursos": "Eficiencia del gasto municipal: presupuesto ejecutado, vidas salvadas frente a la inacción y costo por vida salvada.",\n'
+        '  "headline": "Titular de la propuesta de decreto",\n'
+        '  "situacion_critica": "Qué pasaría sin actuar y dónde golpea más el brote.",\n'
+        '  "directivas_operativas": "Qué hacer, dónde y cuándo, en el orden del gasto real.",\n'
+        '  "balance_recursos": "Contagios evitados, gasto y comparación con actuar al azar.",\n'
         '  "action_items": [\n'
-        '    {"title": "Acción breve", "description": "Detalle operativo", "priority": "CRITICA", "parish_or_hub": "Lugar específico"}\n'
+        '    {"title": "Acción breve", "description": "Detalle operativo", "priority": "CRITICA|ALTA|MEDIA", "parish_or_hub": "Lugar"}\n'
         "  ]\n"
         "}"
     )
 
-    surprise_note = (
-        "\nATENCIÓN ESPECIAL: Se ha detectado una mutación o cepa agresiva (Brote Sorpresa) con baja eficacia "
-        f"vacunal ({ctx['vaccine_efficacy']*100:.0f}%). El sistema reasignó recursos prioritariamente hacia "
-        "el cierre quirúrgico de hubs de alta densidad y brigadas de contención directa."
-        if ctx.get("is_surprise_outbreak")
-        else ""
-    )
-
-    hubs_str = ", ".join(ctx["critical_hubs_intervened"]) if ctx.get("critical_hubs_intervened") else "Mercado Central de Tarqui"
+    share = ctx["spend_share_pct"]
+    closed = ", ".join(
+        f"{h['name']} (días {', '.join(map(str, h['days_closed']))})" for h in ctx["hubs_detail"]
+    ) or "ninguno"
+    changes = "; ".join(ctx["scenario_changes"]) or "ninguno (escenario base)"
 
     user_prompt = (
-        f"Genera el Boletín Oficial para el Alcalde de Manta con los siguientes datos consolidados:\n"
-        f"- Población monitoreada: {ctx['total_population']:,} habitantes\n"
-        f"- Parroquia con mayor presión infecciosa: {ctx['most_critical_parish']}\n"
-        f"- Hubs intervenidos por cortafuegos: {hubs_str}\n"
-        f"- Vidas salvadas estimadas vs. inacción: {ctx['lives_saved_vs_none']:,.0f} personas ({ctx['lives_saved_vs_none_pct']}%\n"
-        f"- Vidas adicionales salvadas vs. actuar al azar: {ctx['lives_saved_vs_random']:,.0f} personas\n"
-        f"- Reducción del pico de contagios activos: {ctx['peak_reduction_vs_none_pct']}%\n"
-        f"- Presupuesto municipal ejecutado: ${ctx['budget_spent_usd']:,.2f} USD (Costo por vida: ${ctx['cost_per_life_saved_usd']:.2f} USD)\n"
-        f"- Dosis de vacuna aplicadas: {ctx['total_vaccines_used']:,.0f} (Desperdicio verificado: 0 dosis)\n"
-        f"- Brigadas de contención desplegadas: {ctx['total_brigades_used']:,.0f}\n"
-        f"- Días-hub de cierre preventivo: {ctx['total_hub_days_closed']:,.0f}\n"
-        f"{surprise_note}\n\n"
+        "Datos de la simulación:\n"
+        f"- Muestra: {ctx['total_population']:,} personas que representan a los {MANTA_POPULATION:,} habitantes de Manta "
+        f"(cada persona de la muestra equivale a {ctx['scale_factor']:.0f} habitantes).\n"
+        f"- Sin intervenir se contagiaría el {ctx['total_infected_none_pct']}% de la población.\n"
+        f"- Parroquia con más contagios sin intervenir: {ctx['most_critical_parish']}. El brote empieza en {ctx['start_hub_name']}.\n"
+        f"- Contagios evitados frente a no hacer nada: {ctx['lives_saved_vs_none']:,.0f} en la muestra "
+        f"(unos {ctx['lives_saved_vs_none'] * ctx['scale_factor']:,.0f} habitantes de Manta).\n"
+        f"- Contagios evitados frente a gastar lo mismo al azar: {ctx['lives_saved_vs_random']:,.0f} en la muestra "
+        f"(unos {ctx['lives_saved_vs_random'] * ctx['scale_factor']:,.0f} habitantes).\n"
+        f"- Reducción del pico de casos activos: {ctx['peak_reduction_vs_none_pct']}%.\n"
+        f"- Gasto: {ctx['budget_spent_usd']:,.2f} $ de {ctx['total_budget_usd']:,.0f} $ "
+        f"({share['vaccine']}% vacunas, {share['brigade']}% brigadas, {share['hub']}% cierres de hubs).\n"
+        f"- Vacunas aplicadas: {ctx['total_vaccines_used']:,.0f} (desperdiciadas: {ctx['wasted_vaccines']}).\n"
+        f"- Brigadas de aislamiento: {ctx['total_brigades_used']:,.0f}.\n"
+        f"- Días de cierre de hubs (promedio): {ctx['total_hub_days_closed']}. Hubs cerrados: {closed}. "
+        f"Hub con más casos activos: {ctx['watch_hub_name']}.\n"
+        f"- Cambios del escenario (Brote Sorpresa): {changes}.\n\n"
         "Genera ÚNICAMENTE el JSON solicitado sin texto introductorio ni explicaciones adicionales."
     )
-
     return system_prompt, user_prompt
+
+
+def _validate_llm_report(report: Any) -> Dict[str, Any]:
+    """Comprueba la respuesta del modelo; si no cumple el contrato, se usa el heurístico."""
+    if not isinstance(report, dict):
+        raise ValueError("La respuesta del modelo no es un objeto JSON")
+    for key in ("headline", "situacion_critica", "directivas_operativas", "balance_recursos"):
+        if not isinstance(report.get(key), str) or not report[key].strip():
+            raise ValueError(f"Falta la sección '{key}' en la respuesta del modelo")
+    items = report.get("action_items")
+    if not isinstance(items, list) or not items:
+        raise ValueError("La respuesta del modelo no trae action_items")
+    clean = []
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError("action_item con formato inválido")
+        priority = str(item.get("priority", "")).upper().replace("Í", "I")
+        if priority not in VALID_PRIORITIES or not all(str(item.get(k, "")).strip()
+                                                         for k in ("title", "description", "parish_or_hub")):
+            raise ValueError("action_item incompleto o con prioridad inválida")
+        clean.append({"title": str(item["title"]), "description": str(item["description"]),
+                      "priority": priority, "parish_or_hub": str(item["parish_or_hub"])})
+    return {**report, "action_items": clean}
 
 
 def invoke_bedrock_report(
     context_data: Dict[str, Any], model_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Invoca el modelo generativo de Amazon Bedrock utilizando la Converse API
-    (con fallback a InvokeModel) para redactar el Boletín del Alcalde.
+    Invoca Amazon Bedrock con la Converse API para redactar el Boletín del Alcalde.
+    Cualquier error (sin acceso al modelo, cuota, timeout o JSON inválido) se propaga
+    para que el handler use el boletín heurístico.
     """
     resolved_model = (
         model_id
@@ -280,37 +353,14 @@ def invoke_bedrock_report(
     ).strip()
 
     system_prompt, user_prompt = build_bedrock_prompts(context_data)
-    client = _get_bedrock_client()
-
-    raw_text = ""
-    try:
-        # 1. Intento primario con Converse API (API unificada de AWS Bedrock)
-        response = client.converse(
-            modelId=resolved_model,
-            messages=[{"role": "user", "content": [{"text": user_prompt}]}],
-            system=[{"text": system_prompt}],
-            inferenceConfig={"maxTokens": 700, "temperature": 0.2},
-        )
-        content_list = response.get("output", {}).get("message", {}).get("content", [])
-        if content_list and "text" in content_list[0]:
-            raw_text = content_list[0]["text"]
-    except Exception as converse_err:
-        logger.warning(
-            "Fallo en Converse API con modelo %s (%s). Intentando invoke_model...",
-            resolved_model,
-            converse_err,
-        )
-        # 2. Fallback a invoke_model para compatibilidad
-        body = json.dumps({
-            "prompt": f"{system_prompt}\n\nHumano: {user_prompt}\n\nAsistente:",
-            "max_tokens_to_sample": 700,
-            "temperature": 0.2,
-        })
-        invoke_res = client.invoke_model(modelId=resolved_model, body=body)
-        raw_body = invoke_res.get("Body").read().decode("utf-8")
-        parsed = json.loads(raw_body)
-        raw_text = parsed.get("completion") or parsed.get("output") or raw_body
-
+    response = _get_bedrock_client().converse(
+        modelId=resolved_model,
+        messages=[{"role": "user", "content": [{"text": user_prompt}]}],
+        system=[{"text": system_prompt}],
+        inferenceConfig={"maxTokens": 700, "temperature": 0.2},
+    )
+    content_list = response.get("output", {}).get("message", {}).get("content", [])
+    raw_text = content_list[0].get("text", "") if content_list else ""
     if not raw_text:
         raise ValueError(f"Respuesta vacía desde Amazon Bedrock ({resolved_model})")
 
@@ -319,131 +369,161 @@ def invoke_bedrock_report(
     match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", cleaned)
     if match:
         cleaned = match.group(1).strip()
+    report_dict = _validate_llm_report(json.loads(cleaned))
 
-    report_dict = json.loads(cleaned)
-
-    # Normalizar generated_by según el modelo
     generated_by = (
         "amazon-bedrock-claude-haiku"
         if "haiku" in resolved_model.lower()
         else "amazon-bedrock-nova-micro"
     )
-
     return {
-        "headline": str(report_dict.get("headline") or "DECRETO DE CONTENCIÓN EPIDEMIOLÓGICA - CANTÓN MANTA"),
-        "situacion_critica": str(report_dict.get("situacion_critica") or ""),
-        "directivas_operativas": str(report_dict.get("directivas_operativas") or ""),
-        "balance_recursos": str(report_dict.get("balance_recursos") or ""),
-        "action_items": list(report_dict.get("action_items") or []),
+        "headline": report_dict["headline"],
+        "situacion_critica": report_dict["situacion_critica"],
+        "directivas_operativas": report_dict["directivas_operativas"],
+        "balance_recursos": report_dict["balance_recursos"],
+        "action_items": report_dict["action_items"],
         "generated_by": generated_by,
         "model_id": resolved_model,
     }
 
 
 # ============================================================================
-# TAREA 3.0: GENERADOR HEURÍSTICO ESTRUCTURADO DE RESPALDO
+# TAREA 3.0: GENERADOR HEURÍSTICO ESTRUCTURADO
 # ============================================================================
+
+def _n(value: float, decimals: int = 0) -> str:
+    """Número en formato del README: miles con espacio y decimales con coma (1 200; 70,2)."""
+    return f"{value:,.{decimals}f}".replace(",", " ").replace(".", ",")
+
+
+def _people(sample_count: float, scale: float, noun: str = "personas") -> str:
+    """Cifra de la muestra y su equivalente aproximado en habitantes de Manta."""
+    return f"**{_n(sample_count)} {noun}** en la muestra (unos **{_n(sample_count * scale)} habitantes** de Manta)"
+
 
 def build_heuristic_mayor_report(context_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Genera el Boletín Oficial del Alcalde de Manta de forma determinista,
-    altamente estructurada y rica en datos municipales reales.
-
-    Se utiliza como salvaguarda infalible ante cuota 0 / Throttling en Amazon Bedrock,
-    caída de enlace, modo local offline o durante la defensa en vivo en la ULEAM.
+    Genera el Boletín del Alcalde de forma determinista a partir de los resultados:
+    misma simulación, mismo boletín. Las acciones se ordenan según el dinero que
+    el Escudo puso en cada defensa, y los hubs solo se mencionan como cerrados si
+    la simulación los cerró.
     """
     ctx = context_data
-    total_pop = ctx.get("total_population", 1200)
-    most_critical = ctx.get("most_critical_parish", "Tarqui")
-    hubs_list = ctx.get("critical_hubs_intervened") or ["Mercado Central de Tarqui"]
-    hubs_str = ", ".join(hubs_list)
-    first_hub = hubs_list[0] if hubs_list else "Mercado Central de Tarqui"
+    scale = ctx["scale_factor"]
+    parish = ctx["most_critical_parish"]
+    share = ctx["spend_share_pct"]
+    changes = ctx["scenario_changes"]
+    hub_days = ctx["total_hub_days_closed"]
+    closed_names = [h["name"] for h in ctx["hubs_detail"]]
+    hub_place = ", ".join(closed_names) if closed_names else ctx["watch_hub_name"]
+    # Si la réplica 0 no cerró hubs pero otras sí, se nombra el hub con más casos sin decir que se cerró
+    hub_where = f"**{hub_place}**" if closed_names else f"el hub con más casos activos (**{hub_place}**)"
 
-    lives_none = ctx.get("lives_saved_vs_none", 0.0)
-    lives_none_pct = ctx.get("lives_saved_vs_none_pct", 0.0)
-    lives_random = ctx.get("lives_saved_vs_random", 0.0)
-    peak_reduct = ctx.get("peak_reduction_vs_none_pct", 0.0)
+    # 1. Titular
+    headline = (
+        "PROPUESTA DE DECRETO DEL COE CANTONAL DE MANTA: RESPUESTA AL BROTE SORPRESA"
+        if changes else
+        "PROPUESTA DE DECRETO DEL COE CANTONAL DE MANTA: OPERACIÓN CORTAFUEGOS"
+    )
 
-    total_spent = ctx.get("budget_spent_usd", 0.0)
-    remaining_budget = ctx.get("remaining_budget_usd", 0.0)
-    cost_per_life = ctx.get("cost_per_life_saved_usd", 0.0)
-
-    total_vaccines = ctx.get("total_vaccines_used", 0.0)
-    total_brigades = ctx.get("total_brigades_used", 0.0)
-    total_hub_days = ctx.get("total_hub_days_closed", 0.0)
-
-    is_surprise = ctx.get("is_surprise_outbreak", False)
-    vaccine_eff = ctx.get("vaccine_efficacy", 0.85)
-
-    # 1. Headline
-    if is_surprise:
-        headline = "DECRETO DE EMERGENCIA EXTRAORDINARIA N° 004-COE: CONTENCIÓN DE BROTE MUTADO EN EL CANTÓN MANTA"
-    else:
-        headline = "DECRETO DE EMERGENCIA SANITARIA N° 001-COE: OPERACIÓN CORTAFUEGOS EPIDEMIOLÓGICO MANTA"
-
-    # 2. Situación Crítica
+    # 2. Situación crítica
     situacion_lines = [
-        "### 1. Diagnóstico de Situación y Población en Riesgo",
-        f"El Comité de Operaciones de Emergencia (COE Cantonal) de Manta declara el estado de alerta máxima en el cantón. Sobre un censo activo de **{total_pop:,} habitantes monitoreados**, la **Parroquia {most_critical}** ha sido identificada como el epicentro de mayor presión infecciosa y riesgo inminente de propagación.",
-        "De no mediar una intervención táctica e inmediata, las proyecciones epidemiológicas indican una pérdida crítica de vidas y la saturación inminente de las unidades de cuidados intensivos del Hospital General Dr. Rafael Rodríguez Zambrano y del Hospital IESS Manta.",
+        "### 1. Situación del brote",
+        f"Sin ninguna intervención, la simulación proyecta que se contagiaría el **{_n(ctx['total_infected_none_pct'], 1)}% "
+        f"de la población**: {_people(ctx['total_infected_none'], scale)}. El brote empieza en **{ctx['start_hub_name']}** "
+        f"y la parroquia con más contagios sería **{parish}**.",
+        f"Con el plan Escudo Manta se evitan {_people(ctx['lives_saved_vs_none'], scale, 'contagios')}.",
     ]
-    if is_surprise:
-        situacion_lines.append(
-            f"**ALERTA DE MUTACIÓN (BROTE SORPRESA):** Se confirma una variante con agresividad incrementada y escape inmunológico parcial (eficacia vacunal reducida al **{vaccine_eff*100:.0f}%**). Esto acelera la transmisión comunitaria en el transporte público y zonas de comercio popular, requiriendo medidas drásticas de contención física y distanciamiento."
-        )
+    if changes:
+        situacion_lines.append("**Condiciones del Brote Sorpresa:** " + "; ".join(changes) + ".")
+    situacion_lines.append(
+        f"*Cifras promedio de {ctx['monte_carlo_runs']} simulaciones de {ctx['days']} días con la semilla {ctx['seed']}. "
+        f"La muestra de {_n(ctx['total_population'])} personas representa a Manta a escala.*"
+    )
     situacion_critica = "\n\n".join(situacion_lines)
 
-    # 3. Directivas Operativas
+    # 3. Directivas: en el orden del gasto real del Escudo
+    directives = {
+        "vaccine": (
+            f"- **Vacunación en anillo y puentes ({_n(share['vaccine'], 1)}% del gasto):** aplicar unas "
+            f"**{_n(ctx['total_vaccines_used'])} dosis** a personas sanas que rodean a los casos detectados y a "
+            f"quienes conectan barrios (transportistas y comerciantes). Nunca se vacuna a quien ya está contagiado "
+            f"o es inmune: **{ctx['wasted_vaccines']} dosis desperdiciadas**."
+        ),
+        "brigade": (
+            f"- **Brigadas de aislamiento ({_n(share['brigade'], 1)}% del gasto):** enviar unas "
+            f"**{_n(ctx['total_brigades_used'])} brigadas** a aislar a los casos detectados que más contactos sanos "
+            f"tienen, empezando por **{parish}**."
+        ),
+        "hub": (
+            f"- **Cierre o fumigación de hubs ({_n(share['hub'], 1)}% del gasto):** {_n(hub_days, 1)} días de cierre en "
+            f"promedio, en {hub_where}."
+            if hub_days > 0 else
+            f"- **Cierre de hubs: no recomendado por ahora.** Cerrar un hub cuesta "
+            f"{_n(ctx['hub_closure_cost_usd'])} $ por día y solo protege ese día; con este brote rinden más las "
+            f"vacunas y las brigadas. Mantener vigilancia en **{ctx['watch_hub_name']}**."
+        ),
+    }
+    order = sorted(directives, key=lambda k: -share[k])
     directivas_lines = [
-        "### 2. Directivas Tácticas y Operativas Inmediatas",
-        "Por disposición de la Alcaldía de Manta y el COE Cantonal, se ejecutan de manera inmediata las siguientes medidas de control:",
-        f"- **Cierre Quirúrgico y Cortafuegos en Hubs:** Se ordena la intervención prioritaria y cordón sanitario en **{hubs_str}**, puntos neurálgicos donde convergen las rutas de transporte interparroquial y mayor flujo ciudadano.",
-        f"- **Estrategia de Vacunación Anillo + Puente:** Se autoriza la aplicación de **{total_vaccines:,.0f} dosis** focalizadas exclusivamente en anillos de contactos cercanos de casos activos y personal de alta movilidad (transportistas y comerciantes de {most_critical}). La auditoría técnica confirma un **desperdicio estricto del 0.0%** al excluir a individuos expuestos o inmunes.",
-        f"- **Despliegue de Brigadas Territoriales:** Se movilizan **{total_brigades:,.0f} brigadas de contención médica** para rastreo activo, detección temprana y aislamiento domiciliario supervisado de superpropagadores.",
+        "### 2. Qué hacer, dónde y cuándo",
+        f"El presupuesto llega cada día ({_n(ctx['daily_budget_usd'])} $) y el plan se recalcula cada día con los "
+        "casos detectados. Prioridades, de mayor a menor gasto:",
+        *[directives[k] for k in order],
     ]
-    if is_surprise:
+    if changes:
         directivas_lines.append(
-            f"**ADAPTACIÓN ESTRATÉGICA POR MUTACIÓN:** Debido a la menor eficacia del biológico, el Comité ha reorientado proactivamente el presupuesto municipal hacia el **cierre estricto de hubs de alta densidad ({total_hub_days:,.0f} días-hub acumulados)** y el fortalecimiento de **brigadas de aislamiento directo**, cortando la cadena de contagio donde la barrera inmunológica es limitada."
+            f"**Cómo se adaptó el plan:** con estas condiciones el dinero se reparte en {_n(share['vaccine'], 1)}% vacunas, "
+            f"{_n(share['brigade'], 1)}% brigadas y {_n(share['hub'], 1)}% cierres de hubs. El plan no tiene reglas fijas: "
+            "cada día compra la acción que más contagios evita por dólar."
         )
     directivas_operativas = "\n\n".join(directivas_lines)
 
-    # 4. Balance de Recursos
+    # 4. Balance de recursos
     balance_lines = [
-        "### 3. Balance de Recursos y Eficiencia del Gasto Público",
-        "La implementación del modelo optimizado *Escudo Manta* demuestra una superioridad contundente frente a la inacción y a la respuesta reactiva al azar:",
-        f"- **Vidas Salvadas:** Se estima un rescate efectivo de **{lives_none:,.0f} vidas** ({lives_none_pct}% de reducción frente a no hacer nada) y **{lives_random:,.0f} vidas adicionales** frente a actuar al azar con el mismo presupuesto.",
-        f"- **Aplanamiento de la Curva:** Se logró una **reducción del {peak_reduct}% en el pico de casos activos**, previniendo la parálisis económica y el desbordamiento hospitalario cantonal.",
-        f"- **Costo-Efectividad del Gasto Municipal:** Con una inversión pública de **${total_spent:,.2f} USD** (manteniendo **${remaining_budget:,.2f} USD** de reserva de contingencia), el costo por vida protegida se sitúa en apenas **${cost_per_life:,.2f} USD**, optimizando cada dólar del erario municipal mediante criterios científicos de centralidad de red.",
+        "### 3. Balance de recursos",
+        f"- **Contagios evitados frente a no hacer nada:** {_people(ctx['lives_saved_vs_none'], scale, 'contagios')} "
+        f"({_n(ctx['lives_saved_vs_none_pct'], 1)}% menos).",
+        f"- **Contagios evitados frente a gastar lo mismo al azar:** "
+        f"{_people(ctx['lives_saved_vs_random'], scale, 'contagios')} ({_n(ctx['lives_saved_vs_random_pct'], 1)}% menos).",
+        f"- **Pico de casos activos:** {_n(ctx['peak_reduction_vs_none_pct'], 1)}% más bajo que sin intervención.",
+        f"- **Gasto:** {_n(ctx['budget_spent_usd'])} $ de {_n(ctx['total_budget_usd'])} $ disponibles "
+        f"({_n(ctx['remaining_budget_usd'])} $ sin usar).",
     ]
+    if ctx["lives_saved_vs_random"] > 0:
+        balance_lines.append(
+            f"- **Costo por contagio evitado frente al azar:** unos {_n(ctx['cost_per_life_saved_usd'])} $ "
+            "por cada persona de la muestra."
+        )
+    else:
+        balance_lines.append(
+            "- **Atención:** con estas condiciones el plan no mejora a gastar el dinero al azar; "
+            "conviene revisar los recursos disponibles."
+        )
     balance_recursos = "\n\n".join(balance_lines)
 
-    # 5. Acciones Inmediatas Priorizadas (MayorActionItem[])
-    action_items = [
-        {
-            "title": "Cierre Quirúrgico y Fumigación",
-            "description": f"Instalación de cortafuegos sanitario y restricción de acceso en {first_hub}.",
-            "priority": "CRITICA",
-            "parish_or_hub": first_hub,
+    # 5. Tres acciones inmediatas, priorizadas por el gasto real
+    items = {
+        "vaccine": {
+            "title": "Vacunación en anillo y puentes",
+            "description": f"Unas {_n(ctx['total_vaccines_used'])} dosis a contactos sanos de casos detectados y a "
+                           "transportistas y comerciantes.",
+            "parish_or_hub": parish,
         },
-        {
-            "title": "Vacunación Anillo + Puente",
-            "description": f"Inmunización focalizada a contactos estrechos sanos y transportistas de la Parroquia {most_critical}.",
-            "priority": "CRITICA" if not is_surprise else "ALTA",
-            "parish_or_hub": most_critical,
+        "brigade": {
+            "title": "Brigadas de aislamiento",
+            "description": f"Unas {_n(ctx['total_brigades_used'])} brigadas para aislar a los casos detectados "
+                           "con más contactos sanos.",
+            "parish_or_hub": parish,
         },
-        {
-            "title": "Despliegue de Brigadas de Aislamiento",
-            "description": f"Operativo casa por casa para rastreo de mordidos y aislamiento temprano en barrios perimetrales.",
-            "priority": "CRITICA" if is_surprise else "ALTA",
-            "parish_or_hub": most_critical,
+        "hub": {
+            "title": "Cierre o fumigación de hubs" if hub_days > 0 else "Vigilancia del hub con más casos",
+            "description": (f"{_n(hub_days, 1)} días de cierre en promedio." if hub_days > 0
+                            else "Sin cierre: vigilar y reportar casos a diario."),
+            "parish_or_hub": hub_place,
         },
-        {
-            "title": "Control en Corredores de Transporte",
-            "description": "Filtros epidemiológicos y desinfección obligatoria en el eje ULEAM - Terminal Terrestre El Palmar.",
-            "priority": "MEDIA",
-            "parish_or_hub": "Terminal Terrestre Luis Valdivieso Morán",
-        },
-    ]
+    }
+    action_items = [{**items[k], "priority": VALID_PRIORITIES[i]} for i, k in enumerate(order)]
 
     return {
         "headline": headline,
@@ -491,6 +571,11 @@ def _parse_body(event: Dict[str, Any]) -> Dict[str, Any]:
     return body
 
 
+def _bedrock_enabled() -> bool:
+    """Bedrock es opcional y está apagado por defecto (cuentas nuevas sin acceso o sin cuota)."""
+    return os.environ.get("USE_BEDROCK", "false").strip().lower() in ("true", "1", "yes", "si", "sí")
+
+
 def lambda_handler(event: Dict[str, Any], context: Any = None) -> Dict[str, Any]:
     """
     Handler para POST /mayor-report y OPTIONS /mayor-report.
@@ -501,9 +586,8 @@ def lambda_handler(event: Dict[str, Any], context: Any = None) -> Dict[str, Any]
     - Campos en la raíz ('params', 'summary_kpis', etc.).
     - Opcional 'model_id' para personalizar el modelo de Amazon Bedrock.
 
-    Responde siempre con HTTP 200 OK y la estructura MayorReportResponse.
-    Si Bedrock falla (por cuota 0, throttling o falta de credenciales),
-    conmuta silenciosamente al fallback heurístico del COE Cantonal de Manta.
+    Con USE_BEDROCK=true intenta Bedrock; si falla (sin acceso, cuota, timeout o
+    respuesta inválida) o está apagado, responde con el boletín heurístico.
     """
     # 1. Preflight CORS
     http = (event.get("requestContext") or {}).get("http") or {}
@@ -541,26 +625,26 @@ def lambda_handler(event: Dict[str, Any], context: Any = None) -> Dict[str, Any]
                 },
             )
 
-    # 3. Extraer contexto ejecutivo para el Alcalde
-    context_data = extract_executive_context(sim_data)
-    if sim_hash:
-        context_data["sim_hash"] = str(sim_hash)
+    try:
+        # 3. Extraer contexto ejecutivo para el Alcalde
+        context_data = extract_executive_context(sim_data)
+        if sim_hash:
+            context_data["sim_hash"] = str(sim_hash)
 
-    # 4. Intentar Bedrock si está habilitado; si falla, activar fallback heurístico
-    use_bedrock = os.environ.get("USE_BEDROCK", "true").lower() not in ("false", "0", "no")
-    report = None
-
-    if use_bedrock:
-        try:
-            report = invoke_bedrock_report(context_data, model_id=body.get("model_id"))
-        except Exception as exc:
-            logger.warning(
-                "Amazon Bedrock no disponible o con cuota agotada (%s). Activando fallback heurístico del COE.",
-                exc,
-            )
+        # 4. Bedrock opcional; ante cualquier fallo, boletín heurístico
+        report = None
+        if _bedrock_enabled():
+            try:
+                report = invoke_bedrock_report(context_data, model_id=body.get("model_id"))
+            except Exception as exc:
+                logger.warning(
+                    "Amazon Bedrock no disponible (%s). Se usa el boletín heurístico del COE.", exc
+                )
+        if report is None:
             report = build_heuristic_mayor_report(context_data)
-    else:
-        report = build_heuristic_mayor_report(context_data)
+    except Exception as exc:
+        logger.exception("Datos de simulación no válidos para el boletín")
+        return _build_http_response(400, {"error": "simulacion_invalida", "message": str(exc)})
 
     # 5. Estructurar respuesta conforme al contrato TypeScript MayorReportResponse
     final_response = {

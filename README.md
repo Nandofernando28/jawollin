@@ -238,6 +238,16 @@ En todos los casos el Escudo supera a las dos líneas base sin cambiar el códig
 
 El caso más ajustado es el brote en el Mercado Central (13 frente a 15 con la semilla 2026): el brote queda más pequeño y el azar también lo contiene bastante. Lo repetimos con las 10 semillas y el Escudo gana en todas, con una mejora frente al azar de entre el 10% y el 70%.
 
+### Informe para el alcalde
+El botón de informe genera una **propuesta de decreto del COE** en lenguaje simple ([`src/handlers/mayor_report.py`](src/handlers/mayor_report.py)), con tres secciones (situación, qué hacer y balance de recursos) y tres acciones inmediatas.
+
+- **Sale de los resultados, no de plantillas fijas.** Las acciones se ordenan según el dinero que el Escudo puso en cada defensa. Un hub solo aparece como cerrado si la simulación lo cerró; si no, el informe explica que cerrar no compensa y recomienda vigilarlo.
+- **Nombra el Brote Sorpresa.** Compara los parámetros con el escenario base y describe cada cambio (más contagio, vacuna que cubre a medias, menos presupuesto, otro punto de inicio) y cómo se repartió el dinero.
+- **Lleva las cifras a escala de Manta.** Cada persona de la muestra de 1 200 equivale a unos 226 habitantes (271 000 / 1 200), el mismo factor que usa la interfaz.
+- **Es determinista:** la misma simulación produce el mismo informe.
+
+**Amazon Bedrock es opcional y está apagado por defecto** (`UseBedrock=false` en [`infra/template.yaml`](infra/template.yaml)). Lo dejamos así por dos razones: nuestra cuenta de AWS es nueva y no tiene acceso a los modelos fundacionales, y el informe heurístico no puede inventar cifras, mientras que un modelo de lenguaje sí podría. Si se activa, el modelo recibe solo los datos de la simulación; si falla, tarda más de 8 s o responde algo que no cumple el formato, se usa el informe heurístico.
+
 ### Limitaciones del modelo
 Todo modelo simplifica la realidad. Estas son las simplificaciones conocidas del nuestro:
 

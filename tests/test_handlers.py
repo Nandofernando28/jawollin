@@ -7,7 +7,7 @@ from src.engine.simulator import normalize_simulation_params, run_monte_carlo_en
 from src.handlers import mayor_report, orchestrator, worker
 
 SMALL = {"seed": 11, "monte_carlo_runs": 3, "n_nodes": 300}
-ENV_KEYS = ["SIMULATIONS_TABLE_NAME", "RESULTS_BUCKET_NAME", "STATE_MACHINE_ARN"]
+ENV_KEYS = ["SIMULATIONS_TABLE_NAME", "RESULTS_BUCKET_NAME", "STATE_MACHINE_ARN", "USE_BEDROCK"]
 
 
 def _v2(method, path, body=None, **extra):
@@ -358,9 +358,10 @@ class MayorReportTests(HandlersTestBase):
 
         # Verificar presencia de nombres reales de Manta
         combined_text = f"{body['situacion_critica']} {body['directivas_operativas']} {body['balance_recursos']}"
-        manta_locations = ["Tarqui", "Manta", "Hospital", "COE"]
-        found_any = any(loc in combined_text for loc in manta_locations)
-        self.assertTrue(found_any, "El reporte debe mencionar lugares e instituciones reales de Manta")
+        parishes = [p["name"] for p in mayor_report.MANTA_PARISHES.values()]
+        hubs = [h["name"] for h in mayor_report.MANTA_HUBS.values()]
+        self.assertTrue(any(name in combined_text for name in parishes), "Debe nombrar una parroquia de Manta")
+        self.assertTrue(any(name in combined_text for name in hubs), "Debe nombrar un hub de Manta")
 
         # Verificar prioridades v?lidas de las acciones
         self.assertGreaterEqual(len(body["action_items"]), 3)
@@ -434,10 +435,130 @@ class MayorReportTests(HandlersTestBase):
         response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"simulation": surprise_sim}))
         self.assertEqual(response["statusCode"], 200)
         body = json.loads(response["body"])
-        self.assertIn("004-COE", body["headline"])
-        self.assertIn("BROTE SORPRESA", body["situacion_critica"])
+        self.assertIn("BROTE SORPRESA", body["headline"])
+        self.assertIn("Brote Sorpresa", body["situacion_critica"])
+        self.assertIn("cubre a medias", body["situacion_critica"])
         self.assertIn("40%", body["situacion_critica"])
-        self.assertIn("cierre estricto de hubs", body["directivas_operativas"])
+        self.assertIn("ULEAM", body["situacion_critica"])  # cambio de punto de inicio
+        self.assertIn("6,0 días de cierre", body["directivas_operativas"])
+
+    # ---------------------------------------------------- el boletín refleja al modelo
+
+    def _report_for(self, params):
+        sim = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", params))["body"])
+        response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"simulation": sim}))
+        self.assertEqual(response["statusCode"], 200)
+        return sim, json.loads(response["body"])
+
+    def test_no_hub_closures_means_no_closure_recommended(self):
+        """Si el Escudo no cerró hubs, el boletín no puede ordenar cerrarlos."""
+        sim, body = self._report_for(SMALL)
+        self.assertEqual(sim["summary_kpis"]["total_hub_days_closed"], 0)
+        self.assertEqual(body["metrics_snapshot"]["critical_hubs_intervened"], [])
+        self.assertIn("no recomendado", body["directivas_operativas"])
+        titles = [a["title"] for a in body["action_items"]]
+        self.assertNotIn("Cierre o fumigación de hubs", titles)
+        self.assertIn("Vigilancia del hub con más casos", titles)
+
+    def test_action_priorities_follow_real_spending(self):
+        """La acción CRITICA es la defensa en la que el Escudo gastó más dinero."""
+        sim, body = self._report_for(SMALL)
+        k, p = sim["summary_kpis"], sim["params"]
+        spend = {
+            "Vacunación en anillo y puentes": k["total_vaccines_used"] * p["vaccine_cost"],
+            "Brigadas de aislamiento": k["total_brigades_used"] * p["brigade_cost"],
+        }
+        critical = [a for a in body["action_items"] if a["priority"] == "CRITICA"]
+        self.assertEqual(len(critical), 1)
+        self.assertEqual(critical[0]["title"], max(spend, key=spend.get))
+        self.assertEqual([a["priority"] for a in body["action_items"]], ["CRITICA", "ALTA", "MEDIA"])
+
+    def test_base_scenario_is_not_a_surprise_outbreak(self):
+        _, body = self._report_for(SMALL)
+        self.assertNotIn("BROTE SORPRESA", body["headline"])
+        self.assertNotIn("Brote Sorpresa", body["situacion_critica"])
+
+    def test_double_contagion_is_reported_without_inventing_vaccine_loss(self):
+        _, body = self._report_for({**SMALL, "beta_day": 0.10, "beta_night": 0.14})
+        self.assertIn("BROTE SORPRESA", body["headline"])
+        self.assertIn("contagia 2,0 veces", body["situacion_critica"])
+        self.assertNotIn("vacuna", body["situacion_critica"].split("Condiciones del Brote Sorpresa")[1].split(".")[0])
+
+    def test_no_invented_institutions_or_decree_numbers(self):
+        _, body = self._report_for(SMALL)
+        text = " ".join([body["headline"], body["situacion_critica"], body["directivas_operativas"],
+                         body["balance_recursos"]])
+        for invented in ("Hospital", "IESS", "N°", "El Palmar", "UCI"):
+            self.assertNotIn(invented, text)
+        self.assertIn("PROPUESTA DE DECRETO", body["headline"])
+
+    def test_report_states_scale_to_manta_population(self):
+        sim, body = self._report_for(SMALL)
+        saved = sim["summary_kpis"]["lives_saved_vs_none"]
+        scaled = mayor_report._n(saved * mayor_report.MANTA_POPULATION / SMALL['n_nodes'])
+        self.assertIn(f"unos **{scaled} habitantes**", body["situacion_critica"])
+
+    def test_same_simulation_gives_same_report(self):
+        sim = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])
+        bodies = [json.loads(mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"simulation": sim}))["body"])
+                  for _ in range(2)]
+        for b in bodies:
+            b.pop("created_at")
+        self.assertEqual(bodies[0], bodies[1])
+
+    def test_most_critical_parish_uses_people_not_percentage(self):
+        """Una parroquia pequeña con alto porcentaje no pasa por delante de una grande con más contagiados."""
+        def snap(tarqui_sanos, esteros_sanos):
+            return {"day": 0, "hubs": {}, "parishes": {
+                "tarqui": {"total_population": 400, "sanos": tarqui_sanos},
+                "los_esteros": {"total_population": 100, "sanos": esteros_sanos},
+            }}
+        sim = {"params": {"n_nodes": 500}, "summary_kpis": {"total_population": 500},
+               "spatial_timelines": {"none": [snap(400, 100), snap(200, 10)]}}
+        ctx = mayor_report.extract_executive_context(sim)
+        self.assertEqual(ctx["most_critical_parish"], "Tarqui")  # 200 contagiados frente a 90
+
+    def test_bedrock_is_off_by_default(self):
+        fake_bedrock = mock.Mock()
+        mayor_report._BEDROCK_CLIENT = fake_bedrock
+        _, body = self._report_for(SMALL)
+        fake_bedrock.converse.assert_not_called()
+        self.assertEqual(body["generated_by"], "heuristic-coe-fallback")
+
+    def test_invalid_bedrock_answers_fall_back_to_heuristic(self):
+        os.environ["USE_BEDROCK"] = "true"
+        bad_answers = [
+            "esto no es json",
+            json.dumps({"headline": "Solo titular"}),
+            json.dumps({"headline": "T", "situacion_critica": "S", "directivas_operativas": "D",
+                        "balance_recursos": "B", "action_items": [
+                            {"title": "x", "description": "y", "priority": "URGENTISIMA", "parish_or_hub": "Tarqui"}]}),
+        ]
+        for answer in bad_answers:
+            with self.subTest(answer=answer[:30]):
+                fake_bedrock = mock.Mock()
+                fake_bedrock.converse.return_value = {"output": {"message": {"content": [{"text": answer}]}}}
+                mayor_report._BEDROCK_CLIENT = fake_bedrock
+                _, body = self._report_for(SMALL)
+                self.assertEqual(body["generated_by"], "heuristic-coe-fallback")
+
+    def test_bedrock_prompt_uses_real_waste_and_no_invented_hubs(self):
+        sim = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])
+        ctx = mayor_report.extract_executive_context(sim)
+        _, user_prompt = mayor_report.build_bedrock_prompts(ctx)
+        self.assertIn(f"desperdiciadas: {sim['summary_kpis']['wasted_vaccines_count']}", user_prompt)
+        self.assertIn("Hubs cerrados: ninguno", user_prompt)
+
+    def test_bedrock_client_has_short_timeouts(self):
+        """Timeouts cortos: Bedrock lento cae al heurístico antes de que la Lambda (25 s) corte."""
+        mayor_report._BEDROCK_CLIENT = None
+        with mock.patch("boto3.client") as fake_client:
+            mayor_report._get_bedrock_client()
+        config = fake_client.call_args.kwargs["config"]
+        self.assertLessEqual(config.read_timeout, 10)
+        self.assertLessEqual(config.connect_timeout, 5)
+        self.assertEqual(config.retries["max_attempts"], 1)
+        mayor_report._BEDROCK_CLIENT = None
 
 
 if __name__ == "__main__":

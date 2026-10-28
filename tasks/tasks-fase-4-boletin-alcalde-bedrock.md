@@ -14,6 +14,14 @@
 - **Criterio de Producto (15%) y Claridad para Decidir (20% en Prueba de Fuego):** El jurado valora que una autoridad municipal pueda leer qué hacer, dónde y cuándo sin jerga matemática. Por ello, el boletín siempre debe responder con nombres propios de Manta (ej. *"Parroquia Tarqui"*, *"Mercado Central de Tarqui"*, *"ULEAM"*) y números concretos de vidas salvadas y dólares ejecutados.
 - **Resiliencia Total (Cero Errores 500):** En cuentas sandbox de hackathon es frecuente que algún modelo de Amazon Bedrock requiera activación manual o tenga cuota restringida. Si `bedrock-runtime` lanza `ClientError`, `AccessDeniedException`, `EndpointConnectionError` o no existen credenciales AWS en local, el handler debe capturar la excepción silenciosamente y devolver el boletín heurístico estructurado con HTTP `200 OK` indicando `"engine": "heuristic-coe-fallback"`.
 
+- **El boletín solo dice lo que hizo el modelo (revisión del 27/10/2026):**
+  - Los hubs aparecen como cerrados solo si el Escudo los cerró en la réplica 0; si `total_hub_days_closed == 0`, el boletín recomienda vigilar el hub con más casos activos en lugar de cerrarlo.
+  - Las tres acciones (`CRITICA`, `ALTA`, `MEDIA`) se ordenan según el gasto real en vacunas, brigadas y cierres.
+  - La parroquia crítica es la de más personas contagiadas al final del escenario sin intervención (no la de mayor porcentaje).
+  - El Brote Sorpresa se detecta comparando con `DEFAULT_SIMULATION_PARAMS` (umbral de eficacia 0,55) y se describe cada cambio por separado.
+  - Sin hospitales, UCI ni números de decreto inventados: el titular es una "Propuesta de decreto del COE". Las cifras se escalan a Manta con 271 000 / `n_nodes`, igual que la interfaz.
+- **Bedrock opcional (`USE_BEDROCK`, apagado por defecto):** la cuenta es nueva y no tiene acceso a modelos fundacionales. Se quitó el respaldo con `invoke_model` (usaba el formato de Claude v2, que Nova y Claude 3 rechazan). El cliente usa `connect_timeout=3`, `read_timeout=8` y un solo intento, y la respuesta del modelo se valida; ante cualquier fallo se usa el boletín heurístico.
+
 ## Instructions for Completing Tasks
 
 **IMPORTANT:** As you complete each task, you must check it off in this markdown file by changing `- [ ]` to `- [x]`. This helps track progress and ensures you don't skip any steps.
