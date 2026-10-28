@@ -55,7 +55,7 @@ Caminos posibles:
 
 ### La población: red de contactos de Manta
 
-La organización no entrega datos, así que generamos una **población sintética de Manta** (por defecto, 1 200 personas) como una red de contactos. Cada persona es un punto y cada contacto es una línea con un **peso** entre 0 y 1,45: cuanto más alto, más cercano es el contacto y más fácil el contagio. Código: [`src/engine/graph_manta.py`](src/engine/graph_manta.py).
+La organización no entrega datos, así que generamos una **población sintética de Manta** (por defecto, 1 200 personas) como una red de contactos. Cada persona es un punto y cada contacto es una línea con un **peso** entre 0,25 y 1,02: cuanto más alto, más cercano es el contacto y más fácil el contagio. Código: [`src/engine/graph_manta.py`](src/engine/graph_manta.py).
 
 **Parroquias urbanas.** Cada persona vive en una de las 5 parroquias, repartidas según su peso de población:
 
@@ -126,7 +126,7 @@ $$p_i = 1 - e^{-\lambda_i}$$
 donde:
 
 - $\beta$ es la probabilidad base de contagio por contacto: **`beta_day` = 0,05** de día y **`beta_night` = 0,07** de noche. La de noche es mayor porque en casa el contacto es más cercano y largo.
-- $w_{ij}$ es el peso del contacto (de 0,25 a 1,45, según la tabla de la población).
+- $w_{ij}$ es el peso del contacto, de 0,25 a 1,02. En los hubs es un valor de 0,45 a 0,70 multiplicado por el multiplicador del hub (como máximo 0,70 × 1,45 ≈ 1,02).
 - Si el contacto ocurre en un **hub cerrado** ese día, su peso se reduce un **88%** (`hub_firewall_reduction`).
 
 Con esta fórmula, un Sano con muchos contactos Zombie casi seguro se contagia, y uno con un solo contacto lejano tiene poca probabilidad. Ni los Mordidos ni los Aislados contagian: solo los Zombies activos.
@@ -372,7 +372,7 @@ _Fuente: [docs/arquitectura.svg](docs/arquitectura.svg)._
 | **AWS Amplify Hosting**                 | Sirve la consola React ([`amplify.yml`](amplify.yml)).                                                                                  | Sí (URL pública) |
 | **Amazon API Gateway (HTTP API)**       | `GET /health`, `POST /simulate`, `GET /simulations/{simHash}`, `POST /mayor-report`.                                                    | Sí               |
 | **AWS Lambda – orquestador**            | Normaliza los parámetros, calcula el `sim_hash`, busca en caché y lanza Step Functions.                                                 | No               |
-| **AWS Step Functions (Express, `Map`)** | Reparte las repeticiones en lotes de 5 y los corre en paralelo (hasta 40 a la vez).                                                     | No               |
+| **AWS Step Functions (Express, `Map`)** | Reparte las repeticiones en lotes de 5 y los corre en paralelo (hasta 8 a la vez, por el límite de Lambda).                                                     | No               |
 | **AWS Lambda – workers**                | Cada uno corre un lote de repeticiones de las 3 estrategias y guarda el resultado en S3 (Step Functions limita su salida a 256 KiB).    | No               |
 | **Amazon DynamoDB (On-Demand)**         | Caché de resultados por `sim_hash`, con expiración a 14 días: la misma configuración y semilla devuelve el mismo resultado al instante. | No               |
 | **Amazon S3**                           | Resultados completos, series del mapa y lotes de los workers; acceso público bloqueado, cifrado y expiración a 14 días.                 | No               |
@@ -393,7 +393,7 @@ _Fuente: [docs/arquitectura.svg](docs/arquitectura.svg)._
 
 Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos los números que muestra vienen del backend: si AWS no responde se usa el servidor local, y si ninguno responde aparece un aviso de error con **Reintentar** (no hay datos simulados en el navegador).
 
-**Tema visual.** Estética retro pixel art inspirada en los menús e inventarios de los juegos de bloques: paneles grises con bisel 3D, botones de piedra, sin esquinas redondeadas ni sombras difuminadas, el mapa como un mapa de papel con cuadrícula de bloques y las gráficas con líneas en escalón y barras como pilares de bloques. Los colores de los datos son materiales (pasto, oro, redstone, diamante). Todos los iconos y texturas son **originales**, dibujados con CSS y SVG ([`PixelIcon.tsx`](frontend/src/components/PixelIcon.tsx), [`index.css`](frontend/src/index.css)). Fuentes: Silkscreen (títulos), Press Start 2P (botones y cifras) y VT323 (texto). Los textos principales cumplen un contraste de al menos 4,5:1.
+**Tema visual.** Estética retro pixel art inspirada en los menús e inventarios de los juegos de bloques: paneles grises con bisel 3D, botones de piedra, sin esquinas redondeadas ni sombras difuminadas, el mapa en estilo táctico oscuro (mosaicos `dark_all` de CARTO) con cuadrícula de bloques y las gráficas con líneas en escalón y barras como pilares de bloques. Los colores de los datos son materiales (pasto, oro, redstone, diamante). Todos los iconos y texturas son **originales**, dibujados con CSS y SVG ([`PixelIcon.tsx`](frontend/src/components/PixelIcon.tsx), [`index.css`](frontend/src/index.css)). Fuentes: Silkscreen (títulos), Press Start 2P (botones y cifras) y VT323 (texto). Los textos principales cumplen un contraste de al menos 4,5:1.
 
 **Recorrido.** La consola se usa en tres pantallas, unidas por una transición de bloques:
 
@@ -403,7 +403,7 @@ Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos lo
 
 **Sonido.** Cinco efectos con elementos `<audio>` de HTML5: grillos y viento, trueno, mordisco de manzana, clic de madera en **todos** los botones y una campanilla al lanzar la simulación. Son **originales**: se sintetizan con `python scripts/generar_sonidos.py` (osciladores, ruido y filtros, sin audios de videojuegos). Los navegadores no permiten sonido hasta el primer clic o tecla, y se puede silenciar desde la cabecera o la presentación.
 
-**Cabecera.** Estado del motor de simulación (_Conectado_ o _Sin conexión_) y los botones **Parámetros**, **Restaurar** (vuelve al escenario base, semilla 2026), **Boletín COE** y **Simular**. Debajo, una barra con el identificador de la simulación (`sim_hash`), si se calculó ahora o vino **desde caché**, el tiempo de cómputo, la población, las repeticiones y la semilla.
+**Cabecera.** Estado del motor de simulación (_Conectado_ o _Sin conexión_) y los botones **Parámetros**, **Restaurar** (vuelve al escenario base, semilla 2026), **Boletín COE** y **Simular**. En los resultados, una barra muestra el identificador de la simulación (`sim_hash`), si se calculó ahora o vino **desde caché**, el tiempo de cómputo, la población, las repeticiones y la semilla.
 
 **Indicadores.** Cuatro tarjetas con la media de las repeticiones y su rango P10–P90:
 
@@ -414,15 +414,15 @@ Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos lo
 | Pico de zombies         | Cuánto baja el máximo de casos simultáneos, y el pico de cada estrategia.                              |
 | Gasto ejecutado         | Gasto, dosis, brigadas, días de cierre, costo por contagio evitado y dosis desperdiciadas (siempre 0). |
 
-**Estrategia en el visor y Brotes Sorpresa.** Se elige qué estrategia muestra el mapa (_Cortafuegos Manta_, _Al Azar_ o _Sin Intervención_). Los botones de **Brote Sorpresa** aplican y simulan los escenarios del reto: _Contagio ×2_, _Mitad de vacunas_, _Brote en Mercado Central_ y _Vacuna a medias_ (los valores están en [`frontend/src/data/surprisePresets.ts`](frontend/src/data/surprisePresets.ts) y coinciden con [docs/calibracion.md](docs/calibracion.md)). Se pueden combinar.
+**Estrategia en el visor y Brotes Sorpresa.** Junto al día de la simulación se elige qué estrategia muestra el mapa (_Cortafuegos Manta_, _Al Azar_ o _Sin Intervención_). En los resultados, los botones de **Brote Sorpresa** aplican y simulan los escenarios del reto: _Contagio ×2_, _Mitad de vacunas_, _Brote en Mercado Central_ y _Vacuna a medias_ (los valores están en [`frontend/src/data/surprisePresets.ts`](frontend/src/data/surprisePresets.ts) y coinciden con [docs/calibracion.md](docs/calibracion.md)). Se pueden combinar.
 
-**Mapa de Manta.** Reproducción día a día (play, pausa, velocidad ×1/×2/×5 y slider). Cada parroquia se colorea por el porcentaje de su población con infección activa (menos de 2%, de 2% a 10%, más de 10%). Cada hub se marca con un icono: un escudo si tiene el cortafuegos activo ese día, un bloque de diamante si hay vacunación en anillo alrededor y una antorcha si está abierto; al hacer clic muestra sus casos activos. Debajo del mapa, una tabla con cada hub y cada parroquia en el día elegido y el gasto acumulado.
+**Mapa de Manta.** Reproducción día a día (play, pausa, velocidad ×1/×2/×5 y slider). Cada parroquia se colorea por el porcentaje de su población con infección activa (menos de 2%, de 2% a 10%, más de 10%). Cada hub se marca con un icono: un escudo si tiene el cortafuegos activo ese día, un bloque de diamante si hay vacunación en anillo alrededor y una antorcha si está abierto; al hacer clic muestra sus casos activos. En los resultados, una tabla muestra cada hub y cada parroquia en el día elegido y el gasto acumulado.
 
 **Gráficas.** (1) Zombies activos o contagiados acumulados por día de las tres estrategias, con la zona P10–P90 sombreada; (2) cómo se reparte la población entre los 5 estados con el Escudo; (3) gasto diario del Escudo en vacunas, brigadas y cierres. Una línea vertical marca el día del mapa.
 
 **Parámetros.** Pantalla con sliders y campos numéricos libres para la semilla, el punto de inicio, la población, los casos iniciales, los días, las repeticiones, el contagio de día y de noche, la incubación, los días contagiando, la eficacia de la vacuna, el presupuesto y los costos. Cada campo muestra su valor, su unidad y qué representa; el valor escrito se aplica al salir del campo o al pulsar Enter.
 
-**Boletín COE.** Abre la propuesta de decreto para el alcalde (ver [Informe para el alcalde](#informe-para-el-alcalde)), con botones para copiar, descargar en Markdown o imprimir.
+**Boletín COE.** Abre la propuesta de decreto para el alcalde (ver [Informe para el alcalde](#informe-para-el-alcalde)), con botones para copiar el texto o descargarlo en PDF.
 
 **Cómo arrancarla en local:**
 
@@ -475,7 +475,7 @@ Para crear la app desde cero en otra cuenta: _Amplify → Create new app → Git
 
 ## Cómo probarlo
 
-**Tests automáticos** (desde la raíz; 103 pruebas del motor, los handlers, el informe y el contrato con el frontend):
+**Tests automáticos** (desde la raíz; 110 pruebas del motor, los handlers, el informe y el contrato con el frontend):
 
 ```bash
 python -m unittest discover -s tests -t .
