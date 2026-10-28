@@ -18,11 +18,11 @@
   - *Los Esteros:* `-0.9465, -80.6920`
   - *Eloy Alfaro:* `-0.9760, -80.6985`
   - *San Mateo:* `-0.9880, -80.7680`
-  - *Hub 1 — ULEAM:* `-0.9536, -80.7465`
-  - *Hub 2 — Mercado de Tarqui:* `-0.9572, -80.7078`
-  - *Hub 3 — Mercado Central:* `-0.9482, -80.7225`
-  - *Hub 4 — Empacadoras (Los Esteros):* `-0.9410, -80.7010`
-  - *Hub 5 — Terminal Terrestre:* `-0.9630, -80.6890`
+  - *Hub 1 — ULEAM:* `-0.9536, -80.7465` *Ajustado el 28/10/2026 a `-0.9526, -80.7454`, la ubicación de la universidad en OpenStreetMap (estaba a 165 m).*
+  - *Hub 2 — Mercado de Tarqui:* `-0.9572, -80.7078` *Sin cambios: no se encontró su ubicación en OpenStreetMap; es un punto aproximado.*
+  - *Hub 3 — Mercado Central:* `-0.9482, -80.7225` *Corregido el 28/10/2026 a `-0.9494, -80.7261`, el Mercado Central Municipal en OpenStreetMap (estaba a 420 m).*
+  - *Hub 4 — Empacadoras (Los Esteros):* `-0.9410, -80.7010` *Corregido el 28/10/2026 a `-0.9493, -80.6990`: el valor original caía unos 800 m dentro de la Bahía de Manta. El nuevo punto está junto a la Vía Puerto–Aeropuerto (La Florita), donde OpenStreetMap ubica a la atunera Seafman.*
+  - *Hub 5 — Terminal Terrestre:* `-0.9630, -80.6890` *Corregido el 28/10/2026 a `-0.9597, -80.6902`, la Terminal Terrestre en OpenStreetMap (estaba a 390 m).*
 
 ## Estado tras la revisión (27/10/2026)
 

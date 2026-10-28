@@ -30,13 +30,15 @@ export const MANTA_HUBS: HubPoint[] = [
     id: 'uleam',
     name: 'ULEAM (Ciudadela Universitaria)',
     parishId: 'manta_centro',
-    coords: [-0.9536, -80.7465],
+    // Ubicación de la universidad en OpenStreetMap (Calle 12, Abdón Calderón)
+    coords: [-0.9526, -80.7454],
     description: 'Campus universitario: estudiantes de todas las parroquias.',
   },
   {
     id: 'mercado_tarqui',
     name: 'Mercado Central de Tarqui',
     parishId: 'tarqui',
+    // Sin ubicación confirmada en OpenStreetMap: punto aproximado en el centro comercial de Tarqui
     coords: [-0.9572, -80.7078],
     description: 'Mercado popular de alta densidad comercial.',
   },
@@ -44,21 +46,25 @@ export const MANTA_HUBS: HubPoint[] = [
     id: 'mercado_central',
     name: 'Mercado Central de Manta',
     parishId: 'manta_centro',
-    coords: [-0.9482, -80.7225],
+    // Mercado Central Municipal (Avenida 15) en OpenStreetMap
+    coords: [-0.9494, -80.7261],
     description: 'Mercado del centro de la ciudad.',
   },
   {
     id: 'empacadoras',
     name: 'Zona Industrial / Empacadoras Los Esteros',
     parishId: 'los_esteros',
-    coords: [-0.9410, -80.7010],
+    // Junto a la Vía Puerto–Aeropuerto (La Florita), donde OpenStreetMap ubica a la atunera
+    // Seafman. El valor del plan (-0.9410, -80.7010) caía unos 800 m dentro de la bahía.
+    coords: [-0.9493, -80.6990],
     description: 'Plantas atuneras con turnos laborales cerrados.',
   },
   {
     id: 'terminal_terrestre',
     name: 'Terminal Terrestre Luis Valdivieso Morán',
     parishId: 'eloy_alfaro',
-    coords: [-0.9630, -80.6890],
+    // Terminal Terrestre en OpenStreetMap (Vía al Palmar, Los Almendros)
+    coords: [-0.9597, -80.6902],
     description: 'Terminal de buses: conecta parroquias y cantones.',
   },
 ];
