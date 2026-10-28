@@ -16,7 +16,7 @@
 | Fuente | Valor |
 | :--- | :--- |
 | Cost Explorer, gasto total del evento | _Pendiente_ |
-| AWS Budget (límite y alertas) | "My Zero-Spend Budget": 1 $ al mes, alerta por correo si el costo real supera 0,01 $. Captura: [`docs/budget.png`](budget.png) |
+| AWS Budget (límite y alertas) | "My Zero-Spend Budget": **$5.00 USD al mes** (gasto actual: $0.00 de $5.00), con alerta por correo en cuanto el costo real supere **$0.01 USD** (notificación inmediata ante cualquier consumo). Captura de la consola de AWS: [`docs/budget.png`](budget.png) |
 
 ### 1.2 Estimación de uso durante el evento
 

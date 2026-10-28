@@ -491,6 +491,6 @@ Cálculo completo y desglose detallado en [docs/costos.md](docs/costos.md).
 
 ## AWS Budget
 
-Hoy la cuenta tiene el presupuesto **"My Zero-Spend Budget" (1 $ al mes)**, que avisa en cuanto haya cualquier gasto. Al desplegar con `AlertEmail` se crea además un **AWS Budget mensual de 5 $** con alertas por correo al 50% y al 80% (recurso `SpookyThonCostBudget` del template).
+La cuenta tiene configurado el presupuesto **"My Zero-Spend Budget" de $5.00 USD al mes** (ver captura), con alerta automática por correo en cuanto el costo real supere **$0.01 USD** (notificación inmediata ante cualquier consumo). Además, al desplegar la infraestructura con el parámetro `AlertEmail` se provisiona como código el recurso `SpookyThonCostBudget` del template con umbrales del 50% ($2.50) y 80% ($4.00).
 
 ![AWS Budget](docs/budget.png)
