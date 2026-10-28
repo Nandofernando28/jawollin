@@ -549,6 +549,84 @@ class MayorReportTests(HandlersTestBase):
         self.assertIn(f"desperdiciadas: {sim['summary_kpis']['wasted_vaccines_count']}", user_prompt)
         self.assertIn("Hubs cerrados: ninguno", user_prompt)
 
+    # ---------------------------------------------------- formato de decreto y escala
+
+    def test_report_has_decree_structure(self):
+        _, body = self._report_for(SMALL)
+        self.assertTrue(body["situacion_critica"].startswith("### Considerando"))
+        self.assertIn("- Que, sin ninguna intervención", body["situacion_critica"])
+        self.assertTrue(body["directivas_operativas"].startswith("### Decreta"))
+        self.assertIn("**Artículo 1. ", body["directivas_operativas"])
+        self.assertIn("Seguimiento diario", body["directivas_operativas"])
+        self.assertTrue(body["balance_recursos"].startswith("### Anexo"))
+
+    def test_report_states_ranges_and_days(self):
+        sim, body = self._report_for(SMALL)
+        k = sim["summary_kpis"]
+        lo = mayor_report._n(k["lives_saved_vs_none_p10"])
+        hi = mayor_report._n(k["lives_saved_vs_none_p90"])
+        self.assertIn(f"entre {lo} y {hi}", body["balance_recursos"])
+        self.assertIn("80% central", body["situacion_critica"])
+        self.assertIn("Entre el día", body["directivas_operativas"])
+
+    def test_cost_is_per_infection_avoided_and_budget_is_scaled(self):
+        """El costo por contagio evitado no depende de la escala; el gasto sí se escala a Manta."""
+        sim, body = self._report_for(SMALL)
+        k, m = sim["summary_kpis"], body["metrics_snapshot"]
+        self.assertAlmostEqual(m["cost_per_infection_avoided_usd"],
+                               k["total_budget_spent"] / k["lives_saved_vs_none"], places=1)
+        scale = mayor_report.MANTA_POPULATION / SMALL["n_nodes"]
+        self.assertAlmostEqual(m["budget_manta_equivalent_usd"], k["total_budget_spent"] * scale, delta=500)
+        self.assertIn(mayor_report._n(m["budget_manta_equivalent_usd"]), body["balance_recursos"])
+        self.assertNotIn("por cada persona de la muestra", body["balance_recursos"])
+
+    def test_active_window_holds_central_share(self):
+        series = [0, 5, 20, 20, 20, 20, 10, 5]  # 100 unidades: se dejan fuera los días 1 y 7 (5 % cada uno)
+        self.assertEqual(mayor_report._active_window(series), (2, 6))
+        self.assertIsNone(mayor_report._active_window([0, 0, 0]))
+
+    def test_brigades_go_where_the_shield_had_cases(self):
+        def snap(tarqui, esteros):
+            return {"day": 0, "hubs": {}, "parishes": {
+                "tarqui": {"total_population": 400, "sanos": 400, "mordidos": tarqui, "zombies": 0},
+                "los_esteros": {"total_population": 100, "sanos": 100, "mordidos": esteros, "zombies": 0},
+            }}
+        sim = {"params": {"n_nodes": 500}, "summary_kpis": {"total_population": 500},
+               "spatial_timelines": {"shield": [snap(1, 5), snap(0, 3)]}}
+        self.assertEqual(mayor_report.extract_executive_context(sim)["brigade_parish"], "Los Esteros")
+
+    def _bedrock_answer(self, text_with_numbers):
+        return json.dumps({
+            "headline": "PROPUESTA DE DECRETO DEL COE CANTONAL DE MANTA",
+            "situacion_critica": f"### Considerando\n\n- Que {text_with_numbers}.",
+            "directivas_operativas": "### Decreta\n\n**Artículo 1. Vacunación.** Vacunar en Tarqui.",
+            "balance_recursos": "### Anexo: balance de recursos",
+            "action_items": [{"title": "Vacunación", "description": "Anillos", "priority": "CRITICA",
+                              "parish_or_hub": "Tarqui"}],
+        })
+
+    def test_bedrock_answer_with_invented_numbers_falls_back(self):
+        sim = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])
+        os.environ["USE_BEDROCK"] = "true"
+        saved = sim["summary_kpis"]["lives_saved_vs_none"]
+        cases = {
+            "cifra real": (f"se evitan {saved:,.0f} contagios", "amazon-bedrock-nova-micro"),
+            "cifra inventada": ("se evitan 98 765 contagios y se usan 4 hospitales", "heuristic-coe-fallback"),
+        }
+        for name, (text, expected) in cases.items():
+            with self.subTest(case=name):
+                fake_bedrock = mock.Mock()
+                fake_bedrock.converse.return_value = {
+                    "output": {"message": {"content": [{"text": self._bedrock_answer(text)}]}}}
+                mayor_report._BEDROCK_CLIENT = fake_bedrock
+                response = mayor_report.lambda_handler(_v2("POST", "/mayor-report", {"simulation": sim}))
+                self.assertEqual(json.loads(response["body"])["generated_by"], expected)
+
+    def test_number_keys_ignore_separators(self):
+        self.assertIn("187000", mayor_report._number_keys("187 000"))
+        self.assertIn("8000", mayor_report._number_keys("8,000.00"))
+        self.assertEqual(mayor_report._number_keys("70,2"), {"702", "70"})
+
     def test_bedrock_client_has_short_timeouts(self):
         """Timeouts cortos: Bedrock lento cae al heurístico antes de que la Lambda (25 s) corte."""
         mayor_report._BEDROCK_CLIENT = None

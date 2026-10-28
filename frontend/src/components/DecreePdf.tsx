@@ -1,0 +1,258 @@
+import { Document, Font, Page, StyleSheet, Text, View, pdf } from '@react-pdf/renderer';
+import type { MayorReportResponse } from '../types/simulation';
+import {
+  fmtOrDash,
+  toManta,
+  ENGINE_LABEL,
+  PRIORITY_LABEL,
+  decreeSections,
+  formatDate,
+  parseBlocks,
+  parseInline,
+  type Block,
+} from '../utils/decree';
+
+/**
+ * Propuesta de Decreto en PDF (A4), generada en el navegador con @react-pdf/renderer.
+ * Usa la fuente Helvetica que trae todo lector de PDF: no hay que descargar fuentes
+ * y el texto queda seleccionable. Este módulo se carga solo al pulsar "Descargar PDF".
+ */
+
+// Sin guiones de corte automáticos: las reglas de la librería son para inglés
+Font.registerHyphenationCallback((word) => [word]);
+
+// Helvetica no trae el espacio fino (U+202F) que usa fmt para los miles: se cambia por un espacio normal
+const pdfText = (text: string) => text.replace(/[  ]/g, ' ');
+const fmt = (value: number | null | undefined, decimals = 0) => pdfText(fmtOrDash(value, decimals));
+
+const C = {
+  navy: '#111a4a',
+  ink: '#3b3e47',
+  muted: '#7c7f88',
+  line: '#e3e4e8',
+  panel: '#f6f6f8',
+  teal: '#167e6c',
+  orange: '#ec652b',
+  blue: '#1e4199',
+};
+
+const PRIORITY_COLOR: Record<string, string> = {
+  CRITICA: '#c62828',
+  ALTA: C.orange,
+  MEDIA: '#b7860b',
+};
+
+const s = StyleSheet.create({
+  page: {
+    paddingTop: 44,
+    paddingBottom: 64,
+    paddingHorizontal: 52,
+    fontFamily: 'Helvetica',
+    fontSize: 10,
+    lineHeight: 1.45,
+    color: C.ink,
+  },
+  // Encabezado institucional
+  band: { height: 4, backgroundColor: C.navy, marginBottom: 18 },
+  eyebrow: { fontSize: 7.5, letterSpacing: 1.6, color: C.muted, textTransform: 'uppercase' },
+  docType: { fontFamily: 'Helvetica-Bold', fontSize: 18, color: C.navy, marginTop: 4 },
+  headline: { fontFamily: 'Helvetica-Bold', fontSize: 11, color: C.navy, marginTop: 10, lineHeight: 1.35 },
+  meta: { fontSize: 8, color: C.muted, marginTop: 6 },
+  rule: { borderBottomWidth: 1, borderBottomColor: C.line, marginVertical: 16 },
+  // Indicadores
+  kpiRow: { flexDirection: 'row', gap: 8 },
+  kpi: { flex: 1, borderWidth: 1, borderColor: C.line, backgroundColor: C.panel, borderRadius: 4, padding: 8 },
+  kpiLabel: { fontSize: 6.5, letterSpacing: 1, color: C.muted, textTransform: 'uppercase' },
+  kpiValue: { fontFamily: 'Helvetica-Bold', fontSize: 13, color: C.navy, marginTop: 4 },
+  kpiUnit: { fontSize: 7, color: C.muted, marginTop: 2 },
+  // Secciones
+  section: { marginTop: 18 },
+  sectionTitle: {
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 10,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    color: C.navy,
+    paddingBottom: 4,
+    marginBottom: 8,
+    borderBottomWidth: 1.5,
+  },
+  paragraph: { marginBottom: 7 },
+  subheading: { fontFamily: 'Helvetica-Bold', fontSize: 10, color: C.navy, marginTop: 4, marginBottom: 4 },
+  bulletRow: { flexDirection: 'row', marginBottom: 5 },
+  bulletDot: { width: 12, color: C.muted },
+  bulletText: { flex: 1 },
+  note: { fontSize: 8, fontFamily: 'Helvetica-Oblique', color: C.muted, marginTop: 2, marginBottom: 6 },
+  bold: { fontFamily: 'Helvetica-Bold', color: C.navy },
+  italic: { fontFamily: 'Helvetica-Oblique' },
+  // Tabla de acciones
+  tableHead: { flexDirection: 'row', backgroundColor: C.navy, color: '#ffffff', paddingVertical: 5, paddingHorizontal: 8 },
+  tableHeadText: { fontFamily: 'Helvetica-Bold', fontSize: 7.5, letterSpacing: 0.8, textTransform: 'uppercase', color: '#ffffff' },
+  tableRow: { flexDirection: 'row', paddingVertical: 7, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: C.line },
+  colPriority: { width: 62 },
+  colAction: { flex: 1, paddingRight: 8 },
+  colPlace: { width: 120 },
+  priorityPill: { fontFamily: 'Helvetica-Bold', fontSize: 7.5, textTransform: 'uppercase', letterSpacing: 0.6 },
+  actionTitle: { fontFamily: 'Helvetica-Bold', color: C.navy },
+  actionDesc: { fontSize: 8.5, marginTop: 2 },
+  // Firmas
+  signatures: { flexDirection: 'row', gap: 40, marginTop: 44 },
+  signature: { flex: 1, borderTopWidth: 1, borderTopColor: C.navy, paddingTop: 5 },
+  signatureRole: { fontFamily: 'Helvetica-Bold', fontSize: 8.5, color: C.navy },
+  signatureHint: { fontSize: 7.5, color: C.muted, marginTop: 1 },
+  // Pie de página
+  footer: {
+    position: 'absolute',
+    bottom: 26,
+    left: 52,
+    right: 52,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: C.line,
+    paddingTop: 6,
+    fontSize: 7,
+    color: C.muted,
+  },
+});
+
+const SECTION_COLORS = [C.orange, C.teal, C.blue];
+
+function Inline({ text }: { text: string }) {
+  return (
+    <>
+      {parseInline(text).map((span, i) => (
+        <Text key={i} style={span.bold ? s.bold : span.italic ? s.italic : undefined}>
+          {pdfText(span.text)}
+        </Text>
+      ))}
+    </>
+  );
+}
+
+function BlockView({ block }: { block: Block }) {
+  switch (block.kind) {
+    case 'heading':
+      return <Text style={s.subheading}>{block.text}</Text>;
+    case 'note':
+      return <Text style={s.note}>{block.text}</Text>;
+    case 'bullets':
+      return (
+        <View>
+          {block.items.map((item, i) => (
+            <View key={i} style={s.bulletRow} wrap={false}>
+              <Text style={s.bulletDot}>•</Text>
+              <Text style={s.bulletText}><Inline text={item} /></Text>
+            </View>
+          ))}
+        </View>
+      );
+    default:
+      return <Text style={s.paragraph}><Inline text={block.text} /></Text>;
+  }
+}
+
+export function DecreeDocument({ report }: { report: MayorReportResponse }) {
+  const m = report.metrics_snapshot;
+  const engine = ENGINE_LABEL[report.generated_by] ?? report.generated_by;
+  const kpis = [
+    { label: 'Contagios evitados', value: fmt(toManta(m.lives_saved_vs_none, m.scale_factor)), unit: 'habitantes de Manta, frente a no actuar' },
+    { label: 'Mejor que el azar', value: fmt(m.lives_saved_vs_random), unit: 'contagios menos en la muestra' },
+    { label: 'Costo por contagio', value: `${fmt(m.cost_per_infection_avoided_usd, 2)} $`, unit: 'evitado frente a no actuar' },
+    { label: 'Parroquia crítica', value: m.most_critical_parish, unit: 'más contagios sin actuar' },
+  ];
+
+  return (
+    <Document
+      title="Propuesta de Decreto de Emergencia - COE Cantonal de Manta"
+      author="Operación Cortafuegos Manta"
+      subject={report.headline}
+      language="es-EC"
+    >
+      <Page size="A4" style={s.page}>
+        <View style={s.band} fixed />
+
+        <Text style={s.eyebrow}>COE Cantonal · Alcaldía de San Pablo de Manta</Text>
+        <Text style={s.docType}>Propuesta de Decreto de Emergencia</Text>
+        <Text style={s.headline}>{report.headline}</Text>
+        <Text style={s.meta}>
+          {formatDate(report.created_at)} · Redactado por: {engine} · Código de reproducibilidad: {report.sim_hash}
+        </Text>
+
+        <View style={s.rule} />
+
+        <View style={s.kpiRow} wrap={false}>
+          {kpis.map((k) => (
+            <View key={k.label} style={s.kpi}>
+              <Text style={s.kpiLabel}>{k.label}</Text>
+              <Text style={s.kpiValue}>{k.value}</Text>
+              <Text style={s.kpiUnit}>{k.unit}</Text>
+            </View>
+          ))}
+        </View>
+
+        {decreeSections(report).map((section, i) => (
+          <View key={section.title} style={s.section}>
+            <Text style={[s.sectionTitle, { borderBottomColor: SECTION_COLORS[i] }]} minPresenceAhead={40}>
+              {section.title}
+            </Text>
+            {parseBlocks(section.body).map((block, j) => <BlockView key={j} block={block} />)}
+          </View>
+        ))}
+
+        {report.action_items.length > 0 && (
+          <View style={s.section} wrap={false}>
+            <Text style={[s.sectionTitle, { borderBottomColor: C.navy }]}>Acciones prioritarias del COE</Text>
+            <View style={s.tableHead}>
+              <Text style={[s.tableHeadText, s.colPriority]}>Prioridad</Text>
+              <Text style={[s.tableHeadText, s.colAction]}>Acción</Text>
+              <Text style={[s.tableHeadText, s.colPlace]}>Lugar</Text>
+            </View>
+            {report.action_items.map((a, i) => (
+              <View key={i} style={s.tableRow}>
+                <Text style={[s.priorityPill, s.colPriority, { color: PRIORITY_COLOR[a.priority] ?? C.muted }]}>
+                  {PRIORITY_LABEL[a.priority] ?? a.priority}
+                </Text>
+                <View style={s.colAction}>
+                  <Text style={s.actionTitle}>{a.title}</Text>
+                  <Text style={s.actionDesc}>{a.description}</Text>
+                </View>
+                <Text style={[s.colPlace, { fontSize: 8.5 }]}>{a.parish_or_hub}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <View style={s.signatures} wrap={false}>
+          <View style={s.signature}>
+            <Text style={s.signatureRole}>Alcaldía de Manta</Text>
+            <Text style={s.signatureHint}>Firma y fecha de aprobación</Text>
+          </View>
+          <View style={s.signature}>
+            <Text style={s.signatureRole}>Presidencia del COE Cantonal</Text>
+            <Text style={s.signatureHint}>Firma y fecha de revisión</Text>
+          </View>
+        </View>
+
+        <View style={s.footer} fixed>
+          <Text>Propuesta generada por simulación (Operación Cortafuegos Manta). No tiene valor legal sin aprobación.</Text>
+          <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+        </View>
+      </Page>
+    </Document>
+  );
+}
+
+/** Genera el PDF y lo descarga con un nombre que identifica la simulación. */
+export async function downloadDecreePdf(report: MayorReportResponse): Promise<void> {
+  const blob = await pdf(<DecreeDocument report={report} />).toBlob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Propuesta_Decreto_COE_Manta_${report.sim_hash.slice(0, 12)}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // Se libera después para que el navegador alcance a iniciar la descarga
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
