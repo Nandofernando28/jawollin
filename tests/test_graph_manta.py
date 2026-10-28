@@ -88,10 +88,14 @@ class TestBuildNetwork(unittest.TestCase):
             backward = set(zip(dst.tolist(), src.tolist(), w.tolist()))
             self.assertEqual(forward, backward, layer)
 
-    def test_households_within_one_parish_and_max_six(self):
+    def test_households_within_one_parish_and_three_to_six(self):
+        for seed in (2026, 7, 9999):
+            net = build_manta_multilayer_network(1000, seed=seed)
+            sizes = np.bincount(net["household_id"])
+            self.assertGreaterEqual(sizes.min(), 3, seed)
+            self.assertLessEqual(sizes.max(), 6, seed)
         net = build_manta_multilayer_network(1000, seed=2026)
         sizes = np.bincount(net["household_id"])
-        self.assertLessEqual(sizes.max(), 6)
         parishes_per_household = {
             h: set(net["node_parish"][net["household_id"] == h].tolist()) for h in range(len(sizes))
         }
@@ -110,6 +114,25 @@ class TestBuildNetwork(unittest.TestCase):
         mean_degree = np.diff(net["day_indptr"]).mean()
         self.assertGreaterEqual(mean_degree, 6)
         self.assertLessEqual(mean_degree, 12)
+
+    def test_each_hub_mean_degree_in_range(self):
+        """Grado medio dentro de cada Hub entre 6 y 12 contactos (Tarea 4.2)."""
+        net = build_manta_multilayer_network(1000, seed=2026)
+        src, _, _ = _edge_set(net, "day")
+        for h_idx, hub_id in enumerate(HUB_IDS):
+            members = net["hub_members"][hub_id]
+            degree = np.bincount(src[net["day_edge_hub"] == h_idx], minlength=net["n_nodes"])[members]
+            self.assertGreaterEqual(degree.mean(), 6, hub_id)
+            self.assertLessEqual(degree.mean(), 12, hub_id)
+
+    def test_neighborhood_links_stay_close(self):
+        """Los contactos barriales nocturnos unen hogares cercanos, sin dar la vuelta a la parroquia."""
+        net = build_manta_multilayer_network(1000, seed=2026)
+        src, dst, w = _edge_set(net, "night")
+        barrio = (w < 0.5) & (net["household_id"][src] != net["household_id"][dst])
+        dist = np.hypot(net["x"][src[barrio]] - net["x"][dst[barrio]],
+                        net["y"][src[barrio]] - net["y"][dst[barrio]])
+        self.assertLess(float(np.percentile(dist, 99)), 0.15)
 
     def test_hub_edges_link_members_of_that_hub(self):
         """Cerrar un Hub solo debe tocar aristas entre personas que asisten a ese Hub."""

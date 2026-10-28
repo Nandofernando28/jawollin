@@ -12,7 +12,7 @@
 ### Notes
 
 - **Determinismo estricto:** Todas las decisiones estocásticas al construir el grafo (asignación de parroquia, hogar, rol, hub diurno y conexiones vecinales) deben utilizar una única instancia local `rng = np.random.default_rng(seed)` sin tocar el estado global de `random` ni `np.random`.
-- **Rendimiento en AWS Lambda:** Para $N = 1,500$ a $5,000$ nodos, la construcción de la red debe tardar $< 150\text{ ms}$ en CPU ARM64 y cachearse en memoria RAM del proceso Lambda mediante un diccionario `_NETWORK_CACHE[(n_nodes, seed)]` para que las $M$ corridas de Monte Carlo reutilicen la topología base instantáneamente.
+- **Rendimiento en AWS Lambda:** Para $N = 1,500$ a $5,000$ nodos, la construcción de la red debe tardar $< 150\text{ ms}$ en CPU ARM64 y cachearse en memoria RAM del proceso Lambda mediante un diccionario `_GRAPH_CACHE[(n_nodes, seed)]` para que las $M$ corridas de Monte Carlo reutilicen la topología base instantáneamente.
 - **Comandos de prueba:** Ejecutar `python -m unittest tests/test_graph_manta.py -v` para validar esta fase.
 
 ## Instructions for Completing Tasks
@@ -57,7 +57,7 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 2.4 Asignar a cada nodo su rol social (`role`), sus coordenadas espaciales individuales $(x_i, y_i)$ añadiendo jitter gaussiano alrededor del centroide de su parroquia, y el Hub primario (`primary_hub`) al que asiste durante el día según su rol y cercanía parroquial.
 
 - [x] 3.0 Construir la Capa Nocturna ($G_N$): Hogares y Vecindarios Barriales
-  - [x] 3.1 Inicializar las estructuras de adyacencia nocturna para que el simulador pueda iterar vectorialmente o por listas rápidas: `night_neighbors` (lista de arrays de vecinos por nodo) y `night_weights` (lista de arrays `float32` con el peso de transmisión $w_{ij}^{(N)}$).
+  - [x] 3.1 Inicializar las estructuras de adyacencia nocturna para que el simulador pueda iterar vectorialmente o por listas rápidas: `night_neighbors` (lista de arrays de vecinos por nodo) y `night_weights` (lista de arrays `float32` con el peso de transmisión $w_{ij}^{(N)}$). *Implementado en formato CSR (`night_indptr` + `night_neighbors` + `night_weights`): los vecinos de $u$ son `night_neighbors[night_indptr[u]:night_indptr[u+1]]`.*
   - [x] 3.2 Conectar en **clique completo (todos con todos)** a los integrantes de un mismo `household_id` con peso nocturno estrecho $w_{ij}^{(N)} \in [0.85, 1.0]$.
   - [x] 3.3 Añadir entre 2 y 4 aristas vecinales nocturnas por hogar hacia hogares cercanos de la **misma parroquia** (simulando convivencia barrial en la calle/tienda de barrio al anochecer) con peso moderado $w_{ij}^{(N)} \in [0.25, 0.45]$.
 

@@ -10,7 +10,7 @@ _Pendiente (todo el equipo)._
 
 ### La plaga
 
-Una plaga zombie ficticia, de contagio directo entre personas. Su contagiosidad está calibrada para parecerse a la **COVID-19 (cepa original)**: cada zombie contagia en promedio a **2,8 personas** (R₀ ≈ 2,8). Sus tiempos son cortos, como los de la influenza, para que el brote se desarrolle dentro de una simulación de 30 días. La plaga no mata: convierte.
+Una plaga zombie ficticia, de contagio directo entre personas. Su contagiosidad está calibrada para parecerse a la **COVID-19 (cepa original)**: cada zombie contagia en promedio a **2,9 personas** (R₀ ≈ 2,9; la COVID-19 original ronda 2,8). Sus tiempos son cortos, como los de la influenza, para que el brote se desarrolle dentro de una simulación de 30 días. La plaga no mata: convierte.
 
 Cada persona está siempre en uno de estos 5 estados:
 
@@ -127,7 +127,7 @@ El COE solo usa la información que tendría en la realidad: los **Zombies detec
 
 **Regla de oro: nunca se vacuna a un infectado o inmune.** La lista de candidatos a vacuna se arma **solo con personas en estado Sano** que no hayan sido vacunadas antes. Además, cada dosis se audita: si alguna se aplicara a alguien que no está Sano, se contaría como desperdicio. El contador `wasted_vaccines_count` ha sido **0 en todas las simulaciones**.
 
-**Se adapta sola al 🎃 Brote Sorpresa.** No tiene reglas fijas del tipo "primero vacunar". Si el jurado baja la eficacia de la vacuna, el valor de vacunar baja automáticamente y el dinero se va a brigadas; si la plaga se vuelve mucho más contagiosa, cerrar hubs empieza a compensar. Por ejemplo, con una vacuna al 25% y el contagio de día al 0,18, el Escudo pasa de 10,6 a 62,8 brigadas y de 487 a 233 vacunas, sin cambiar el código.
+**Se adapta sola al 🎃 Brote Sorpresa.** No tiene reglas fijas del tipo "primero vacunar". Si el jurado baja la eficacia de la vacuna, el valor de vacunar baja automáticamente y el dinero se va a brigadas; si la plaga se vuelve mucho más contagiosa, cerrar hubs empieza a compensar. Por ejemplo, con una vacuna al 25% y el contagio de día al 0,18, el Escudo pasa de 10,7 a 63,6 brigadas y de 487 a 234 vacunas, sin cambiar el código.
 
 **Cuándo usa cada defensa.** Con brotes controlables, le rinden más las brigadas (65 $) y las vacunas (15 $). Cerrar un hub cuesta 220 $ y solo protege un día, así que solo lo hace cuando la epidemia se descontrola y hay muchos contagios dentro de un mismo lugar (ver [docs/calibracion.md](docs/calibracion.md), fila 8).
 
@@ -171,7 +171,7 @@ Si el Escudo supera al azar, es porque **elige mejor**, no porque tenga más rec
 
 | Parámetro | Valor | Por qué |
 |---|---|---|
-| `beta_day` | 0,05 | Junto con `beta_night`, da un R₀ ≈ 2,8, comparable a la COVID-19 original (ver *Calibración*). |
+| `beta_day` | 0,05 | Junto con `beta_night`, da un R₀ ≈ 2,9, comparable a la COVID-19 original (ver *Calibración*). |
 | `beta_night` | 0,07 | Mayor que de día: en casa el contacto es más cercano y largo. |
 | `incubation_days` | 2 | Tiempos cortos, del orden de los de la influenza, para que el brote se desarrolle en 30 días. |
 | `infectious_days` | 5 | Ídem. |
@@ -206,7 +206,7 @@ Con los valores por defecto y la semilla 2026, el resultado debe ser exactamente
 
 | Sin intervención | Al azar | Escudo Manta | Escudo vs azar | Vacunas desperdiciadas |
 |---|---|---|---|---|
-| 814 infectados (68%) | 39,2 | 14,6 | 62,67% menos contagios | 0 |
+| 842 infectados (70%) | 51,4 | 14,5 | 71,79% menos contagios | 0 |
 
 Para probar otra configuración, se escriben los cambios como `nombre=valor`, por ejemplo: `python scripts/calibrar.py seed=42 vaccine_efficacy=0.5`.
 
@@ -217,24 +217,26 @@ El detalle completo de cada experimento está en [docs/calibracion.md](docs/cali
 
 **Qué ajustamos y por qué.** Con los valores iniciales, el modelo tenía dos supuestos poco creíbles: sin intervenir se infectaba el 97% de Manta en un mes, y con 12 000 $ se podían comprar vacunas para casi la mitad de la ciudad. Cambiamos un parámetro cada vez y anotamos el resultado:
 
-- Bajamos el contagio (`beta_day` 0,085 → 0,05 y `beta_night` 0,110 → 0,07): sin intervenir se infecta el 68%, una epidemia grave pero creíble.
+- Bajamos el contagio (`beta_day` 0,085 → 0,05 y `beta_night` 0,110 → 0,07): sin intervenir se infecta el 70%, una epidemia grave pero creíble.
 - Probamos abaratar el cierre de hubs, pero eso favorecía al azar (que cierra hubs por casualidad), así que lo descartamos.
 - Bajamos el presupuesto (600 → 400 $/día y 12 000 → 8 000 $): los recursos pasan a ser realmente limitados.
 
-**Comparación con una enfermedad real.** Con los valores elegidos, cada Zombie contagia en promedio a **2,8 personas** (R₀ ≈ 2,8), comparable a la **COVID-19 original**. El escenario "el doble de contagiosa" equivale a R₀ ≈ 5, como la **variante Delta**. Lo medimos con `python scripts/estimar_r0.py`.
+**Comparación con una enfermedad real.** Con los valores elegidos, cada Zombie contagia en promedio a **2,9 personas** (R₀ ≈ 2,9), comparable a la **COVID-19 original** (mediana ≈ 2,8). El escenario "el doble de contagiosa" equivale a R₀ ≈ 5, como la **variante Delta**. Lo medimos con `python scripts/estimar_r0.py`.
 
-**Verificación 1: el jurado elige la semilla.** Probamos 10 semillas distintas (1, 7, 42, 55, 100, 123, 777, 999, 2026 y 31337). El Escudo supera a las dos líneas base **con las 10**. La mejora frente al azar varía entre el 19% y el 74% según la semilla, por eso no fijamos un porcentaje como meta: lo que se mantiene es que **siempre gana**.
+**Verificación 1: el jurado elige la semilla.** Probamos 10 semillas distintas (1, 7, 42, 55, 100, 123, 777, 999, 2026 y 31337). El Escudo supera a las dos líneas base **con las 10**. La mejora frente al azar varía entre el 45% y el 75% según la semilla, por eso no fijamos un porcentaje como meta: lo que se mantiene es que **siempre gana**.
 
 **Verificación 2: Brote Sorpresa.** Probamos los cambios que el reto pone de ejemplo, con la semilla 2026:
 
 | Escenario | Sin intervención | Al azar | Escudo Manta |
 |---|---|---|---|
-| El doble de contagiosa | 1 187 | 820 | **197** |
-| La mitad de las vacunas | 814 | 90 | **24** |
-| El brote empieza en el Mercado Central (por defecto empieza en el de Tarqui) | 635 | 21 | **13** |
-| La vacuna cubre a medias | 814 | 40 | **21** |
+| El doble de contagiosa | 1 188 | 816 | **194** |
+| La mitad de las vacunas | 842 | 85 | **22** |
+| El brote empieza en el Mercado Central (por defecto empieza en el de Tarqui) | 675 | 15 | **13** |
+| La vacuna cubre a medias | 842 | 64 | **21** |
 
 En todos los casos el Escudo supera a las dos líneas base sin cambiar el código, y con **0 vacunas desperdiciadas**.
+
+El caso más ajustado es el brote en el Mercado Central (13 frente a 15 con la semilla 2026): el brote queda más pequeño y el azar también lo contiene bastante. Lo repetimos con las 10 semillas y el Escudo gana en todas, con una mejora frente al azar de entre el 10% y el 70%.
 
 ### Limitaciones del modelo
 Todo modelo simplifica la realidad. Estas son las simplificaciones conocidas del nuestro:

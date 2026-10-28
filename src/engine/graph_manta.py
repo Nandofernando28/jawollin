@@ -64,7 +64,7 @@ MANTA_HUBS: Dict[str, Dict[str, Any]] = {
     },
     "terminal_terrestre": {
         "name": "Terminal Terrestre Luis Valdivieso Morán",
-        "parish": "eloy_alfaro", "contact_weight": 1.40, "ring_k": 6, "rewire_p": 0.30,
+        "parish": "eloy_alfaro", "contact_weight": 1.40, "ring_k": 8, "rewire_p": 0.30,
     },
 }
 
@@ -121,6 +121,26 @@ def _nearest_market(parish_id: str) -> str:
 def _edge_block(u: np.ndarray, v: np.ndarray, w: np.ndarray, hub: int) -> EdgeBlock:
     return (u.astype(np.int32), v.astype(np.int32), w.astype(np.float32),
             np.full(len(u), hub, dtype=np.int8))
+
+def _household_sizes(n_people: int, rng: np.random.Generator) -> np.ndarray:
+    """
+    Reparte n_people en hogares de 3 a 6 personas.
+    Si al final sobran 1 o 2 personas, se suman a los últimos hogares con espacio.
+    """
+    if n_people == 0:
+        return np.empty(0, dtype=np.int64)
+    sizes = rng.integers(3, 7, size=n_people // 3 + 1)
+    last = int(np.searchsorted(np.cumsum(sizes), n_people))
+    sizes = sizes[:last + 1]
+    sizes[-1] -= int(sizes.sum()) - n_people
+    if sizes[-1] < 3 and len(sizes) > 1:
+        extra, sizes = int(sizes[-1]), sizes[:-1]
+        room = np.flatnonzero(sizes < 6)[::-1][:extra]
+        sizes[room] += 1
+        extra -= len(room)
+        if extra:  # todos los hogares llenos: queda un hogar pequeño
+            sizes = np.append(sizes, extra)
+    return sizes
 
 #crea los contactos dentro de un hub
 def _small_world(
@@ -252,13 +272,9 @@ def build_manta_multilayer_network(n_nodes: int = 1200, seed: int = 2026) -> Dic
         rng.permutation(np.flatnonzero(node_parish == p)) for p in range(n_parishes)
     ])
     parish_sizes = np.bincount(node_parish, minlength=n_parishes)
-    parish_ends = np.cumsum(parish_sizes)
 
-    sizes = rng.integers(3, 7, size=n_nodes // 3 + n_parishes + 1)
-    cuts = np.unique(np.concatenate([np.cumsum(sizes), parish_ends]))
-    cuts = cuts[cuts < n_nodes]
-    hh_start = np.concatenate([[0], cuts]).astype(np.int32)
-    hh_size = np.diff(np.concatenate([hh_start, [n_nodes]])).astype(np.int32)
+    hh_size = np.concatenate([_household_sizes(int(s), rng) for s in parish_sizes]).astype(np.int32)
+    hh_start = np.concatenate([[0], np.cumsum(hh_size)[:-1]]).astype(np.int32)
     n_households = len(hh_start)
 
     household_id = np.empty(n_nodes, dtype=np.int32)
@@ -316,7 +332,10 @@ def build_manta_multilayer_network(n_nodes: int = 1200, seed: int = 2026) -> Dic
         n_links = rng.integers(2, 5, size=len(hh))
         pos = np.repeat(np.arange(len(hh)), n_links)
         offset = rng.integers(1, 6, size=len(pos)) * rng.choice([-1, 1], size=len(pos))
-        h_from, h_to = hh[pos], hh[(pos + offset) % len(hh)]
+        # Sin dar la vuelta: si el salto se sale de la lista, se va hacia el otro lado
+        target = pos + offset
+        target = np.where((target < 0) | (target >= len(hh)), pos - offset, target)
+        h_from, h_to = hh[pos], hh[np.clip(target, 0, len(hh) - 1)]
         # Un integrante al azar de cada hogar
         u = by_parish[hh_start[h_from] + (rng.random(len(pos)) * hh_size[h_from]).astype(np.int32)]
         v = by_parish[hh_start[h_to] + (rng.random(len(pos)) * hh_size[h_to]).astype(np.int32)]
