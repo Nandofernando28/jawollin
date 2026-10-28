@@ -37,10 +37,10 @@ export function ResultsScroll({ result, reportLoading, onOpenReport, onReplay, o
           </span>
           <div>
             <p className="mc-label text-[#6b4a2b]">Resultados de la simulación</p>
-            <h2 id="results-scroll-title" className="font-display text-[22px] leading-tight text-[#3a2a14]">
+            <h2 id="results-scroll-title" className="font-display text-[16px] leading-tight text-[#3a2a14]">
               Crónica de la contención
             </h2>
-            <p className="text-[18px] text-[#6b4a2b]">
+            <p className="text-[14px] text-[#6b4a2b]">
               {p.monte_carlo_runs} simulaciones de {p.days} días · semilla {p.seed} · {p.n_nodes.toLocaleString()} personas
             </p>
           </div>
@@ -64,25 +64,25 @@ export function ResultsScroll({ result, reportLoading, onOpenReport, onReplay, o
       {/* Vidas salvadas frente a cada línea base */}
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <div className="mc-slot-dark p-3">
-          <p className="mc-label text-[#d8d8d8]">Contagios evitados frente a no intervenir</p>
-          <p className="mt-2 font-pixel text-[20px] text-mc-grass-light" style={{ textShadow: '2px 2px 0 #000' }}>
-            {fmt(k.lives_saved_vs_none)} <span className="font-retro text-[20px] text-white">personas</span>
+          <p className="mc-label text-[#ede5e2]">Contagios evitados frente a no intervenir</p>
+          <p className="mt-2 font-pixel text-[15px] text-mc-grass-light" style={{ textShadow: '2px 2px 0 #000' }}>
+            {fmt(k.lives_saved_vs_none)} <span className="font-ui text-[15px] text-white">personas</span>
           </p>
-          <p className="mt-1 text-[18px] text-[#d8d8d8]">{fmt(k.lives_saved_vs_none_pct, 1)}% menos contagios</p>
+          <p className="mt-1 text-[14px] text-[#ede5e2]">{fmt(k.lives_saved_vs_none_pct, 1)}% menos contagios</p>
         </div>
         <div className="mc-slot-dark p-3">
-          <p className="mc-label text-[#d8d8d8]">Contagios evitados frente al azar</p>
-          <p className="mt-2 font-pixel text-[20px] text-mc-diamond" style={{ textShadow: '2px 2px 0 #000' }}>
-            {fmt(k.lives_saved_vs_random)} <span className="font-retro text-[20px] text-white">personas</span>
+          <p className="mc-label text-[#ede5e2]">Contagios evitados frente al azar</p>
+          <p className="mt-2 font-pixel text-[15px] text-mc-diamond" style={{ textShadow: '2px 2px 0 #000' }}>
+            {fmt(k.lives_saved_vs_random)} <span className="font-ui text-[15px] text-white">personas</span>
           </p>
-          <p className="mt-1 text-[18px] text-[#d8d8d8]">{fmt(k.lives_saved_vs_random_pct, 1)}% menos contagios</p>
+          <p className="mt-1 text-[14px] text-[#ede5e2]">{fmt(k.lives_saved_vs_random_pct, 1)}% menos contagios</p>
         </div>
       </div>
 
       {/* Comparativa numérica y gráfica de las tres estrategias */}
       <div className="mt-5 grid gap-4 lg:grid-cols-5">
         <div className="overflow-x-auto lg:col-span-3">
-          <table className="w-full border-collapse text-left text-[19px] text-[#3a2a14]">
+          <table className="w-full border-collapse text-left text-[15px] text-[#3a2a14]">
             <caption className="mc-label mb-2 text-left text-[#6b4a2b]">Personas contagiadas en {p.days} días (media y rango P10–P90)</caption>
             <thead>
               <tr className="border-b-2 border-[#3a2a14]">
