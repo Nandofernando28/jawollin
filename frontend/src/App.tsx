@@ -237,7 +237,7 @@ export default function App() {
               <div className="mc-panel flex items-center justify-between gap-3 p-3">
                 <div className="flex items-center gap-3">
                   <PixelIcon name="warning" size={24} title="Error" />
-                  <span className="text-[20px] leading-tight text-mc-ink">{error}</span>
+                  <span className="text-[15px] leading-tight text-mc-ink">{error}</span>
                 </div>
                 <button
                   onClick={() => execute()}
@@ -261,7 +261,7 @@ export default function App() {
             <KpiCards result={result} />
 
             {/* Barra de metadatos de la ejecución */}
-            <div className="mc-panel-dark flex flex-wrap items-center justify-between gap-3 px-4 py-2 text-[18px] text-[#d8d8d8]">
+            <div className="mc-panel-dark flex flex-wrap items-center justify-between gap-3 px-4 py-2 text-[14px] text-[#ede5e2]">
               <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
                 <span className="flex items-center gap-2 text-white">
                   <PixelIcon name="database" size={16} />
