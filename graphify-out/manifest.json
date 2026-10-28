@@ -18,21 +18,21 @@
     "semantic_hash": ""
   },
   "frontend/src/App.tsx": {
-    "mtime": 1793136919.5558121,
-    "seen": 1793137624.899845,
-    "ast_hash": "4eed3e82cd96fb5c0e6e4caf776bd6d4",
+    "mtime": 1793151595.0771804,
+    "seen": 1793151819.9288306,
+    "ast_hash": "2c7e77bba2867f929557f374ba3c9d94",
     "semantic_hash": ""
   },
   "frontend/src/main.tsx": {
-    "mtime": 1793136919.5705197,
-    "seen": 1793137624.8998795,
-    "ast_hash": "a33a2f433fc53ed4f78e162c7dfb3b4a",
+    "mtime": 1793138556.979613,
+    "seen": 1793147032.5317342,
+    "ast_hash": "aab8e5c6415051622f3f57d3446831e8",
     "semantic_hash": ""
   },
   "frontend/src/types/simulation.ts": {
-    "mtime": 1793073959.3887901,
-    "seen": 1793119325.954785,
-    "ast_hash": "954d22466a7c004dec1663f8244f4df7",
+    "mtime": 1793150353.6852064,
+    "seen": 1793151819.9314497,
+    "ast_hash": "1e4efc8e042b32143b74070741499d24",
     "semantic_hash": ""
   },
   "frontend/src/vite-env.d.ts": {
@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "frontend/vite.config.ts": {
-    "mtime": 1793136919.5725367,
-    "seen": 1793137624.901006,
-    "ast_hash": "0e697f1a4c3b86669220681b7d14451a",
+    "mtime": 1793149991.4996505,
+    "seen": 1793151819.93314,
+    "ast_hash": "68dd34938a9d88b5b5b2d28c225330f1",
     "semantic_hash": ""
   },
   "infra/statemachine/monte_carlo_express.asl.json": {
@@ -60,9 +60,9 @@
     "semantic_hash": ""
   },
   "scripts/deploy-aws.ps1": {
-    "mtime": 1793040220.301861,
-    "seen": 1793052695.9271762,
-    "ast_hash": "9dacdb74682e8e24f80feb66f706d13c",
+    "mtime": 1793148517.002221,
+    "seen": 1793151819.9338253,
+    "ast_hash": "2570e86a882c56c197a446bd12352785",
     "semantic_hash": ""
   },
   "scripts/setup-aws-account.ps1": {
@@ -72,57 +72,57 @@
     "semantic_hash": ""
   },
   "src/engine/__init__.py": {
-    "mtime": 1793047842.4527194,
-    "seen": 1793052695.927179,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "mtime": 1793146769.0295794,
+    "seen": 1793147032.5328603,
+    "ast_hash": "a3e5b7c8156c753d49ee7a21c253ff19",
     "semantic_hash": ""
   },
   "src/engine/graph_manta.py": {
-    "mtime": 1793125146.1851225,
-    "seen": 1793137624.9055026,
-    "ast_hash": "272ba848e5ca658f92dff08edbee4d29",
+    "mtime": 1793146769.0308342,
+    "seen": 1793147032.5328617,
+    "ast_hash": "574fd3a6f7cb88d0a3215ae8b25469d0",
     "semantic_hash": ""
   },
   "src/engine/simulator.py": {
-    "mtime": 1793125146.1859207,
-    "seen": 1793137624.9055052,
-    "ast_hash": "c49e183cb244a819c0a5882eb2bfe9c6",
+    "mtime": 1793147998.5100894,
+    "seen": 1793151819.9353619,
+    "ast_hash": "9f6cdd067625ff126400278fe51da90d",
     "semantic_hash": ""
   },
   "src/handlers/__init__.py": {
-    "mtime": 1793125104.3216166,
-    "seen": 1793137624.9055073,
-    "ast_hash": "d58fca79cfaa8fa94dd7ce27880dc06b",
+    "mtime": 1793144185.9721146,
+    "seen": 1793147032.5329874,
+    "ast_hash": "911a4422004e410392866c3e407dd7ce",
     "semantic_hash": ""
   },
   "src/handlers/mayor_report.py": {
-    "mtime": 1793136264.226305,
-    "seen": 1793137624.9055095,
-    "ast_hash": "d5befc8129fd5c2a6d95223bc5f3c517",
+    "mtime": 1793149666.7060015,
+    "seen": 1793151819.9356446,
+    "ast_hash": "e029d3569df80371b2d39f1d27ab0b74",
     "semantic_hash": ""
   },
   "src/handlers/orchestrator.py": {
-    "mtime": 1793125104.3227158,
-    "seen": 1793137624.9055116,
-    "ast_hash": "884327bc2f417ad2d0671d71db2f5fbf",
+    "mtime": 1793148507.281086,
+    "seen": 1793151819.935649,
+    "ast_hash": "ed9ed5b40a30aa3ae498f75bc3d392bf",
     "semantic_hash": ""
   },
   "src/handlers/worker.py": {
-    "mtime": 1793125104.323413,
-    "seen": 1793137624.9055138,
-    "ast_hash": "a16fcb525786ad6e280e7ebc917deff7",
+    "mtime": 1793148489.5127304,
+    "seen": 1793151819.9356508,
+    "ast_hash": "d838add18ab9e17df4e1b2b8a5d33450",
     "semantic_hash": ""
   },
   "src/local_server.py": {
-    "mtime": 1793125104.324554,
-    "seen": 1793137624.9055161,
-    "ast_hash": "c26638eb07184345c0e15e15d2c4f70b",
+    "mtime": 1793151784.2796302,
+    "seen": 1793151819.9356534,
+    "ast_hash": "b79608e98b69a6163aafc10da1fa8197",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793127202.6661215,
-    "seen": 1793137624.9061372,
-    "ast_hash": "c8b9368c9d95e119293ee4eb03e06469",
+    "mtime": 1793149587.9702613,
+    "seen": 1793151819.936239,
+    "ast_hash": "bad11016cdd4335c096898c4292e7c38",
     "semantic_hash": ""
   },
   "Rules/DESIGN.md": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "src/requirements.txt": {
-    "mtime": 1793040220.315832,
-    "seen": 1793052695.9271944,
-    "ast_hash": "c8b05a40f2b5b77867b9258e497ae9c5",
+    "mtime": 1793148516.9443324,
+    "seen": 1793151819.9412944,
+    "ast_hash": "d4bc464e6e48f6ae860336cb885b319c",
     "semantic_hash": ""
   },
   "tasks/prd-operacion-cortafuegos-manta.md": {
@@ -192,27 +192,27 @@
     "semantic_hash": ""
   },
   "tasks/tasks-fase-1-red-multicapa-manta.md": {
-    "mtime": 1793116537.9331315,
-    "seen": 1793119325.9568796,
-    "ast_hash": "f0b7afc8c259a39e2d9f6730146a9198",
+    "mtime": 1793146769.0319095,
+    "seen": 1793147032.5345066,
+    "ast_hash": "7da9d08d5608c1d505ce75f542938b91",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-2-motor-seir-escudo-manta.md": {
-    "mtime": 1793116537.9342928,
-    "seen": 1793119325.956881,
-    "ast_hash": "b1e3d179ed2ea10cc3f212a72b7d55c6",
+    "mtime": 1793147930.0156546,
+    "seen": 1793151819.942501,
+    "ast_hash": "605e13cde075a0e0d605aece3986eb72",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-3-backend-serverless-hibrido.md": {
-    "mtime": 1793125104.3271523,
-    "seen": 1793137624.9086552,
-    "ast_hash": "2a21f700de2f80a1248333c69a301640",
+    "mtime": 1793148592.5010517,
+    "seen": 1793151819.9425046,
+    "ast_hash": "8236b0d66726145484eff145ff99c643",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-4-boletin-alcalde-bedrock.md": {
-    "mtime": 1793136264.2283144,
-    "seen": 1793137624.9086585,
-    "ast_hash": "7c5c17430b07bbec7297de453b646649",
+    "mtime": 1793149588.0726168,
+    "seen": 1793151819.9425066,
+    "ast_hash": "74f29e776af8493cefd9e6593a577d5e",
     "semantic_hash": ""
   },
   "tasks/tasks-fase-5-cartografia-manta-contratos-ts.md": {
@@ -246,63 +246,51 @@
     "semantic_hash": ""
   },
   "tests/test_graph_manta.py": {
-    "mtime": 1793116537.9388735,
-    "seen": 1793119325.9559977,
-    "ast_hash": "71a5d00002c5fb9d329360dbdcbf9ca8",
+    "mtime": 1793146769.0329666,
+    "seen": 1793147032.5334716,
+    "ast_hash": "3d70c42ebb00811ee101d1278448e45e",
     "semantic_hash": ""
   },
   "tests/test_simulator.py": {
-    "mtime": 1793116537.9395602,
-    "seen": 1793119325.9559991,
-    "ast_hash": "a6a2ceec58511dc8f998a438c49dda3f",
+    "mtime": 1793147883.2289155,
+    "seen": 1793151819.9360678,
+    "ast_hash": "673eae4c8f20c4474a3f25f7edf64789",
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1793077517.2368107,
-    "seen": 1793119325.9560018,
-    "ast_hash": "40b83870c77ee2810705d5a7cee80807",
-    "semantic_hash": ""
-  },
-  "frontend/src/components/ControlPanel.tsx": {
-    "mtime": 1793136919.5584505,
-    "seen": 1793137624.899849,
-    "ast_hash": "383fc0c8d78f6a3d20b9cb4f5f898579",
+    "mtime": 1793146769.0279362,
+    "seen": 1793147032.533586,
+    "ast_hash": "b27adc617d5e823a2ab4e2bb28037948",
     "semantic_hash": ""
   },
   "frontend/src/components/EpidemicCharts.tsx": {
-    "mtime": 1793136919.5604644,
-    "seen": 1793137624.8998513,
-    "ast_hash": "4417841761022bc112e26111b23ba4f4",
+    "mtime": 1793138852.1140943,
+    "seen": 1793147032.531255,
+    "ast_hash": "34b90dc6b4f320cd1bf653f83e059007",
     "semantic_hash": ""
   },
   "frontend/src/components/Header.tsx": {
-    "mtime": 1793136919.5634725,
-    "seen": 1793137624.8998537,
-    "ast_hash": "55ff5e1204c3c272cdb873f72be30cb4",
+    "mtime": 1793145390.9145818,
+    "seen": 1793147032.5312574,
+    "ast_hash": "93097123250c5a72366748c3e608a0fa",
     "semantic_hash": ""
   },
   "frontend/src/components/KpiCards.tsx": {
-    "mtime": 1793136919.5649827,
-    "seen": 1793137624.8998559,
-    "ast_hash": "915b775a66f92485d2776ab88d6063ed",
+    "mtime": 1793138852.1162703,
+    "seen": 1793147032.5312593,
+    "ast_hash": "15c2ee2ec633df44208d72a0de34de42",
     "semantic_hash": ""
   },
   "frontend/src/components/MantaMap.tsx": {
-    "mtime": 1793136919.5674796,
-    "seen": 1793137624.8998632,
-    "ast_hash": "a074ceda0a9991392eb3889fd35d6935",
+    "mtime": 1793151636.90546,
+    "seen": 1793151819.9292305,
+    "ast_hash": "e8e218a34d090ab9d5ae8050fc4ec4b7",
     "semantic_hash": ""
   },
   "frontend/src/components/MayorReportModal.tsx": {
     "mtime": 1793125146.163964,
     "seen": 1793137624.8998652,
     "ast_hash": "7a9259c47f823d5ae4bd8d9fb0b94463",
-    "semantic_hash": ""
-  },
-  "frontend/src/components/SkeletonLoader.tsx": {
-    "mtime": 1793125146.1659765,
-    "seen": 1793137624.8998704,
-    "ast_hash": "6c031d7c43e5a2c312fb64e2f3068351",
     "semantic_hash": ""
   },
   "frontend/src/components/Tooltip.tsx": {
@@ -312,21 +300,21 @@
     "semantic_hash": ""
   },
   "frontend/src/data/mantaGeo.ts": {
-    "mtime": 1793136813.7955506,
-    "seen": 1793137624.8998754,
-    "ast_hash": "d0a03f3b0095adfb3d51ffe0f18aca3e",
+    "mtime": 1793151668.7381008,
+    "seen": 1793151819.9310575,
+    "ast_hash": "e76e192d2ef183e2f6d46488a9569f0b",
     "semantic_hash": ""
   },
   "frontend/src/hooks/useSimulation.ts": {
-    "mtime": 1793125146.171919,
-    "seen": 1793137624.899877,
-    "ast_hash": "4a2edd1c6d1d4f32465d65ce13c9594e",
+    "mtime": 1793150324.1517577,
+    "seen": 1793151819.9310622,
+    "ast_hash": "8ece36d1b58f36cfbb0970f07dcee05e",
     "semantic_hash": ""
   },
   "frontend/src/services/api.ts": {
-    "mtime": 1793125146.175929,
-    "seen": 1793137624.8998811,
-    "ast_hash": "18685afdff598a63fff66a9b9ec06ba4",
+    "mtime": 1793150073.715441,
+    "seen": 1793151819.931447,
+    "ast_hash": "6aef2d5d1e308deea99f0e5f3ae53b35",
     "semantic_hash": ""
   },
   "scripts/calibrar.py": {
@@ -348,15 +336,45 @@
     "semantic_hash": ""
   },
   "tests/test_handlers.py": {
-    "mtime": 1793136264.231319,
-    "seen": 1793137624.90582,
-    "ast_hash": "f685383eb47ee0ab2ea1c708a4c50bf4",
+    "mtime": 1793149674.2577088,
+    "seen": 1793151819.9360652,
+    "ast_hash": "e6917df960ad9c9d1eca128c16ac527b",
     "semantic_hash": ""
   },
   "docs/calibracion.md": {
-    "mtime": 1793125146.1262157,
-    "seen": 1793137624.9069433,
-    "ast_hash": "c001bc6fcbe2952f5c36e01dcf790c38",
+    "mtime": 1793146874.7701693,
+    "seen": 1793147032.5339425,
+    "ast_hash": "50eb4b6396aa2761fd457c7831887176",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/SetupScreen.tsx": {
+    "mtime": 1793144984.0121946,
+    "seen": 1793147032.5314014,
+    "ast_hash": "fd11a5d703397dde062ce09ffdb624df",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/TerritoryPanel.tsx": {
+    "mtime": 1793145026.671607,
+    "seen": 1793147032.5315397,
+    "ast_hash": "d90e98c08c22b9024145e42166c96ae6",
+    "semantic_hash": ""
+  },
+  "Rules/Reto.md": {
+    "mtime": 1793145897.7875497,
+    "seen": 1793147032.5337164,
+    "ast_hash": "712b98f276611022d55849cf4e65c7b5",
+    "semantic_hash": ""
+  },
+  "tests/test_frontend_contract.py": {
+    "mtime": 1793151667.6937635,
+    "seen": 1793151819.9359004,
+    "ast_hash": "bc21bad0dcd066bd6b100a74892f2d9b",
+    "semantic_hash": ""
+  },
+  "tasks/tasks-correccion-fases-5-6-mapa-interfaz.md": {
+    "mtime": 1793151806.2611177,
+    "seen": 1793151819.9421055,
+    "ast_hash": "fa8b0e0e0a411e771c3b3953e7f454d5",
     "semantic_hash": ""
   }
 }
