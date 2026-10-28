@@ -1,0 +1,150 @@
+{
+	"Name": "My Estimate",
+	"Total Cost": {
+		"monthly": "4.55",
+		"upfront": "0.00",
+		"12 months": "54.60"
+	},
+	"Metadata": {
+		"Currency": "USD",
+		"Locale": "en_US",
+		"Created On": "10/28/2026",
+		"Legal Disclaimer": "AWS Pricing Calculator provides only an estimate of your AWS fees and doesn't include any taxes that might apply. Your actual fees depend on a variety of factors, including your actual usage of AWS services.",
+		"Share Url": "https://calculator.aws/#/estimate?id=967e79f4ca7a1cb5a0807a4856c4001120952fbc"
+	},
+	"Groups": {
+		"Services": [
+			{
+				"Service Name": "AWS Lambda",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.00",
+					"upfront": "0.00",
+					"12 months": "0.00"
+				},
+				"Properties": {
+					"Architecture": "x86",
+					"Invoke Mode": "Buffered",
+					"Amount of ephemeral storage allocated": "1536 MB",
+					"Number of requests": "10000 per month"
+				}
+			},
+			{
+				"Service Name": "Amazon API Gateway",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.01",
+					"upfront": "0.00",
+					"12 months": "0.14"
+				},
+				"Properties": {
+					"HTTP API requests units": "exact number",
+					"Average size of each request": "10 KB",
+					"REST API request units": "millions",
+					"Cache memory size (GB)": "None",
+					"WebSocket message units": "thousands",
+					"Average message size": "32 KB",
+					"Requests": "12000 per month"
+				}
+			},
+			{
+				"Service Name": "DynamoDB on-demand capacity",
+				"Description": "estandar",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.26",
+					"upfront": "0.00",
+					"12 months": "3.12"
+				},
+				"Properties": {
+					"Table class": "Standard",
+					"Average item size (all attributes)": "1 KB",
+					"Data storage size": "1 GB"
+				}
+			},
+			{
+				"Service Name": "S3 Standard",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "1.16",
+					"upfront": "0.00",
+					"12 months": "13.92"
+				},
+				"Properties": {
+					"S3 Standard storage": "1 GB per month",
+					"PUT, COPY, POST, LIST requests to S3 Standard": "210000",
+					"GET, SELECT, and all other requests from S3 Standard": "210000"
+				}
+			},
+			{
+				"Service Name": "Data Transfer",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.09",
+					"upfront": "0.00",
+					"12 months": "1.08"
+				},
+				"Properties": {
+					"DT Inbound: Internet": "1 GB per month",
+					"DT Outbound: Internet": "1 GB per month"
+				}
+			},
+			{
+				"Service Name": "AWS Amplify",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.97",
+					"upfront": "0.00",
+					"12 months": "11.64"
+				},
+				"Properties": {
+					"Select build instance size": "Standard (8 GB Memory, 4 vCPUs)",
+					"Duration of each request (in ms)": "500",
+					"Number of build minutes": "20 per month",
+					"Data stored per month": "1 GB",
+					"Data served per month": "5 GB",
+					"Number of SSR requests": "per month"
+				}
+			},
+			{
+				"Service Name": "Amazon CloudWatch",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.30",
+					"upfront": "0.00",
+					"12 months": "3.60"
+				},
+				"Properties": {
+					"Number of mobile OTEL events and spans or spans per visit": "70",
+					"Mobile sampling rate": "1",
+					"Number of Metrics (includes detailed and custom metrics)": "1"
+				}
+			},
+			{
+				"Service Name": "Amazon",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "1.76",
+					"upfront": "0.00",
+					"12 months": "21.17"
+				},
+				"Properties": {
+					"Select your inference route": "In-Region",
+					"Select your inference type": "On Demand - Standard",
+					"Average requests per minute": "1",
+					"Hours per day at this rate": "8",
+					"Average input tokens per request": "1500",
+					"Average output tokens per request": "500"
+				}
+			}
+		]
+	}
+}

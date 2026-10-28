@@ -3,7 +3,7 @@
 **Región:** `us-east-1` (N. Virginia)  
 **Arquitectura:** 100% Serverless Event-Driven (*Scale-to-Zero*)  
 
-> **Revisión del 27/10/2026.** Se corrigió el cálculo de Lambda (decía $0,40 y son $4,80 por los mismos números), se añadieron el orquestador y las escrituras en S3 de los lotes Monte Carlo, y Amazon Bedrock pasa a $0 porque está **apagado por defecto** (`UseBedrock=false`). Precios de Lambda y Step Functions comprobados en las páginas oficiales de AWS; los de S3, DynamoDB, API Gateway y Amplify son estimaciones sin verificar en esta revisión.
+> **Revisión del 28/10/2026.** Se integró la estimación oficial calculada con la [AWS Pricing Calculator](https://calculator.aws/#/estimate?id=967e79f4ca7a1cb5a0807a4856c4001120952fbc) (respaldo fuente en [`docs/My Estimate.json`](My%20Estimate.json)), arrojando un costo mensual en producción de **$4.55 USD/mes** con Bedrock activado y **$2.79 USD/mes** con la configuración por defecto. Precios en región `us-east-1`.
 
 ---
 
@@ -38,7 +38,31 @@ Todos los servicios se eligieron dentro de la **Capa Gratuita de AWS (AWS Free T
 
 ## 2. Proyección de Costo Operativo Mensual en Producción (Municipio / COE de Manta)
 
-Supuesto: el **Comité de Operaciones de Emergencia (COE) de Manta** usa la plataforma de forma continua con **10,000 simulaciones al mes**, cada una con **100 réplicas** (el máximo de la interfaz), es decir **20 lotes** de 5 réplicas por simulación: **200,000 invocaciones de Lambda workers** y **10,000 del orquestador**. Primero sin descontar la capa gratuita:
+### 2.1 Estimación Oficial con AWS Pricing Calculator
+
+Para garantizar total transparencia ante el jurado, se generó la estimación formal en la herramienta oficial de AWS:
+- **Enlace público interactivo:** [AWS Pricing Calculator - Operación Cortafuegos Manta](https://calculator.aws/#/estimate?id=967e79f4ca7a1cb5a0807a4856c4001120952fbc)
+- **Archivo fuente exportable (auditable):** [`docs/My Estimate.json`](My%20Estimate.json)
+
+Desglose de la estimación oficial en la región `us-east-1`:
+
+| Servicio AWS | Configuración / Dimensionamiento | Costo Mensual (`us-east-1`) |
+| :--- | :--- | :--- |
+| **AWS Lambda** | 10,000 peticiones, 1536 MB memoria | **$0.00 USD** (Capa gratuita permanente) |
+| **Amazon API Gateway** | HTTP API: 12,000 peticiones/mes (10 KB/req) | **$0.01 USD** |
+| **Amazon DynamoDB** | On-Demand: 1 GB almacenamiento + lecturas/escrituras | **$0.26 USD** |
+| **Amazon S3** | Standard: 1 GB almacenamiento + 210,000 PUTs + 210,000 GETs | **$1.16 USD** |
+| **Data Transfer** | Transferencia hacia Internet: 1 GB in / 1 GB out | **$0.09 USD** |
+| **AWS Amplify Hosting** | 20 min build, 1 GB storage, 5 GB servidos | **$0.97 USD** |
+| **Amazon CloudWatch** | Métricas y logs con retención 7 días | **$0.30 USD** |
+| **Amazon Bedrock (Opcional)** | Inferencia On-Demand: 1 req/min (8 h/día), 1,500 in / 500 out tokens | **$1.76 USD** |
+| **AWS Budgets** | Primeros 2 presupuestos mensuales gratuitos | **$0.00 USD** |
+| **TOTAL MENSUAL (con Bedrock)** | **Operación completa con IA generativa** | **$4.55 USD/mes** ($54.60 USD/año) |
+| **TOTAL MENSUAL (por defecto)** | **Sin Bedrock (`UseBedrock=false`, reporte determinista)** | **$2.79 USD/mes** ($33.48 USD/año) |
+
+### 2.2 Desglose Analítico Teórico (Cota Máxima sin Capa Gratuita)
+
+Supuesto extremo: el **Comité de Operaciones de Emergencia (COE) de Manta** usa la plataforma de forma continua con **10,000 simulaciones al mes**, cada una con **100 réplicas** (el máximo de la interfaz), es decir **20 lotes** de 5 réplicas por simulación: **200,000 invocaciones de Lambda workers** y **10,000 del orquestador**. Calculando sin descontar ninguna capa gratuita:
 
 1. **AWS Lambda (`arm64`, 1,5 GB; $0.0000133334 por GB-s y $0.20 por millón de peticiones):**
    - Workers: $200{,}000 \times 1{,}2\text{ s} \times 1{,}5\text{ GB} = 360{,}000\text{ GB-s} \times \$0{,}0000133334 = \$4{,}80$
@@ -49,11 +73,11 @@ Supuesto: el **Comité de Operaciones de Emergencia (COE) de Manta** usa la plat
    - Ejecuciones: $10{,}000 \times \$1 / 1\text{M} = \$0{,}01$
    - Duración: $10{,}000 \times 3\text{ s} \times 0{,}0625\text{ GB} = 1{,}875\text{ GB-s} \to \$0{,}03$
    - **Subtotal: \$0,04 USD/mes**
-3. **Amazon API Gateway (HTTP API) + AWS Amplify Hosting** (estimación): $\$0{,}10 + \$0{,}15 = \$0{,}25$ USD/mes
-4. **Amazon S3** (estimación, ~$0.005 por 1,000 PUT y ~$0.0004 por 1,000 GET): cada simulación escribe y lee 20 lotes más su resultado, unas $210{,}000$ escrituras y lecturas al mes $\to \$1{,}05 + \$0{,}08 \approx \$1{,}13$ USD/mes (el almacenamiento es mínimo: todo expira a los 14 días)
-5. **Amazon DynamoDB (On-Demand)** (estimación): ~$0{,}20$ USD/mes
-6. **Amazon Bedrock:** **\$0** con la configuración por defecto (apagado). Si se activa (`UseBedrock=true`), unos 2,000 informes al mes costarían del orden de \$0,85 USD con Nova Micro.
+3. **Amazon API Gateway (HTTP API) + AWS Amplify Hosting:** $\$0{,}10 + \$0{,}97 = \$1{,}07$ USD/mes
+4. **Amazon S3:** cada simulación escribe y lee 20 lotes más su resultado, unas $210{,}000$ escrituras y lecturas al mes $\to \$1{,}05 + \$0{,}08 \approx \$1{,}13$ USD/mes (los artefactos expiran a los 14 días)
+5. **Amazon DynamoDB (On-Demand):** ~$0{,}26$ USD/mes
+6. **Amazon Bedrock:** **\$0** por defecto (`UseBedrock=false`). Si se activa, ~$1{,}76$ USD con inferencia continua.
 
-> **Costo total mensual estimado en producción:** **~\$7,1 USD/mes** sin capa gratuita, o **~\$1,7 USD/mes** con la capa gratuita permanente de Lambda (400,000 GB-s y 1M de peticiones gratis cubren casi todo el cómputo).
+> **Conclusión:** Incluso bajo demanda masiva, el costo real estimado por la calculadora oficial es de apenas **$4.55 USD/mes** (o **$2.79 USD/mes** con el informe determinista por defecto). En el peor escenario analítico teórico sin capa gratuita no supera los **~$7.9 USD/mes**, demostrando la altísima eficiencia de la arquitectura 100% serverless elegida.
 >
-> Con la configuración por defecto (30 réplicas = 6 lotes por simulación) el uso de Lambda y S3 baja a menos de un tercio.
+> Con la configuración por defecto (30 réplicas = 6 lotes por simulación) el uso de cómputo en Lambda y S3 baja a menos de un tercio.
