@@ -492,11 +492,16 @@ class MayorReportTests(HandlersTestBase):
             self.assertNotIn(invented, text)
         self.assertIn("PROPUESTA DE DECRETO", body["headline"])
 
-    def test_report_states_scale_to_manta_population(self):
+    def test_report_uses_configured_population_not_real_manta(self):
+        """Las cifras se dan sobre la población configurada, sin escalarlas a la Manta real."""
         sim, body = self._report_for(SMALL)
-        saved = sim["summary_kpis"]["lives_saved_vs_none"]
-        scaled = mayor_report._n(saved * mayor_report.MANTA_POPULATION / SMALL['n_nodes'])
-        self.assertIn(f"unos **{scaled} habitantes**", body["situacion_critica"])
+        saved = mayor_report._n(sim["summary_kpis"]["lives_saved_vs_none"])
+        population = mayor_report._n(SMALL["n_nodes"])
+        self.assertIn(f"**{saved} contagios** de una población simulada de {population} personas",
+                      body["situacion_critica"])
+        text = " ".join([body["situacion_critica"], body["balance_recursos"]])
+        self.assertNotIn("habitantes", text)
+        self.assertNotIn("271", text)
 
     def test_same_simulation_gives_same_report(self):
         sim = json.loads(orchestrator.lambda_handler(_v2("POST", "/simulate", SMALL))["body"])
@@ -569,16 +574,16 @@ class MayorReportTests(HandlersTestBase):
         self.assertIn("80% central", body["situacion_critica"])
         self.assertIn("Entre el día", body["directivas_operativas"])
 
-    def test_cost_is_per_infection_avoided_and_budget_is_scaled(self):
-        """El costo por contagio evitado no depende de la escala; el gasto sí se escala a Manta."""
+    def test_cost_is_per_infection_avoided_and_budget_is_not_scaled(self):
+        """El costo por contagio evitado y el gasto son los de la población simulada."""
         sim, body = self._report_for(SMALL)
         k, m = sim["summary_kpis"], body["metrics_snapshot"]
         self.assertAlmostEqual(m["cost_per_infection_avoided_usd"],
                                k["total_budget_spent"] / k["lives_saved_vs_none"], places=1)
-        scale = mayor_report.MANTA_POPULATION / SMALL["n_nodes"]
-        self.assertAlmostEqual(m["budget_manta_equivalent_usd"], k["total_budget_spent"] * scale, delta=500)
-        self.assertIn(mayor_report._n(m["budget_manta_equivalent_usd"]), body["balance_recursos"])
-        self.assertNotIn("por cada persona de la muestra", body["balance_recursos"])
+        self.assertNotIn("budget_manta_equivalent_usd", m)
+        self.assertNotIn("scale_factor", m)
+        self.assertIn(mayor_report._n(m["budget_spent_usd"]), body["balance_recursos"])
+        self.assertNotIn("toda Manta", body["balance_recursos"])
 
     def test_active_window_holds_central_share(self):
         series = [0, 5, 20, 20, 20, 20, 10, 5]  # 100 unidades: se dejan fuera los días 1 y 7 (5 % cada uno)

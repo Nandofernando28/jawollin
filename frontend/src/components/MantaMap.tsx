@@ -25,9 +25,10 @@ const DEFAULT_CARTO_KEY = 'cb1_4wbd_1_65f9d0e2dc755e74c2198851';
 const CARTO_KEY = (import.meta.env.VITE_CARTO_API_KEY || DEFAULT_CARTO_KEY).trim();
 const CARTO_STYLE = (import.meta.env.VITE_CARTO_STYLE || 'voyager').trim();
 
-const TILE_URL = CARTO_KEY
+const OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const CARTO_URL = CARTO_KEY
   ? `https://{s}.basemaps.cartocdn.com/rastertiles/${CARTO_STYLE}/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`
-  : `https://tile.openstreetmap.org/{z}/{x}/{y}.png`;
+  : OSM_URL;
 
 interface MantaMapProps {
   result?: { params: { days: number } };
@@ -117,6 +118,17 @@ export const MantaMap: React.FC<MantaMapProps> = ({
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentTileUrl, setCurrentTileUrl] = useState(CARTO_URL);
+  const tileFallbackTriggered = useRef(false);
+
+  // Fallback si CARTO falla (por ejemplo 403 Forbidden por dominios no autorizados en producción)
+  const handleTileError = () => {
+    if (!tileFallbackTriggered.current && currentTileUrl !== OSM_URL) {
+      tileFallbackTriggered.current = true;
+      console.warn('Fallo al cargar teselas de CARTO (posible 403 por restricción de dominio). Conmutando a OpenStreetMap.');
+      setCurrentTileUrl(OSM_URL);
+    }
+  };
 
   // Pantalla completa nativa si el navegador la permite; si no, el mapa se expande a toda la ventana
   useEffect(() => {
@@ -160,6 +172,16 @@ export const MantaMap: React.FC<MantaMapProps> = ({
 
     return () => window.clearTimeout(frame);
   }, [currentDay, playing]);
+
+  // Asegura que Leaflet recalcule su tamaño tras estabilizarse la carga de fuentes y layout
+  useEffect(() => {
+    const t1 = window.setTimeout(() => mapRef.current?.invalidateSize(), 150);
+    const t2 = window.setTimeout(() => mapRef.current?.invalidateSize(), 600);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, []);
 
   const parishStyle = useMemo(
     () => (feature?: Feature<Geometry, ParishFeatureProps>) => ({
@@ -265,9 +287,13 @@ export const MantaMap: React.FC<MantaMapProps> = ({
         }}
       >
         <TileLayer
+          key={currentTileUrl}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url={TILE_URL}
-          subdomains="abcd"
+          url={currentTileUrl}
+          subdomains={currentTileUrl === OSM_URL ? 'abc' : 'abcd'}
+          eventHandlers={{
+            tileerror: handleTileError,
+          }}
           maxZoom={19}
         />
 

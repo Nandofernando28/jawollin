@@ -16,7 +16,6 @@ import {
   decreeSections,
   fmtOrDash as fmt,
   formatDate,
-  toManta,
 } from '../utils/decree';
 import { PixelIcon, type PixelIconName } from './PixelIcon';
 
@@ -100,9 +99,7 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
       valueClass: 'text-mc-grass-light',
       label: 'Evitados vs. azar',
       value: fmt(m.lives_saved_vs_random),
-      unit: m.scale_factor
-        ? `contagios · unos ${fmt(toManta(m.lives_saved_vs_random, m.scale_factor))} hab.`
-        : 'contagios en la muestra',
+      unit: 'contagios menos',
     },
     {
       icon: <PixelIcon name="zombie" size={24} />,

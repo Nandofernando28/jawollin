@@ -13,9 +13,6 @@ import { Tooltip } from './Tooltip';
 import { PixelIcon } from './PixelIcon';
 import { fmt } from '../utils/format';
 
-// Población de Manta usada para escalar la muestra
-const MANTA_POPULATION = 271_000;
-
 interface KpiCardsProps {
   result: SimulationResponse;
 }
@@ -23,31 +20,30 @@ interface KpiCardsProps {
 export function KpiCards({ result }: KpiCardsProps) {
   const k = result.summary_kpis;
   const p = result.params;
-  const scale = MANTA_POPULATION / p.n_nodes;
-  const people = (v: number) => fmt(v * scale);
-
+  // Todas las cifras son de la población configurada al iniciar la simulación (p.n_nodes).
+  // Costo por contagio evitado frente al azar: el mismo valor que usa el boletín del backend.
   const costPerAvoided = k.lives_saved_vs_random > 0 ? k.cost_per_life_saved_vs_random : null;
 
   const cards = [
     {
       icon: <PixelIcon name="grassBlock" size={24} />,
       label: 'Contagios evitados',
-      tooltip: `Personas que no se contagian con Cortafuegos Manta frente a no intervenir. La muestra de ${fmt(p.n_nodes)} personas se escala a los ${fmt(MANTA_POPULATION)} habitantes de Manta. El rango P10–P90 sale de las ${p.monte_carlo_runs} simulaciones.`,
-      value: `+${people(k.lives_saved_vs_none)}`,
-      unit: 'hab.',
+      tooltip: `Personas que no se contagian con Cortafuegos Manta frente a no intervenir, sobre la población simulada de ${fmt(p.n_nodes)} personas. El rango P10–P90 sale de las ${p.monte_carlo_runs} simulaciones.`,
+      value: `+${fmt(k.lives_saved_vs_none)}`,
+      unit: `de ${fmt(p.n_nodes)} personas`,
       valueClass: 'text-mc-grass-light',
-      sub: `${fmt(k.lives_saved_vs_none_pct, 1)}% menos que sin intervenir · ${fmt(k.lives_saved_vs_none)} en la muestra`,
-      range: `Rango P10–P90: ${people(k.lives_saved_vs_none_p10)} a ${people(k.lives_saved_vs_none_p90)} hab.`,
+      sub: `${fmt(k.lives_saved_vs_none_pct, 1)}% menos contagios que sin intervenir`,
+      range: `Rango P10–P90: ${fmt(k.lives_saved_vs_none_p10)} a ${fmt(k.lives_saved_vs_none_p90)} personas`,
     },
     {
       icon: <PixelIcon name="diamondBlock" size={24} />,
       label: 'Frente a actuar al azar',
       tooltip: 'Contagios evitados frente a gastar el mismo presupuesto, con la misma información, eligiendo acciones al azar. Es lo que aporta elegir bien.',
-      value: `+${people(k.lives_saved_vs_random)}`,
-      unit: 'hab.',
+      value: `+${fmt(k.lives_saved_vs_random)}`,
+      unit: `de ${fmt(p.n_nodes)} personas`,
       valueClass: 'text-mc-diamond',
-      sub: `${fmt(k.lives_saved_vs_random_pct, 1)}% menos que el azar · ${fmt(k.lives_saved_vs_random)} en la muestra`,
-      range: `Rango P10–P90: ${people(k.lives_saved_vs_random_p10)} a ${people(k.lives_saved_vs_random_p90)} hab.`,
+      sub: `${fmt(k.lives_saved_vs_random_pct, 1)}% menos contagios que el azar`,
+      range: `Rango P10–P90: ${fmt(k.lives_saved_vs_random_p10)} a ${fmt(k.lives_saved_vs_random_p90)} personas`,
     },
     {
       icon: <PixelIcon name="zombie" size={24} />,
@@ -56,20 +52,20 @@ export function KpiCards({ result }: KpiCardsProps) {
       value: `−${fmt(k.peak_reduction_vs_none_pct, 1)}%`,
       unit: 'vs. sin intervenir',
       valueClass: 'text-mc-redstone',
-      sub: `Pico en la muestra: ${fmt(k.peak_zombies_shield, 1)} personas con el Escudo`,
+      sub: `Pico: ${fmt(k.peak_zombies_shield, 1)} personas con el Escudo`,
       range: `Sin intervenir: ${fmt(k.peak_zombies_none, 1)} · Al azar: ${fmt(k.peak_zombies_random, 1)}`,
     },
     {
       icon: <PixelIcon name="coin" size={24} />,
       label: 'Gasto ejecutado',
-      tooltip: `Gasto total del Escudo en vacunas, brigadas y cierres de hubs durante ${p.days} días. El costo por contagio evitado divide ese gasto entre los contagios evitados frente al azar en la muestra de ${fmt(p.n_nodes)} personas.`,
+      tooltip: `Gasto total del Escudo en vacunas, brigadas y cierres de hubs durante ${p.days} días. El costo por contagio evitado divide ese gasto entre los contagios evitados frente al azar, sobre la población simulada de ${fmt(p.n_nodes)} personas.`,
       value: `$${fmt(k.total_budget_spent)}`,
       unit: `de $${fmt(p.total_budget)}`,
       valueClass: 'text-mc-gold',
       sub: `${fmt(k.total_vaccines_used)} dosis · ${fmt(k.total_brigades_used)} brigadas · ${fmt(k.total_hub_days_closed, 1)} días-hub`,
       range: costPerAvoided === null
         ? 'No evita contagios frente al azar con estas condiciones'
-        : `$${fmt(costPerAvoided)} por contagio evitado frente al azar (en la muestra)`,
+        : `$${fmt(costPerAvoided)} por contagio evitado frente al azar`,
       badge: k.zero_wasted_vaccines_verified
         ? <span className="mc-chip bg-mc-grass text-white"><PixelIcon name="check" size={8} />0 dosis desperdiciadas</span>
         : <span className="mc-chip bg-mc-redstone text-white"><PixelIcon name="warning" size={8} />{fmt(k.wasted_vaccines_count)} dosis desperdiciadas</span>,

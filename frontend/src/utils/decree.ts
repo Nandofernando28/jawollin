@@ -92,11 +92,6 @@ export function fmtOrDash(value: number | null | undefined, decimals = 0): strin
   return typeof value === 'number' && Number.isFinite(value) ? fmt(value, decimals) : '—';
 }
 
-/** Cifra de la muestra llevada a habitantes de Manta, si se conoce la escala. */
-export function toManta(sample: number | undefined, scale: number | undefined): number | undefined {
-  return typeof sample === 'number' && typeof scale === 'number' ? sample * scale : undefined;
-}
-
 /** Fecha legible en español de Ecuador. */
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleString('es-EC', { dateStyle: 'long', timeStyle: 'short' });
@@ -119,11 +114,11 @@ export function decreeMarkdown(report: MayorReportResponse): string {
     '',
     '## Indicadores clave',
     '',
-    `- **Contagios evitados frente a no actuar:** ${fmtOrDash(m.lives_saved_vs_none)} en la muestra (unos ${fmtOrDash(toManta(m.lives_saved_vs_none, m.scale_factor))} habitantes de Manta)`,
-    `- **Contagios evitados frente al azar:** ${fmtOrDash(m.lives_saved_vs_random)} en la muestra`,
+    `- **Contagios evitados frente a no actuar:** ${fmtOrDash(m.lives_saved_vs_none)} personas`,
+    `- **Contagios evitados frente al azar:** ${fmtOrDash(m.lives_saved_vs_random)} personas`,
     `- **Reducción del pico de zombies:** ${fmtOrDash(m.peak_reduction_pct, 1)}%`,
     `- **Costo por contagio evitado:** ${fmtOrDash(m.cost_per_infection_avoided_usd, 2)} $`,
-    `- **Gasto:** ${fmtOrDash(m.budget_spent_usd)} $ en la muestra (unos ${fmtOrDash(m.budget_manta_equivalent_usd)} $ para toda Manta)`,
+    `- **Gasto:** ${fmtOrDash(m.budget_spent_usd)} $`,
     `- **Parroquia con más contagios sin actuar:** ${m.most_critical_parish}`,
     '',
     '## Acciones prioritarias del COE',

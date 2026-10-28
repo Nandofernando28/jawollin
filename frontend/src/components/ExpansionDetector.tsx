@@ -21,6 +21,7 @@ import {
 import type { SimulationResponse, StrategyType } from '../types/simulation';
 import { analyzeExpansion, doublingTime, type FitResult, type ModelKind } from '../analysis/expansionFit';
 import { PixelIcon, type PixelIconName } from './PixelIcon';
+import { VirusStatusBadge } from './VirusStatusBadge';
 import { fmt } from '../utils/format';
 import { AXIS_LINE, AXIS_TICK, FONT_PIXEL, GRID_STROKE, MATERIAL } from '../theme/pixelTheme';
 
@@ -30,6 +31,8 @@ interface ExpansionDetectorProps {
   upToDay: number;
   strategy: StrategyType;
   onStrategyChange?: (s: StrategyType) => void;
+  /** Muestra el estado del virus en el día analizado (en vivo ya se ve en la cabecera) */
+  showStatus?: boolean;
 }
 
 const MODEL_INFO: Record<ModelKind, { name: string; formula: string; color: string }> = {
@@ -73,7 +76,7 @@ function interpretation(fit: FitResult, upToDay: number): string {
   return 'Crecimiento logarítmico: crece rápido al principio y se frena pronto; cada día se suman menos contagios.';
 }
 
-export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange }: ExpansionDetectorProps) {
+export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange, showStatus = false }: ExpansionDetectorProps) {
   const series = result.strategies[strategy].ever_infected.mean;
   const day = Math.min(upToDay, series.length - 1);
   const analysis = useMemo(
@@ -125,6 +128,8 @@ export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange 
           </div>
         )}
       </div>
+
+      {showStatus && <VirusStatusBadge cumulative={series} day={day} />}
 
       <div className="grid gap-3 lg:grid-cols-5">
         {/* Modelo detectado y su fórmula */}

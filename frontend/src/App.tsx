@@ -306,6 +306,7 @@ export default function App() {
             upToDay={result.params.days}
             strategy={selectedStrategy}
             onStrategyChange={setSelectedStrategy}
+            showStatus
           />
         )}
 

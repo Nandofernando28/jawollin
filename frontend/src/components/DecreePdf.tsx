@@ -2,7 +2,6 @@ import { Document, Font, Page, StyleSheet, Text, View, pdf } from '@react-pdf/re
 import type { MayorReportResponse } from '../types/simulation';
 import {
   fmtOrDash,
-  toManta,
   ENGINE_LABEL,
   PRIORITY_LABEL,
   decreeSections,
@@ -162,8 +161,8 @@ export function DecreeDocument({ report }: { report: MayorReportResponse }) {
   const m = report.metrics_snapshot;
   const engine = ENGINE_LABEL[report.generated_by] ?? report.generated_by;
   const kpis = [
-    { label: 'Contagios evitados', value: fmt(toManta(m.lives_saved_vs_none, m.scale_factor)), unit: 'habitantes de Manta, frente a no actuar' },
-    { label: 'Mejor que el azar', value: fmt(m.lives_saved_vs_random), unit: 'contagios menos en la muestra' },
+    { label: 'Contagios evitados', value: fmt(m.lives_saved_vs_none), unit: 'contagios menos frente a no actuar' },
+    { label: 'Mejor que el azar', value: fmt(m.lives_saved_vs_random), unit: 'contagios menos frente al azar' },
     { label: 'Costo por contagio', value: `${fmt(m.cost_per_infection_avoided_usd, 2)} $`, unit: 'evitado frente a no actuar' },
     { label: 'Parroquia crítica', value: m.most_critical_parish, unit: 'más contagios sin actuar' },
   ];
