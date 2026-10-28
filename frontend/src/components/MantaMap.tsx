@@ -19,8 +19,8 @@ import { MATERIAL } from '../theme/pixelTheme';
 
 // ── Configuración de tiles de CARTO con Fallback Infalible ─────────────────────
 // Los marcadores son divIcon propios (sin iconos de Leaflet).
-// Tema pixel: mosaicos claros ("voyager") a los que index.css aplica un tono de
-// pergamino (.mc-paper-map), para que el mapa parezca un mapa de papel.
+// Estilo táctico oscuro por defecto ("dark_all"); con VITE_CARTO_STYLE=voyager se usan
+// mosaicos claros. index.css (.mc-paper-map) les añade la cuadrícula de bloques.
 const DEFAULT_CARTO_KEY = 'cb1_4wbd_1_65f9d0e2dc755e74c2198851';
 const CARTO_KEY = (import.meta.env.VITE_CARTO_API_KEY || DEFAULT_CARTO_KEY).trim();
 const CARTO_STYLE = (import.meta.env.VITE_CARTO_STYLE || 'dark_all').trim();
