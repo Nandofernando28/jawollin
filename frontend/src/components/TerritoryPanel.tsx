@@ -47,15 +47,15 @@ export function TerritoryPanel({ result, currentDay, strategy }: TerritoryPanelP
   const parishes = snap ? Object.values(snap.parishes) : [];
 
   return (
-    <div className="space-y-6">
-      <div className="mc-panel p-3">
+    <div className="flex h-full flex-col gap-6">
+      <div className="mc-panel flex flex-1 flex-col p-3">
         <PanelTitle kicker={`Control urbano · día ${currentDay}`} title="Hubs y cortafuegos de Manta" icon="torch" />
-        <div className="space-y-2">
+        <div className="flex flex-1 flex-col gap-2">
           {hubs.length === 0 && <p className="text-[15px] text-mc-muted">Sin serie espacial para esta estrategia.</p>}
           {hubs.map((hub) => (
             <div
               key={hub.hub_id}
-              className={`${hub.firewall_active ? 'mc-slot-dark' : 'mc-slot-light'} px-3 py-2`}
+              className={`${hub.firewall_active ? 'mc-slot-dark' : 'mc-slot-light'} flex flex-1 flex-col justify-center px-3 py-2`}
             >
               <div className="flex items-center justify-between gap-2">
                 <p className={`truncate text-[15px] leading-tight ${hub.firewall_active ? 'text-white' : 'text-mc-ink'}`}>{hub.hub_name}</p>
@@ -76,10 +76,10 @@ export function TerritoryPanel({ result, currentDay, strategy }: TerritoryPanelP
         </div>
       </div>
 
-      <div className="mc-panel p-3">
+      <div className="mc-panel flex flex-1 flex-col p-3">
         <PanelTitle title="Parroquias" icon="map" />
-        <div className="mc-slot-dark overflow-x-auto p-1">
-          <table className="w-full border-collapse text-left text-[15px]">
+        <div className="mc-slot-dark flex-1 overflow-x-auto p-1">
+          <table className="h-full w-full border-collapse text-left text-[15px]">
             <thead>
               <tr className="bg-mc-stone-mid">
                 <th className="mc-label px-2 py-2 font-normal text-mc-gold">Parroquia</th>
