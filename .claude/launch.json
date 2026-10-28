@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "backend-venv",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["src/local_server.py"],
+      "port": 8000
+    },
+    {
       "name": "backend-local",
       "runtimeExecutable": "python",
       "runtimeArgs": ["src/local_server.py"],
