@@ -1,56 +1,110 @@
 /*
- * Tema pixel art inspirado en los menús, el inventario y los mapas de los juegos
- * de bloques. Todo es original: texturas hechas con CSS e iconos SVG propios
- * (src/components/PixelIcon.tsx). Sin esquinas redondeadas, sin blur ni glow:
- * solo bordes rectos y sombras "duras" (desplazadas, sin difuminado).
+ * ============================================================================
+ * SISTEMA DE DISEÑO: OPERACIÓN CORTAFUEGOS MANTA
+ * Basado en las reglas de diseño oficiales documentadas en:
+ * Rules/Desing_MC.md (extraídas de minecraft.net el 2026-10-28)
  *
- * Fuentes:
- * - "Silkscreen" para títulos y etiquetas: pixel art con tildes y Ñ bien dibujadas.
- * - "Press Start 2P" para botones y cifras. Sus mayúsculas con tilde salen
- *   reducidas ("OPERACIóN") y no tiene Ñ, así que no se usa en títulos en mayúsculas.
- * - "VT323" para el texto corrido, mucho más legible en párrafos.
+ * Secciones de referencia:
+ * - §1 Principios generales (cero redondeo, biselado 3D duro, tracking en acciones)
+ * - §2 Color (núcleo de grises cálidos, verde Vanilla, oro Marketplace, semánticos)
+ * - §3 Tipografía (fuentes pixel para títulos/botones, sans-serif para lectura, escala)
+ * - §4 Espaciado y layout (rejilla base 4/8 px, cabecera 80px, contenedor 1280px)
+ * - §5 Componentes (botones biselados en mayúsculas, paneles de 4 lados, casillas)
+ * - §6 Imagen y decoración (paisaje en bloques, noche en franjas, bordes rectos)
+ * - §7 Animación y movimiento (transiciones 100-300 ms, respeto de accesibilidad)
+ * - §8 Accesibilidad (foco con doble anillo #1157be, forced-colors, alto contraste)
+ * ============================================================================
  */
-@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen&family=VT323&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen&family=Noto+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
-/* ── Paleta como clases de Tailwind 4 (bg-mc-stone, text-mc-gold, ...) ──────── */
+/* ── Tokens CSS del sitio web de Minecraft (Rules/Desing_MC.md §2 y §4) ────── */
+:root {
+  /* Núcleo (Core) - Rules/Desing_MC.md §2.1 */
+  --mc-core-rich-black: #000000;
+  --mc-core-off-black: #171615;
+  --mc-core-white: #ffffff;
+  --mc-core-off-white: #fcf5f1;
+  --mc-core-grey-1: #ede5e2;
+  --mc-core-grey-2: #d0c5c0;
+  --mc-core-grey-3: #aba09c;
+  --mc-core-grey-4: #6b6562;
+  --mc-core-grey-5: #3d3938;
+  --mc-core-grey-6: #262423;
+
+  /* Gradientes del núcleo - Rules/Desing_MC.md §2.1 */
+  --mc-core-gradient-dark-grey: linear-gradient(180deg, #3d3938, #262423 50%, #171615);
+  --mc-core-gradient-light-grey: linear-gradient(180deg, #fcf5f1, #ede5e2 50%, #d0c5c0);
+  --mc-core-gradient-green: linear-gradient(180deg, #6cc349, #52a535 50%, #3c8527);
+  --mc-marketplace-gradient-gold: linear-gradient(270deg, #fff27a, #ffc42b);
+
+  /* Verde Vanilla (6 tonos) - Rules/Desing_MC.md §2.2 */
+  --mc-green-1: #a0e081;
+  --mc-green-2: #86d562;
+  --mc-green-3: #6cc349;
+  --mc-green-4: #52a535;
+  --mc-green-5: #3c8527;
+  --mc-green-6: #2a641c;
+
+  /* Oro Marketplace (6 tonos) - Rules/Desing_MC.md §2.3 */
+  --mc-gold-1: #fff27a;
+  --mc-gold-2: #ffd953;
+  --mc-gold-3: #ffc42b;
+  --mc-gold-4: #db9f21;
+  --mc-gold-5: #b87918;
+  --mc-gold-6: #94540e;
+
+  /* Semánticos y Foco - Rules/Desing_MC.md §2.4 */
+  --mc-default-focus: #1157be;
+  --mc-default-caution: #e2b923;
+  --mc-default-warning: #ca3636;
+  --mc-default-warning-2: #ff605e;
+  --mc-text-highlight-color: #c736ff;
+
+  /* Bisel 3D y contorno - Rules/Desing_MC.md §1 y §5.1 */
+  --mc-bevel-light: #ffffff;
+  --mc-bevel-dark: #3d3938;
+  --mc-outline: #000000;
+  --mc-paper: #e9dcb8;
+
+  /* Layout - Rules/Desing_MC.md §4.2 */
+  --mc-globalHeaderHeight: 80px;
+  --grid-size: 1280px;
+}
+
+/* ── Mapeo a utilidades de Tailwind 4 (Rules/Desing_MC.md §2) ─────────────── */
 @theme {
   --font-pixel: "Press Start 2P", ui-monospace, monospace;
   --font-display: "Silkscreen", "Press Start 2P", ui-monospace, monospace;
-  --font-retro: "VT323", ui-monospace, monospace;
+  --font-retro: "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-ui: "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
-  --color-mc-stone: #1b1b1b;      /* fondo de cueva */
-  --color-mc-stone-mid: #373737;  /* piedra media, paneles oscuros */
-  --color-mc-stone-light: #555555;
-  --color-mc-panel: #c6c6c6;      /* panel de inventario */
-  --color-mc-slot: #8b8b8b;       /* casilla hundida */
-  --color-mc-ink: #2b2b2b;        /* texto sobre panel gris */
-  --color-mc-muted: #4a4a4a;      /* texto secundario sobre panel gris */
-  --color-mc-gold: #f8f800;       /* títulos (solo sobre fondo oscuro) */
-  --color-mc-paper: #e9dcb8;      /* pergamino */
+  /* Colores de superficie y texto mapeados a tokens oficiales */
+  --color-mc-stone: #171615;      /* Rules/Desing_MC.md §2.1: --mc-core-off-black */
+  --color-mc-stone-mid: #262423;  /* Rules/Desing_MC.md §2.1: --mc-core-grey-6 */
+  --color-mc-stone-light: #3d3938;/* Rules/Desing_MC.md §2.1: --mc-core-grey-5 */
+  --color-mc-panel: #ede5e2;      /* Rules/Desing_MC.md §2.1: --mc-core-grey-1 */
+  --color-mc-slot: #6b6562;       /* Rules/Desing_MC.md §2.1: --mc-core-grey-4 */
+  --color-mc-ink: #171615;        /* Rules/Desing_MC.md §2.1: texto sobre claro */
+  --color-mc-muted: #6b6562;      /* Rules/Desing_MC.md §2.1: texto secundario */
+  --color-mc-gold: #ffc42b;       /* Rules/Desing_MC.md §2.3: gold-3 */
+  --color-mc-paper: #e9dcb8;      /* Rules/Desing_MC.md §2.1: pergamino */
 
-  /* Materiales para datos */
-  --color-mc-grass: #3f7a26;      /* oscurecido: el texto blanco encima cumple 4,5:1 */
-  --color-mc-grass-light: #7cc24a;
-  --color-mc-dirt: #8b5a2b;
-  --color-mc-wood: #9c6b37;
-  --color-mc-redstone: #c0281e;
-  --color-mc-redstone-dark: #8f1a12; /* texto rojo sobre fondos claros */
-  --color-mc-ore-gold: #e2b32a;
-  --color-mc-diamond: #2fb8c6;
-  --color-mc-lapis: #2a4ea8;
-  --color-mc-amethyst: #8a4fc3;
+  /* Materiales y semánticos */
+  --color-mc-grass: #3c8527;      /* Rules/Desing_MC.md §2.2: green-5 */
+  --color-mc-grass-light: #6cc349;/* Rules/Desing_MC.md §2.2: green-3 */
+  --color-mc-dirt: #805539;       /* Rules/Desing_MC.md §2.3: marrón Vanilla */
+  --color-mc-wood: #976746;       /* Rules/Desing_MC.md §2.3: tierra */
+  --color-mc-redstone: #ca3636;   /* Rules/Desing_MC.md §2.4: default-warning */
+  --color-mc-redstone-dark: #8f1f0b; /* Rules/Desing_MC.md §2.3: red-6 */
+  --color-mc-ore-gold: #ffc42b;   /* Rules/Desing_MC.md §2.3: gold-3 */
+  --color-mc-diamond: #2fb8c6;    /* Rules/Desing_MC.md §2.3: cian Dungeons/Legends */
+  --color-mc-lapis: #1157be;      /* Rules/Desing_MC.md §2.4: default-focus / blue */
+  --color-mc-amethyst: #8d68e0;   /* Rules/Desing_MC.md §2.3: realms deep blue */
 }
 
-:root {
-  /* Bisel 3D: luz arriba e izquierda, sombra abajo y derecha */
-  --mc-bevel-light: #ffffff;
-  --mc-bevel-dark: #555555;
-  --mc-outline: #000000;
-  --mc-paper: #e9dcb8;
-}
-
-/* ── Reglas globales del estilo pixel ──────────────────────────────────────── */
+/* ── Principio 2: Cero Redondeo estricto (Rules/Desing_MC.md §1.2) ────────── */
 *,
 *::before,
 *::after {
@@ -62,25 +116,19 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ── Fondo y cuerpo: off-black #171615 y textura de bloques (Rules/Desing_MC.md §2.1 y §6) ── */
 body {
   margin: 0;
-  font-family: var(--font-retro);
-  font-size: 20px;
-  line-height: 1.15;
-  color: #ffffff;
-  /* Textura de piedra hecha con CSS: bloques de 32 px con juntas y vetas de 8 px */
-  background-color: #1b1b1b;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--mc-core-white, #ffffff);
+  background-color: var(--mc-core-off-black, #171615);
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.35) 2px, transparent 2px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.35) 2px, transparent 2px),
-    linear-gradient(45deg, #202020 25%, transparent 25%, transparent 75%, #202020 75%),
-    linear-gradient(45deg, #171717 25%, transparent 25%, transparent 75%, #171717 75%);
-  background-size: 32px 32px, 32px 32px, 16px 16px, 8px 8px;
-  background-position: 0 0, 0 0, 0 0, 4px 4px;
-  -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: unset;
-  font-smooth: never;
-  text-rendering: optimizeSpeed;
+    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(108, 195, 73, 0.10), transparent 70%),
+    linear-gradient(180deg, #262423 0%, #171615 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
@@ -99,223 +147,237 @@ svg {
 .font-mono,
 code,
 pre {
-  font-family: var(--font-retro);
+  font-family: var(--font-ui);
 }
 
-/* Foco visible para teclado: contorno amarillo recto */
+/* ── Foco visible: doble anillo según Rules/Desing_MC.md §2.4, §5.1 y §8 ──── */
 :where(button, a, input, select, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-mc-gold);
-  outline-offset: 2px;
+  outline: 3px solid var(--mc-default-focus, #1157be);
+  box-shadow: 0 0 0 2px #ffffff;
+  outline-offset: 1px;
 }
 
-/* ── Componentes reutilizables ─────────────────────────────────────────────── */
+/* ── Componentes reutilizables (Rules/Desing_MC.md §5) ─────────────────────── */
 @layer components {
-  /* Panel de inventario: gris claro con bisel 3D y contorno negro */
+  /* Panel de inventario con bisel de 4 lados - Rules/Desing_MC.md §5.1 */
   .mc-panel {
-    background: var(--color-mc-panel);
+    background: var(--mc-core-gradient-light-grey);
     color: var(--color-mc-ink);
-    border: 4px solid;
-    border-color: var(--mc-bevel-light) var(--mc-bevel-dark) var(--mc-bevel-dark) var(--mc-bevel-light);
-    box-shadow: 0 0 0 2px var(--mc-outline);
+    border: 2px solid var(--mc-core-off-black);
+    box-shadow: inset 0 -4px 0 0 #aba09c;
   }
 
-  /* Panel oscuro de piedra (cabecera, franjas de título, reproductor) */
+  /* Panel oscuro de piedra (Rules/Desing_MC.md §2.1 y §5.1) */
   .mc-panel-dark {
-    background: var(--color-mc-stone-mid);
+    background: var(--mc-core-gradient-dark-grey);
     color: #ffffff;
-    border: 4px solid;
-    border-color: #6b6b6b #1b1b1b #1b1b1b #6b6b6b;
-    box-shadow: 0 0 0 2px var(--mc-outline);
+    border: 2px solid #000000;
+    box-shadow: inset 0 -4px 0 0 #000000, inset 0 2px 0 0 rgba(255, 255, 255, 0.08);
   }
 
-  /* Casilla hundida del inventario: bisel invertido */
+  /* Casilla hundida del inventario: bisel invertido (Rules/Desing_MC.md §5.1) */
   .mc-slot {
-    background: var(--color-mc-slot);
+    background: var(--mc-core-grey-5);
     color: #ffffff;
-    border: 3px solid;
-    border-color: #373737 #ffffff #ffffff #373737;
+    border: 2px solid var(--mc-core-grey-4);
   }
 
-  /* Casilla hundida clara (para contenido de lectura dentro de un panel) */
+  /* Casilla clara para lectura */
   .mc-slot-light {
-    background: #dbdbdb;
+    background: #fcf5f1; /* core-off-white */
     color: var(--color-mc-ink);
-    border: 3px solid;
-    border-color: #555555 #ffffff #ffffff #555555;
+    border: 2px solid #d0c5c0;
   }
 
-  /* Casilla hundida oscura (inputs, gráficas, tablas) */
+  /* Casilla hundida oscura (inputs, tablas, métricas) */
   .mc-slot-dark {
-    background: #1e1e1e;
+    background: #171615; /* core-off-black */
     color: #ffffff;
-    border: 3px solid;
-    border-color: #0a0a0a #6b6b6b #6b6b6b #0a0a0a;
+    border: 2px solid #3d3938;
   }
 
-  /* Pergamino para el decreto */
+  /* Pergamino para el decreto (Rules/Desing_MC.md §2.1) */
   .mc-paper {
     background-color: var(--mc-paper);
     background-image:
-      linear-gradient(rgba(139, 90, 43, 0.08) 2px, transparent 2px),
-      linear-gradient(90deg, rgba(139, 90, 43, 0.08) 2px, transparent 2px);
+      linear-gradient(rgba(128, 85, 57, 0.08) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(128, 85, 57, 0.08) 2px, transparent 2px);
     background-size: 16px 16px;
-    color: #3a2a14;
+    color: #2b1d0c;
   }
 
-  /* Botón de piedra con bisel */
+  /* 
+   * Botón con bisel inferior duro según Rules/Desing_MC.md §1.7, §5.1 y §7.1:
+   * Mayúsculas, letter-spacing .03em, bisel inset de 6px y respuesta rápida
+   */
   .mc-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 34px;
-    padding: 6px 12px;
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    line-height: 1.4;
+    min-height: 40px;
+    padding: 0.6875rem 1rem;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
     color: #ffffff;
-    text-shadow: 2px 2px 0 #2b2b2b;
-    background: #6f6f6f;
-    border: 3px solid;
-    border-color: #a9a9a9 #2b2b2b #2b2b2b #a9a9a9;
-    box-shadow: 0 0 0 2px var(--mc-outline);
+    background: #6b6562; /* core-grey-4 */
+    border: 2px solid var(--mc-core-off-black);
+    box-shadow: inset 0 -6px 0 var(--mc-core-grey-5);
     cursor: pointer;
-    transition: background-color 120ms steps(2), color 120ms steps(2);
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease-out, box-shadow 0.1s ease-out;
+    outline: 1px solid transparent;
   }
 
   .mc-button:hover:not(:disabled) {
-    background: #7a83b8;
-    border-color: #c1c8f0 #2f3666 #2f3666 #c1c8f0;
-    color: #ffffa0;
+    background: #8b8582;
+    box-shadow: inset 0 -6px 0 var(--mc-core-grey-6);
+    color: #ffffff;
   }
 
   .mc-button:active:not(:disabled),
   .mc-button.is-active {
-    background: #4a4a4a;
-    border-color: #2b2b2b #a9a9a9 #a9a9a9 #2b2b2b;
+    transform: translateY(2px);
+    box-shadow: inset 0 -2px 0 var(--mc-core-grey-5);
     color: var(--color-mc-gold);
   }
 
   .mc-button.is-active {
-    box-shadow: 0 0 0 2px var(--color-mc-gold);
+    box-shadow: inset 0 -2px 0 var(--mc-core-grey-5), 0 0 0 2px var(--color-mc-gold);
   }
 
   .mc-button:disabled {
     cursor: not-allowed;
-    background: #2c2c2c;
-    border-color: #444444 #1a1a1a #1a1a1a #444444;
-    color: #8b8b8b;
+    background: #262423;
+    border-color: #3d3938;
+    color: #6b6562;
+    box-shadow: inset 0 -4px 0 #171615;
     text-shadow: none;
+    opacity: 0.65;
   }
 
-  /* Variante principal: bloque de pasto */
+  /* Variante principal: Verde Vanilla con bisel (Rules/Desing_MC.md §2.2 y §5.1) */
   .mc-button-primary {
-    background: var(--color-mc-grass);
-    border-color: #8fd860 #234d14 #234d14 #8fd860;
+    background: linear-gradient(180deg, #6cc349 0%, #52a535 50%, #3c8527 100%);
+    border-color: var(--mc-core-off-black);
+    box-shadow: inset 0 -6px 0 #2a641c;
+    color: #ffffff;
   }
 
   .mc-button-primary:hover:not(:disabled) {
-    background: #41802a;
-    border-color: #b4ef8a #234d14 #234d14 #b4ef8a;
+    background: linear-gradient(180deg, #86d562 0%, #6cc349 50%, #3c8527 100%);
+    box-shadow: inset 0 -6px 0 #2a641c;
   }
 
-  /* Variante de alerta: redstone */
+  .mc-button-primary:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: inset 0 -2px 0 #2a641c;
+  }
+
+  /* Variante de alerta: Redstone / Warning con bisel (Rules/Desing_MC.md §2.4 y §5.1) */
   .mc-button-danger {
-    background: var(--color-mc-redstone);
-    border-color: #f07a70 #5e0f0a #5e0f0a #f07a70;
+    background: var(--mc-default-warning, #ca3636);
+    border-color: var(--mc-core-off-black);
+    box-shadow: inset 0 -6px 0 #8f1f0b;
+    color: #ffffff;
+  }
+
+  .mc-button-danger:hover:not(:disabled) {
+    background: #da3a16;
+    box-shadow: inset 0 -6px 0 #8f1f0b;
+  }
+
+  .mc-button-danger:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: inset 0 -2px 0 #8f1f0b;
   }
 
   .mc-button-sm {
     min-height: 28px;
     padding: 4px 8px;
-    font-size: 8px;
+    font-size: 11px;
   }
 
-  /* Botón cuadrado solo con icono */
   .mc-button-icon {
-    min-height: 34px;
-    width: 34px;
+    min-height: 40px;
+    width: 40px;
     padding: 0;
   }
 
-  /* Títulos amarillos con sombra dura (solo sobre fondo oscuro) */
+  /* Títulos pixel dorados sobre fondo oscuro (Rules/Desing_MC.md §2.3 y §3.3) */
   .mc-title {
     font-family: var(--font-display);
     color: var(--color-mc-gold);
-    text-shadow: 2px 2px 0 #3e3e00;
-    line-height: 1.2;
+    text-shadow: 0 2px 0 #3e3200;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
   }
 
-  /* Título sobre panel gris: tinta oscura con sombra clara */
+  /* Título sobre panel gris (Rules/Desing_MC.md §2.1) */
   .mc-heading {
     font-family: var(--font-display);
     color: var(--color-mc-ink);
-    text-shadow: 1px 1px 0 #ffffff;
-    line-height: 1.2;
+    line-height: 1.25;
   }
 
-  /* Etiqueta pequeña en mayúsculas */
+  /* Etiqueta pequeña en mayúsculas (Rules/Desing_MC.md §3.4) */
   .mc-label {
     font-family: var(--font-display);
-    font-size: 13px;
-    line-height: 1.2;
+    font-size: 12px;
+    line-height: 1.3;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
   }
 
-  /* Insignia sólida tipo bloque */
+  /* Insignia sólida tipo bloque (Rules/Desing_MC.md §5.1 y §5.5) */
   .mc-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 3px 6px;
-    font-family: var(--font-pixel);
-    font-size: 8px;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 11px;
     line-height: 1.5;
     border: 2px solid var(--mc-outline);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
 
-  /* Tooltip pixel: fondo casi negro y borde morado */
+  /* Tooltip pixel: fondo casi negro y marco de portal morado (Rules/Desing_MC.md §2.3 Realms) */
   .mc-tooltip {
-    background: #100010;
+    background: #170d19;
     color: #ffffff;
-    border: 2px solid #3a0a8c;
-    box-shadow: 0 0 0 2px #100010;
-    font-family: var(--font-retro);
-    font-size: 18px;
-    line-height: 1.1;
+    border: 2px solid #643acb;
+    box-shadow: 0 0 0 2px #000000;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.4;
   }
 
-  /* Marcos gruesos de madera y piedra */
+  /* Marcos de madera y piedra (Rules/Desing_MC.md §5.1 y §6) */
   .mc-frame-wood {
     border: 8px solid;
-    border-image: repeating-linear-gradient(90deg, #8b5e34 0 12px, #7a5230 12px 14px, #9c6b37 14px 26px, #6b4a2b 26px 28px) 8;
-    box-shadow: 0 0 0 2px var(--mc-outline), inset 0 0 0 2px #3d2a16;
+    border-image: repeating-linear-gradient(90deg, #805539 0 12px, #66412c 12px 14px, #976746 14px 26px, #492d1f 26px 28px) 8;
+    box-shadow: 0 0 0 2px var(--mc-outline), inset 0 0 0 2px #321d12;
   }
 
   .mc-frame-stone {
     border: 8px solid;
-    border-image: repeating-linear-gradient(90deg, #7a7a7a 0 10px, #6a6a6a 10px 12px, #858585 12px 22px, #5a5a5a 22px 24px) 8;
+    border-image: repeating-linear-gradient(90deg, #6b6562 0 10px, #3d3938 10px 12px, #807a77 12px 22px, #262423 22px 24px) 8;
     box-shadow: 0 0 0 2px var(--mc-outline);
   }
 
-  /* Cuadrícula fina de bloques */
-  .mc-block-grid {
-    background-image:
-      linear-gradient(rgba(0, 0, 0, 0.14) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.14) 1px, transparent 1px);
-    background-size: 16px 16px;
-  }
-
-  /* Casilla de carga (sustituye al pulso suave) */
   .mc-loading {
     animation: mc-blink 1s steps(2) infinite;
   }
 }
 
-/* ── Presentación: El Ataque Nocturno ───────────────────────────────────────── */
+/* ── Presentación: El Ataque Nocturno (Rules/Desing_MC.md §6 y §7) ─────────── */
 
-/* Cielo de noche cerrada: degradado en franjas (bandas de color, sin suavizado) */
 .mc-night {
   background: linear-gradient(
     #04050c 0%, #04050c 25%,
@@ -325,7 +387,6 @@ pre {
   );
 }
 
-/* Luna cuadrada pixel con dos cráteres */
 .mc-moon {
   width: 56px;
   height: 56px;
@@ -336,18 +397,16 @@ pre {
   box-shadow: 0 0 0 4px #b8c1d6;
 }
 
-/* Suelo: fila de bloques de hierba en sombra */
 .mc-night-ground {
-  background-color: #1d2a16;
+  background-color: #172612;
   background-image:
-    linear-gradient(#2c4220 0 12px, transparent 12px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.35) 2px, transparent 2px),
-    linear-gradient(rgba(0, 0, 0, 0.35) 2px, transparent 2px);
+    linear-gradient(#2a641c 0 12px, transparent 12px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.40) 2px, transparent 2px),
+    linear-gradient(rgba(0, 0, 0, 0.40) 2px, transparent 2px);
   background-size: 100% 100%, 32px 32px, 32px 32px;
-  border-top: 4px solid #0b1206;
+  border-top: 4px solid #000000;
 }
 
-/* Destello del rayo: dos golpes de luz en pasos, sin difuminado */
 .mc-lightning {
   background: #ffffff;
   animation: mc-lightning 0.7s steps(1) forwards;
@@ -360,18 +419,17 @@ pre {
   36%, 100% { opacity: 0; }
 }
 
-/* Letrero de madera rústico: tablones con vetas, borde oscuro y clavos */
 .mc-sign {
   position: relative;
-  background-color: #a57a43;
+  background-color: #976746;
   background-image:
-    linear-gradient(rgba(60, 35, 10, 0.35) 2px, transparent 2px),
-    linear-gradient(90deg, rgba(60, 35, 10, 0.18) 2px, transparent 2px),
-    linear-gradient(90deg, transparent 0 30%, rgba(255, 230, 180, 0.12) 30% 34%, transparent 34% 70%, rgba(60, 35, 10, 0.12) 70% 73%, transparent 73%);
+    linear-gradient(rgba(40, 20, 10, 0.35) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(40, 20, 10, 0.18) 2px, transparent 2px),
+    linear-gradient(90deg, transparent 0 30%, rgba(255, 230, 180, 0.12) 30% 34%, transparent 34% 70%, rgba(40, 20, 10, 0.12) 70% 73%, transparent 73%);
   background-size: 100% 24px, 48px 100%, 100% 100%;
   border: 6px solid;
-  border-color: #c9965a #5e3b1a #5e3b1a #c9965a;
-  box-shadow: 0 0 0 3px #1b0f05, 6px 6px 0 0 rgba(0, 0, 0, 0.6);
+  border-color: #c28e64 #492d1f #492d1f #c28e64;
+  box-shadow: 0 0 0 3px #000000, 6px 6px 0 0 rgba(0, 0, 0, 0.6);
 }
 
 .mc-sign::before,
@@ -381,24 +439,22 @@ pre {
   top: 6px;
   width: 6px;
   height: 6px;
-  background: #3a2a14;
+  background: #2b1d0c;
 }
 
 .mc-sign::before { left: 6px; }
 .mc-sign::after { right: 6px; }
 
-/* Poste del letrero */
 .mc-sign-post {
   display: block;
   width: 16px;
   height: 56px;
-  background: #6b4a2b;
+  background: #66412c;
   border: 3px solid;
-  border-color: #8b5e34 #3d2a16 #3d2a16 #8b5e34;
-  box-shadow: 0 0 0 2px #1b0f05;
+  border-color: #805539 #2b1d0c #2b1d0c #805539;
+  box-shadow: 0 0 0 2px #000000;
 }
 
-/* Flotación del letrero: sube y baja por pasos */
 .mc-float {
   animation: mc-float 2.4s steps(4) infinite;
 }
@@ -408,7 +464,6 @@ pre {
   50% { transform: translateY(-10px); }
 }
 
-/* Parpadeo suave: el texto nunca desaparece del todo (se puede leer siempre) */
 .mc-blink-soft {
   animation: mc-blink-soft 1.1s steps(1) infinite;
 }
@@ -418,11 +473,10 @@ pre {
   61%, 100% { opacity: 0.55; }
 }
 
-/* Bloques de la transición entre pantallas */
 .mc-transition-block {
-  background-color: #6f6f6f;
+  background-color: #6b6562;
   border: 2px solid;
-  border-color: #9a9a9a #3a3a3a #3a3a3a #9a9a9a;
+  border-color: #aba09c #262423 #262423 #aba09c;
   opacity: 0;
   animation: mc-block-in 160ms steps(2) forwards, mc-block-out 160ms steps(2) forwards;
 }
@@ -436,7 +490,6 @@ pre {
   to { opacity: 0; }
 }
 
-/* ── Animaciones retro: parpadeo en dos pasos, sin suavizado ────────────────── */
 @keyframes mc-blink {
   0% { opacity: 1; }
   100% { opacity: 0.45; }
@@ -447,6 +500,7 @@ pre {
   100% { transform: scale(1.35); opacity: 0; }
 }
 
+/* ── Accesibilidad: Preferencia de movimiento reducido (Rules/Desing_MC.md §1, §7.3 y §8) ── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -456,14 +510,25 @@ pre {
   }
 }
 
-/* ── Mapa (Leaflet): mapa de papel pixelado ─────────────────────────────────── */
-.leaflet-container {
-  background: var(--mc-paper) !important;
-  font-family: var(--font-retro);
-  font-size: 16px;
+/* ── Accesibilidad: Modo de colores forzados / alto contraste (Rules/Desing_MC.md §1.6, §5.1 y §8) ── */
+@media (forced-colors: active) {
+  .mc-button,
+  .mc-panel,
+  .mc-panel-dark,
+  .mc-slot,
+  .mc-slot-dark,
+  .mc-slot-light {
+    outline: 2px solid ButtonText !important;
+  }
 }
 
-/* Tono pergamino: solo color, sin blur */
+/* ── Mapa (Leaflet): Estilo pergamino (Rules/Desing_MC.md §2.1 y §6) ────────── */
+.leaflet-container {
+  background: var(--mc-paper) !important;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
 .mc-paper-map .leaflet-tile-pane {
   filter: sepia(0.55) saturate(1.35) contrast(1.08) brightness(0.98);
 }
@@ -472,8 +537,6 @@ pre {
   image-rendering: pixelated;
 }
 
-/* Cuadrícula de bloques: vive dentro de la capa de mosaicos, así se mueve con el
-   terreno al arrastrar y queda por debajo de parroquias, hubs y popups */
 .mc-paper-map .leaflet-tile-pane::after {
   content: "";
   position: absolute;
@@ -489,7 +552,7 @@ pre {
   background-size: 16px 16px;
 }
 
-/* Control de zoom como botones de piedra */
+/* Control de zoom como botones de piedra (Rules/Desing_MC.md §5.1) */
 .leaflet-control-zoom {
   border: 0 !important;
   box-shadow: 0 0 0 2px #000000 !important;
@@ -501,19 +564,19 @@ pre {
   line-height: 26px !important;
   font-family: var(--font-pixel) !important;
   font-size: 14px !important;
-  background: #6f6f6f !important;
+  background: #6b6562 !important;
   color: #ffffff !important;
-  text-shadow: 2px 2px 0 #2b2b2b;
-  border: 3px solid !important;
-  border-color: #a9a9a9 #2b2b2b #2b2b2b #a9a9a9 !important;
+  text-shadow: 1px 1px 0 #171615;
+  border: 2px solid !important;
+  border-color: #aba09c #262423 #262423 #aba09c !important;
 }
 
 .leaflet-control-zoom a:hover {
-  background: #7a83b8 !important;
-  color: #ffffa0 !important;
+  background: #8b8582 !important;
+  color: #ffffff !important;
 }
 
-/* Popups como panel de inventario */
+/* Popups como panel de inventario (Rules/Desing_MC.md §5.1) */
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: var(--color-mc-panel) !important;
@@ -522,48 +585,47 @@ pre {
 }
 
 .leaflet-popup-content-wrapper {
-  border: 4px solid;
-  border-color: #ffffff #555555 #555555 #ffffff;
+  border: 2px solid var(--mc-core-off-black);
+  box-shadow: inset 0 -4px 0 0 #000000, inset -4px 0 0 0 #3d3938,
+              inset 4px 0 0 0 #000000,  inset 0 4px 0 0 #3d3938 !important;
 }
 
 .leaflet-popup-content {
   margin: 10px 12px !important;
-  font-family: var(--font-retro);
-  font-size: 18px;
-  line-height: 1.15;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .leaflet-popup-close-button {
   font-family: var(--font-pixel) !important;
-  color: #2b2b2b !important;
+  color: #171615 !important;
 }
 
-/* Atribución obligatoria de OpenStreetMap y CARTO: visible y legible */
 .leaflet-control-attribution {
-  font-family: var(--font-retro) !important;
-  font-size: 14px !important;
+  font-family: var(--font-ui) !important;
+  font-size: 11px !important;
   background: rgba(233, 220, 184, 0.92) !important;
-  color: #3a2a14 !important;
+  color: #2b1d0c !important;
   border-top: 2px solid #000000;
   border-left: 2px solid #000000;
 }
 
 .leaflet-control-attribution a {
-  color: #2a4ea8 !important;
+  color: #1157be !important;
 }
 
-/* Iconos de los hubs: sin el fondo blanco que añade Leaflet a los divIcon */
 .hub-pin {
   background: transparent;
   border: 0;
 }
 
-/* ── Slider pixel: pista recta y tirador cuadrado con bisel ────────────────── */
+/* ── Slider pixel: Pista recta y pulgar cuadrado (Rules/Desing_MC.md §5.5) ── */
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   height: 10px;
-  background: linear-gradient(90deg, #4f8f2f 0%, #4f8f2f var(--range-percent, 50%), #373737 var(--range-percent, 50%), #373737 100%);
+  background: linear-gradient(90deg, #3c8527 0%, #3c8527 var(--range-percent, 50%), #3d3938 var(--range-percent, 50%), #3d3938 100%);
   border: 2px solid #000000;
   outline: none;
 }
@@ -573,9 +635,9 @@ input[type='range']::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
   height: 22px;
-  background: #c6c6c6;
-  border: 3px solid;
-  border-color: #ffffff #555555 #555555 #ffffff;
+  background: #d0c5c0;
+  border: 2px solid;
+  border-color: #ffffff #3d3938 #3d3938 #ffffff;
   box-shadow: 0 0 0 2px #000000;
   cursor: pointer;
 }
@@ -583,31 +645,31 @@ input[type='range']::-webkit-slider-thumb {
 input[type='range']::-moz-range-thumb {
   width: 16px;
   height: 22px;
-  background: #c6c6c6;
-  border: 3px solid;
-  border-color: #ffffff #555555 #555555 #ffffff;
+  background: #d0c5c0;
+  border: 2px solid;
+  border-color: #ffffff #3d3938 #3d3938 #ffffff;
   box-shadow: 0 0 0 2px #000000;
   cursor: pointer;
 }
 
-/* ── Barra de desplazamiento pixel ─────────────────────────────────────────── */
+/* ── Scrollbar pixel (Rules/Desing_MC.md §2.1 y §5.1) ─────────────────────── */
 ::-webkit-scrollbar {
   width: 14px;
   height: 14px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e1e1e;
+  background: #171615;
   border-left: 2px solid #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #8b8b8b;
-  border: 3px solid;
-  border-color: #c6c6c6 #373737 #373737 #c6c6c6;
+  background: #6b6562;
+  border: 2px solid;
+  border-color: #aba09c #262423 #262423 #aba09c;
 }
 
-/* ── Print ──────────────────────────────────────────────────────── */
+/* ── Impresión ────────────────────────────────────────────────────────────── */
 @media print {
   header, aside, .no-print { display: none !important; }
   body { background: #fff !important; color: #000 !important; }

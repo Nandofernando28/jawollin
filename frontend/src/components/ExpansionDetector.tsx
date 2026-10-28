@@ -1,10 +1,11 @@
 /**
- * Detector del modelo de expansión: ajusta una exponencial, una logística y una
- * logarítmica a la curva de contagios acumulados (días 0..upToDay) y muestra cuál
- * describe mejor la expansión, con su fórmula, sus parámetros y su R².
+ * ExpansionDetector.tsx — Detector analítico del modelo de expansión de la plaga.
  *
- * Es una descripción matemática de la curva que produjo la simulación; el motor
- * sigue siendo un SEIR sobre una red de contactos (ver src/analysis/expansionFit.ts).
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §2 Colores temáticos para modelos (exponencial redstone, logística oro, logarítmica hierba)
+ * - §3.1 Tipografía pixel para ejes y leyendas
+ * - §5.1 Botones de estrategia con bisel y estado activo
+ * - §5.3 Tarjetas con cabecera oscura mc-panel-dark
  */
 import React, { useMemo } from 'react';
 import {
@@ -100,9 +101,9 @@ export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange 
         <div className="flex items-start gap-3">
           <PixelIcon name="book" size={24} />
           <div>
-            <p className="mc-label text-[#d8d8d8]">Contagios acumulados · días 0 a {day}</p>
-            <h3 id="expansion-title" className="mc-title mt-1 text-[16px]">Detector del modelo de expansión</h3>
-            <p className="mt-1 max-w-2xl text-[18px] leading-tight text-[#d8d8d8]">
+            <p className="mc-label text-[#ede5e2]">Contagios acumulados · días 0 a {day}</p>
+            <h3 id="expansion-title" className="mc-title mt-1 text-[14px]">Detector del modelo de expansión</h3>
+            <p className="mt-1 max-w-2xl text-[14px] leading-tight text-[#ede5e2]">
               La simulación es un modelo SEIR sobre una red de contactos. Aquí se ajustan tres funciones matemáticas a su curva de contagios para describir qué forma tiene la expansión.
             </p>
           </div>
@@ -129,20 +130,20 @@ export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange 
         {/* Modelo detectado y su fórmula */}
         <div className="space-y-3 lg:col-span-2">
           <div className="mc-slot-dark p-3" aria-live="polite">
-            <p className="mc-label text-[#d8d8d8]">Modelo detectado</p>
+            <p className="mc-label text-[#ede5e2]">Modelo detectado</p>
             {best ? (
               <>
-                <p className="mt-2 font-pixel text-[16px]" style={{ color: MODEL_INFO[best.kind].color, textShadow: '2px 2px 0 #000' }}>
+                <p className="mt-2 font-pixel text-[14px]" style={{ color: MODEL_INFO[best.kind].color, textShadow: '2px 2px 0 #000' }}>
                   {MODEL_INFO[best.kind].name}
                 </p>
-                <p className="mt-2 break-words bg-black px-2 py-1 font-retro text-[20px] text-mc-gold">{fittedFormula(best)}</p>
-                <p className="mt-2 text-[18px] leading-tight text-white">{interpretation(best, day)}</p>
-                <p className="mt-1 text-[18px] text-[#a8a8a8]">
+                <p className="mt-2 break-words bg-black px-2 py-1 font-ui text-[15px] text-mc-gold">{fittedFormula(best)}</p>
+                <p className="mt-2 text-[14px] leading-tight text-white">{interpretation(best, day)}</p>
+                <p className="mt-1 text-[14px] text-[#aba09c]">
                   t = día · C(t) = contagiados acumulados · R² = {fmt(best.r2, 3)}
                 </p>
               </>
             ) : (
-              <p className="mt-2 text-[18px] leading-tight text-white">
+              <p className="mt-2 text-[14px] leading-tight text-white">
                 Aún no hay expansión suficiente para ajustar una función (hacen falta al menos 4 días y que los contagios crezcan).
               </p>
             )}
@@ -157,7 +158,7 @@ export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange 
               return (
                 <li key={kind} className={`${isBest ? 'mc-slot-dark' : 'mc-slot-light'} p-2`}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`flex items-center gap-2 text-[18px] ${isBest ? 'text-white' : 'text-mc-ink'}`}>
+                    <span className={`flex items-center gap-2 text-[14px] ${isBest ? 'text-white' : 'text-mc-ink'}`}>
                       <span className="h-3.5 w-3.5 border-2 border-black" style={{ background: MODEL_INFO[kind].color }} aria-hidden="true" />
                       {MODEL_INFO[kind].name}
                       {isBest && <span className="mc-chip bg-mc-grass text-white">Mejor ajuste</span>}
@@ -166,9 +167,9 @@ export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange 
                       R² {f ? fmt(f.r2, 3) : '—'}
                     </span>
                   </div>
-                  <p className={`mt-1 text-[16px] ${isBest ? 'text-[#d8d8d8]' : 'text-mc-muted'}`}>{MODEL_INFO[kind].formula}</p>
+                  <p className={`mt-1 text-[14px] ${isBest ? 'text-[#ede5e2]' : 'text-mc-muted'}`}>{MODEL_INFO[kind].formula}</p>
                   {/* Barra de bloques con el R² (0 a 1) */}
-                  <div className="mt-1 h-2.5 bg-[#2b2b2b]">
+                  <div className="mt-1 h-2.5 bg-[#262423]">
                     <div
                       className="h-full"
                       style={{
@@ -187,7 +188,7 @@ export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange 
 
         {/* Datos de la simulación frente a las curvas ajustadas */}
         <div className="mc-slot-dark p-2 lg:col-span-3">
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 px-1 pb-2 text-[18px] text-white" aria-label="Leyenda del ajuste">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 px-1 pb-2 text-[14px] text-white" aria-label="Leyenda del ajuste">
             <li className="flex items-center gap-2">
               <span className="h-3.5 w-3.5 border-2 border-black bg-white" aria-hidden="true" />
               Simulación (datos)
@@ -208,7 +209,7 @@ export function ExpansionDetector({ result, upToDay, strategy, onStrategyChange 
               <YAxis tick={AXIS_TICK} axisLine={AXIS_LINE} tickLine={AXIS_LINE} width={44} />
               <RCTooltip
                 cursor={{ stroke: '#ffffff', strokeWidth: 2 }}
-                contentStyle={{ background: '#100010', border: '2px solid #3a0a8c', borderRadius: 0, fontFamily: '"VT323", monospace', fontSize: 18, color: '#fff' }}
+                contentStyle={{ background: '#170d19', border: '2px solid #643acb', borderRadius: 0, fontFamily: '"Noto Sans", sans-serif', fontSize: 13, color: '#fff' }}
                 labelFormatter={(l) => `Día ${l}`}
                 formatter={(v: number, name: string) => [fmt(v, 1), name === 'observed' ? 'Simulación' : MODEL_INFO[name as ModelKind]?.name ?? name]}
               />

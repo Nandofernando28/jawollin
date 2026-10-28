@@ -1,12 +1,11 @@
 /**
- * SetupScreen — Panel de parámetros libres (Calibración y Brote Sorpresa)
+ * SetupScreen.tsx — Panel de configuración y Brotes Sorpresa.
  *
- * Fase 6 · tarea 5.2: sliders e inputs numéricos libres, agrupados en
- *   1) Semilla y escenario base, 2) Parámetros biológicos, 3) Recursos y costos.
- * Cada control muestra valor actual, unidad y qué representa. Todos los valores
- * se envían tal cual al backend (SimulationParams); no hay datos simulados aquí.
- *
- * Estilo: menú de opciones del tema pixel (src/index.css).
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §4.1 Espaciado base 4/8 px en formularios y grupos de botones
+ * - §4.2 Rejilla responsive: contenedor max-w-4xl y 2 columnas en md:
+ * - §5.1 Botones biselados en mayúsculas y tracking .03em
+ * - §5.5 Sliders de rango con pista recta y pulgar cuadrado biselado
  */
 import React from 'react';
 import type { SimulationParams, StartHubOption } from '../types/simulation';
@@ -40,7 +39,7 @@ function Field({ label, hint, unit, value, min, max, step, format, onChange }: F
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-2">
-        <span className="text-[20px] leading-tight text-mc-ink">{label}</span>
+        <span className="text-[15px] leading-tight text-mc-ink">{label}</span>
         <span className="font-pixel text-[10px] text-mc-ink">
           {format ? format(value) : value}
           {unit ? ` ${unit}` : ''}
@@ -54,11 +53,11 @@ function Field({ label, hint, unit, value, min, max, step, format, onChange }: F
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full cursor-pointer appearance-none"
-        style={{ background: `linear-gradient(to right, #4f8f2f 0%, #4f8f2f ${pct}%, #373737 ${pct}%, #373737 100%)` }}
+        style={{ background: `linear-gradient(to right, #3c8527 0%, #3c8527 ${pct}%, #3d3938 ${pct}%, #3d3938 100%)` }}
         aria-label={label}
       />
       <div className="mt-2 flex items-center justify-between gap-2">
-        <span className="text-[18px] leading-tight text-mc-muted">{hint}</span>
+        <span className="text-[14px] leading-tight text-mc-muted">{hint}</span>
         <input
           type="number"
           min={min}
@@ -71,7 +70,7 @@ function Field({ label, hint, unit, value, min, max, step, format, onChange }: F
             if (e.key === 'Enter') commit();
             if (e.key === 'Escape') setDraft(null);
           }}
-          className="mc-slot-dark w-24 shrink-0 px-2 py-0.5 text-right text-[20px] text-white outline-none"
+          className="mc-slot-dark w-24 shrink-0 px-2 py-0.5 text-right text-[15px] text-white outline-none"
           aria-label={`${label} (valor exacto)`}
         />
       </div>
@@ -84,8 +83,8 @@ function Section({ icon, kicker, title, children }: { icon: React.ReactNode; kic
     <section className="mc-panel p-4">
       <div className="mc-panel-dark mb-4 flex items-center justify-between gap-3 px-3 py-2">
         <div>
-          <p className="mc-label text-[#d8d8d8]">{kicker}</p>
-          <h2 className="mc-title mt-1 text-[16px]">{title}</h2>
+          <p className="mc-label text-[#ede5e2]">{kicker}</p>
+          <h2 className="mc-title mt-1 text-[14px]">{title}</h2>
         </div>
         <div className="mc-slot flex h-10 w-10 shrink-0 items-center justify-center">{icon}</div>
       </div>
@@ -121,9 +120,9 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
     <div className="min-h-screen px-4 py-10 text-white">
       <div className="mc-panel mx-auto max-w-4xl p-4 sm:p-6">
         <div className="mc-panel-dark px-4 py-4">
-          <p className="mc-label text-[#d8d8d8]">Paso 1 · Operación Cortafuegos Manta · SpookyThon 2026 · Track B</p>
-          <h1 className="mc-title mt-2 text-[22px] sm:text-[26px]">Parámetros de Contención Epidemiológica</h1>
-          <p className="mt-3 text-[20px] leading-tight text-white">
+          <p className="mc-label text-[#ede5e2]">Paso 1 · Operación Cortafuegos Manta · SpookyThon 2026 · Track B</p>
+          <h1 className="mc-title mt-2 text-[16px] sm:text-[26px]">Parámetros de Contención Epidemiológica</h1>
+          <p className="mt-3 text-[15px] leading-tight text-white">
             Todos los valores son libres y se envían al motor Monte Carlo (AWS o servidor local). Con la misma semilla el resultado es idéntico.
           </p>
         </div>
@@ -156,11 +155,11 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           <Section icon={<PixelIcon name="pin" size={24} />} kicker="Escenario" title="Semilla y escenario base">
             <label className="block">
-              <span className="mb-2 block text-[20px] leading-tight text-mc-ink">Epicentro inicial (paciente cero)</span>
+              <span className="mb-2 block text-[15px] leading-tight text-mc-ink">Epicentro inicial (paciente cero)</span>
               <select
                 value={params.start_hub}
                 onChange={(e) => set({ start_hub: e.target.value as StartHubOption })}
-                className="mc-slot-dark w-full cursor-pointer px-3 py-1.5 text-[20px] text-white outline-none"
+                className="mc-slot-dark w-full cursor-pointer px-3 py-1.5 text-[15px] text-white outline-none"
               >
                 {START_HUBS.map((h) => (
                   <option key={h.id} value={h.id}>
@@ -196,7 +195,7 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
         </div>
 
         {error && (
-          <p className="mc-slot-light mt-4 flex items-center gap-3 p-3 text-[20px] leading-tight">
+          <p className="mc-slot-light mt-4 flex items-center gap-3 p-3 text-[15px] leading-tight">
             <PixelIcon name="warning" size={16} />
             {error}
           </p>

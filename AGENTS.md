@@ -82,6 +82,7 @@ python scripts/estimar_r0.py
 - Diseño cuidado, sin "estética genérica de IA": jerarquía visual clara, buen contraste, espaciado consistente y tipografía moderna.
 - Transiciones sutiles (150 a 300 ms) y sin saltos de layout.
 - Mantén la coherencia con el estilo actual de la consola de mando.
+- **Referencia de diseño oficial: `Rules/Desing_MC.md`** (tokens de color, tipografía, espaciado, componentes y animación tomados de minecraft.net). Los colores salen de la paleta del documento (variables `--mc-*` en `frontend/src/index.css`), esquinas siempre rectas, bisel con `inset` duro y respeto de `prefers-reduced-motion`.
 - Si existen las skills de diseño (`impeccable`, `design-taste-frontend`, `high-end-visual-design`, `emil-design-eng`), úsalas.
 
 ## 8. Verificación en navegador

@@ -13,9 +13,14 @@ import {
 } from '../utils/decree';
 
 /**
- * Propuesta de Decreto en PDF (A4), generada en el navegador con @react-pdf/renderer.
- * Usa la fuente Helvetica que trae todo lector de PDF: no hay que descargar fuentes
- * y el texto queda seleccionable. Este módulo se carga solo al pulsar "Descargar PDF".
+ * DecreePdf.tsx — Propuesta de Decreto en PDF oficial para el alcalde de Manta.
+ *
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §1 Principios: esquinas estrictamente rectas (borderRadius: 0)
+ * - §2.1 Núcleo de color: off-black #171615, grey-6 #262423, grey-4 #6b6562, grey-1 #ede5e2
+ * - §2.2 Verde Vanilla: green-5 #3c8527
+ * - §2.4 Semánticos: warning #ca3636, focus/blue #1157be
+ * - §3.4 Reglas de texto: mayúsculas con tracking en títulos institucionales
  */
 
 // Sin guiones de corte automáticos: las reglas de la librería son para inglés
@@ -25,23 +30,22 @@ Font.registerHyphenationCallback((word) => [word]);
 const pdfText = (text: string) => text.replace(/[  ]/g, ' ');
 const fmt = (value: number | null | undefined, decimals = 0) => pdfText(fmtOrDash(value, decimals));
 
-// Paleta del tema pixel (src/index.css). El PDF mantiene Helvetica porque es un documento
-// oficial para imprimir; solo adopta los colores de materiales y las esquinas rectas.
+// Paleta oficial basada en Rules/Desing_MC.md (§2 Color y §1 Cero redondeo)
 const C = {
-  navy: '#1b1b1b', // piedra oscura: títulos y franjas
-  ink: '#2b2b2b',
-  muted: '#5a5a5a',
-  line: '#8b8b8b',
-  panel: '#ececec',
-  teal: '#4f8f2f', // pasto
-  orange: '#c96a14',
-  blue: '#2a4ea8', // lapislázuli
+  navy: '#171615', // Rules/Desing_MC.md §2.1: --mc-core-off-black
+  ink: '#262423',  // Rules/Desing_MC.md §2.1: --mc-core-grey-6
+  muted: '#6b6562',// Rules/Desing_MC.md §2.1: --mc-core-grey-4
+  line: '#aba09c', // Rules/Desing_MC.md §2.1: --mc-core-grey-3
+  panel: '#ede5e2',// Rules/Desing_MC.md §2.1: --mc-core-grey-1
+  teal: '#3c8527', // Rules/Desing_MC.md §2.2: --mc-green-5
+  orange: '#ffa41f', // Rules/Desing_MC.md §2.3: orange-4
+  blue: '#1157be', // Rules/Desing_MC.md §2.4: --mc-default-focus
 };
 
 const PRIORITY_COLOR: Record<string, string> = {
-  CRITICA: '#c0281e', // redstone
-  ALTA: C.orange,
-  MEDIA: '#a5781a', // oro oscuro, legible sobre blanco
+  CRITICA: '#ca3636', // Rules/Desing_MC.md §2.4: default-warning
+  ALTA: '#de5b0d',    // Rules/Desing_MC.md §2.3: orange-6
+  MEDIA: '#94540e',   // Rules/Desing_MC.md §2.3: gold-6 (legible sobre fondo claro)
 };
 
 const s = StyleSheet.create({

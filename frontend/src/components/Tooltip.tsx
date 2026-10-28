@@ -1,3 +1,11 @@
+/**
+ * Tooltip.tsx — Descripción flotante estilo Minecraft.
+ *
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §2.3 Paletas por tema: púrpura portal de Realms y fondo casi negro
+ * - §5.1 Componentes: cajas de información con borde ortogonal
+ * - §7.1 Transiciones y §8 Accesibilidad: etiquetado semántico ARIA (role="tooltip")
+ */
 import React, { useState, useId } from 'react';
 import { PixelIcon } from './PixelIcon';
 

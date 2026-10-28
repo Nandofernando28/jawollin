@@ -1,5 +1,10 @@
 /**
- * Header — barra de menú de piedra del tema pixel (src/index.css).
+ * Header.tsx — Barra de menú institucional de piedra.
+ *
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §4.2 Cabecera global fija de 80px (--mc-globalHeaderHeight) y contenedor 1280px
+ * - §5.1 Botones en mayúsculas con tracking .03em y bisel inferior duro
+ * - §5.4 Navegación institucional sobre fondo oscuro
  */
 import React from 'react';
 import { PixelIcon } from './PixelIcon';
@@ -36,26 +41,26 @@ export function Header({
   const healthLabel = backendHealthy === null ? 'Verificando' : backendHealthy ? 'Conectado' : 'Sin conexión';
 
   return (
-    <header className="sticky top-0 z-40 border-b-4 border-black bg-mc-stone-mid shadow-[0_4px_0_0_#1b1b1b]">
-      <div className="mx-auto flex min-h-[68px] max-w-[1280px] items-center justify-between gap-3 px-4 py-2 sm:px-6">
+    <header className="sticky top-0 z-40 h-[80px] border-b-2 border-black bg-mc-stone-mid shadow-[0_4px_0_0_#171615]">
+      <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between gap-3 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <div className="mc-slot-dark flex h-11 w-11 shrink-0 items-center justify-center">
             <PixelIcon name="shield" size={24} />
           </div>
           <div className="hidden min-w-0 lg:block">
-            <h1 className="mc-title whitespace-nowrap text-[20px]">
+            <h1 className="mc-title whitespace-nowrap text-[15px]">
               OPERACIÓN CORTAFUEGOS MANTA
             </h1>
-            <p className="text-[18px] leading-tight text-[#d8d8d8]">
+            <p className="text-[14px] leading-tight text-[#d0c5c0]">
               Centro de Comando Epidemiológico · SpookyThon 2026
             </p>
           </div>
         </div>
 
-        {/* Estado del motor de simulación: AWS y, si no responde, el servidor local en silencio */}
+        {/* Estado del motor de simulación: AWS o servidor local */}
         <div className="mc-slot-dark hidden items-center gap-2 px-3 py-1 md:flex">
           <span className={`h-3 w-3 border-2 border-black ${healthDot}`} />
-          <span className="whitespace-nowrap text-[18px] text-white">{healthLabel}</span>
+          <span className="whitespace-nowrap text-[14px] text-white">{healthLabel}</span>
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">

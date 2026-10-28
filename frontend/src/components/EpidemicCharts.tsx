@@ -1,3 +1,11 @@
+/**
+ * EpidemicCharts.tsx — Curvas epidemiológicas y gráficos de recursos.
+ *
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §2 Colores de estrategias (diamante, oro, redstone) y estados SEIR
+ * - §3.1 Tipografías: Press Start 2P para ejes y VT323 para leyendas y tooltips
+ * - §5.1 y §5.3 Tarjetas con cabecera oscura mc-panel-dark y casillas hundidas
+ */
 import React, { useState } from 'react';
 import {
   Area,
@@ -48,7 +56,7 @@ const STATES = [
 const DEFENSES = [
   { key: 'vacunas', label: 'Vacunas', color: MATERIAL.diamond, light: '#b9f3f8', dark: '#0f6f78' },
   { key: 'brigadas', label: 'Brigadas', color: MATERIAL.dirt, light: '#b9824e', dark: '#4a2e14' },
-  { key: 'cierres', label: 'Cierres de hubs', color: MATERIAL.stone, light: '#c6c6c6', dark: '#4a4a4a' },
+  { key: 'cierres', label: 'Cierres de hubs', color: MATERIAL.stone, light: '#d0c5c0', dark: '#3d3938' },
 ] as const;
 
 type Metric = 'zombie' | 'ever_infected';
@@ -64,7 +72,7 @@ const AXIS = { tick: AXIS_TICK, axisLine: AXIS_LINE, tickLine: AXIS_LINE };
 const LEGEND_PROPS = {
   iconType: 'square' as const,
   iconSize: 12,
-  wrapperStyle: { fontFamily: FONT_RETRO, fontSize: 18, color: '#ffffff', paddingTop: 6 },
+  wrapperStyle: { fontFamily: FONT_RETRO, fontSize: 13, color: '#ffffff', paddingTop: 6 },
 };
 
 interface CurveRow {
@@ -82,9 +90,9 @@ function CurveTooltip({ active, payload, label }: { active?: boolean; payload?: 
       {STRATEGIES.map((s) => (
         <div key={s.id} className="flex items-center gap-2">
           <span className="h-3 w-3 shrink-0 border-2 border-black" style={{ background: s.color }} />
-          <span className="text-[#d8d8d8]">{s.label}:</span>
+          <span className="text-[#ede5e2]">{s.label}:</span>
           <span className="text-white">{Math.round(row[`${s.id}_mean`])}</span>
-          <span className="text-[#a8a8a8]">
+          <span className="text-[#aba09c]">
             (P10–P90: {Math.round(row[`${s.id}_p10`])}–{Math.round(row[`${s.id}_p90`])})
           </span>
         </div>
@@ -104,7 +112,7 @@ function SimpleTooltip({ active, payload, label, unit = '' }: {
       {payload.map((p) => (
         <div key={p.name} className="flex items-center gap-2">
           <span className="h-3 w-3 shrink-0 border-2 border-black" style={{ background: p.color }} />
-          <span className="text-[#d8d8d8]">{p.name}:</span>
+          <span className="text-[#ede5e2]">{p.name}:</span>
           <span className="text-white">{unit}{Math.round(p.value).toLocaleString()}</span>
         </div>
       ))}
@@ -122,9 +130,9 @@ function Card({ kicker, title, subtitle, children, action, icon }: {
         <div className="flex min-w-0 items-start gap-3">
           <PixelIcon name={icon} size={24} />
           <div className="min-w-0">
-            {kicker && <p className="mc-label text-[#d8d8d8]">{kicker}</p>}
-            <h3 className="mc-title mt-1 text-[16px]">{title}</h3>
-            {subtitle && <p className="mt-1 text-[18px] leading-tight text-[#d8d8d8]">{subtitle}</p>}
+            {kicker && <p className="mc-label text-[#ede5e2]">{kicker}</p>}
+            <h3 className="mc-title mt-1 text-[14px]">{title}</h3>
+            {subtitle && <p className="mt-1 text-[14px] leading-tight text-[#ede5e2]">{subtitle}</p>}
           </div>
         </div>
         {action}
@@ -184,7 +192,7 @@ export function EpidemicCharts({ result, currentDay }: EpidemicChartsProps) {
   const current = METRICS.find((m) => m.id === metric)!;
   // Cursor de las gráficas: franja sólida, sin transparencias difuminadas
   const lineCursor = { stroke: '#ffffff', strokeWidth: 2 };
-  const barCursor = { fill: '#3a3a3a' };
+  const barCursor = { fill: '#3d3938' };
 
   return (
     <div className="space-y-6">
@@ -209,7 +217,7 @@ export function EpidemicCharts({ result, currentDay }: EpidemicChartsProps) {
         }
       >
         <div className="mc-slot-dark p-2">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 px-1 pb-2 text-[18px] text-white">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 px-1 pb-2 text-[14px] text-white">
             {STRATEGIES.map(({ id, color, label, dash }) => (
               <span key={id} className="flex items-center gap-2">
                 <svg width="24" height="8" aria-hidden shapeRendering="crispEdges">
@@ -218,7 +226,7 @@ export function EpidemicCharts({ result, currentDay }: EpidemicChartsProps) {
                 {label}
               </span>
             ))}
-            <span className="text-[#a8a8a8]">· Zona sombreada: rango P10–P90</span>
+            <span className="text-[#aba09c]">· Zona sombreada: rango P10–P90</span>
           </div>
 
           <ResponsiveContainer width="100%" height={250}>
@@ -263,7 +271,7 @@ export function EpidemicCharts({ result, currentDay }: EpidemicChartsProps) {
       >
         <div className="mc-slot-dark p-2">
           {/* Leyenda fija de los estados, con su color */}
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 px-1 pb-2 text-[18px] text-white" aria-label="Colores de los estados">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 px-1 pb-2 text-[14px] text-white" aria-label="Colores de los estados">
             {STATES.map((st) => (
               <li key={st.key} className="flex items-center gap-2">
                 <span className="h-4 w-4 border-2 border-black" style={{ background: st.color }} aria-hidden="true" />

@@ -1,4 +1,13 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+/**
+ * MantaMap.tsx — Visualización cartográfica de Manta en papel pergamino.
+ *
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §2.1/§2.2: Paleta de materiales (grass, gold, redstone, diamond, lapis)
+ * - §5.1: Marcadores como casillas biseladas y popups como paneles de inventario
+ * - §5.5: Control deslizante de rango con pista recta y pulgar cuadrado
+ * - §6: Estilo de mapa pergamino sin sombras difusas
+ */
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Circle, GeoJSON, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -76,7 +85,7 @@ const HUB_STATUS_COLOR: Record<HubStatus, string> = {
 const buildHubIcon = (status: HubStatus) => {
   const color = HUB_STATUS_COLOR[status];
   const html = `
-    <span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#c6c6c6;border:3px solid;border-color:#ffffff #555555 #555555 #ffffff;box-shadow:0 0 0 2px #000000,0 0 0 4px ${color};">
+    <span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#d0c5c0;border:2px solid;border-color:#ffffff #3d3938 #3d3938 #ffffff;box-shadow:0 0 0 2px #171615,0 0 0 4px ${color};">
       ${pixelIconHtml(HUB_STATUS_ICON[status], 24)}
     </span>
   `;
@@ -106,6 +115,39 @@ export const MantaMap: React.FC<MantaMapProps> = ({
 }) => {
   const maxDay = result?.params?.days ?? 30;
   const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Pantalla completa nativa si el navegador la permite; si no, el mapa se expande a toda la ventana
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) setIsFullscreen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => mapRef.current?.invalidateSize(), 120);
+    return () => window.clearTimeout(timer);
+  }, [isFullscreen]);
+
+  const toggleFullscreen = () => {
+    const next = !isFullscreen;
+    setIsFullscreen(next);
+    if (next) {
+      containerRef.current?.requestFullscreen?.().catch(() => undefined);
+    } else if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    }
+  };
   const dayPercent = (currentDay / maxDay) * 100;
 
   // Recalcula el tamaño del mapa al montarse y al cambiar de día o de reproducción
@@ -124,7 +166,7 @@ export const MantaMap: React.FC<MantaMapProps> = ({
       fillColor: prevalenceColor(feature ? prevalenceByParish[feature.properties.parish_id] ?? 0 : 0),
       weight: 3,
       opacity: 1,
-      color: '#1b1b1b',
+      color: '#171615',
       dashArray: '8 4',
       lineCap: 'square' as const,
       lineJoin: 'miter' as const,
@@ -137,7 +179,19 @@ export const MantaMap: React.FC<MantaMapProps> = ({
     firewallHubs.includes(id) ? 'firewall' : ringVaccinationHubs.includes(id) ? 'ring' : 'open';
 
   return (
-    <div className="mc-frame-wood mc-paper-map relative z-10 isolate h-[650px] w-full overflow-hidden">
+    <div
+      ref={containerRef}
+      className={`mc-frame-wood mc-paper-map isolate w-full overflow-hidden ${isFullscreen ? 'fixed inset-0 z-[1000] h-screen' : 'relative z-10 h-[650px]'}`}
+    >
+      <button
+        type="button"
+        onClick={toggleFullscreen}
+        className="mc-button mc-button-icon absolute right-3 top-3 z-20"
+        aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Ver mapa en pantalla completa'}
+        title={isFullscreen ? 'Salir de pantalla completa (Esc)' : 'Pantalla completa'}
+      >
+        <PixelIcon name={isFullscreen ? 'compress' : 'expand'} size={16} />
+      </button>
       <div className="mc-panel absolute left-3 top-3 z-20 w-[min(calc(100%-24px),300px)] p-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -177,11 +231,11 @@ export const MantaMap: React.FC<MantaMapProps> = ({
             onChange={(e) => onDayChange?.(Number(e.target.value))}
             className="w-full cursor-pointer appearance-none"
             style={{
-              background: `linear-gradient(to right, ${MATERIAL.grass} 0%, ${MATERIAL.grass} ${dayPercent}%, #373737 ${dayPercent}%, #373737 100%)`,
+              background: `linear-gradient(to right, ${MATERIAL.grass} 0%, ${MATERIAL.grass} ${dayPercent}%, #3d3938 ${dayPercent}%, #3d3938 100%)`,
             }}
             aria-label="Control de días"
           />
-          <div className="mt-2 flex items-center justify-between text-[18px] text-mc-muted">
+          <div className="mt-2 flex items-center justify-between text-[14px] text-mc-muted">
             <span>0</span>
             <span>{maxDay} días</span>
           </div>
@@ -233,8 +287,8 @@ export const MantaMap: React.FC<MantaMapProps> = ({
                 <Popup>
                   <div className="text-mc-ink">
                     <h4 className="mc-heading text-[14px]">{hub.name}</h4>
-                    <p className="mt-2 text-[18px] leading-tight text-mc-muted">{hub.description}</p>
-                    <p className="mt-2 text-[18px] leading-tight text-mc-ink">
+                    <p className="mt-2 text-[14px] leading-tight text-mc-muted">{hub.description}</p>
+                    <p className="mt-2 text-[14px] leading-tight text-mc-ink">
                       Casos activos hoy: <b className="font-pixel text-[10px] text-mc-redstone-dark">{hubCases[hub.id] ?? 0}</b>
                     </p>
                     <div className="mc-chip mt-2 text-white" style={{ background: ringColor }}>
@@ -248,7 +302,7 @@ export const MantaMap: React.FC<MantaMapProps> = ({
         })}
       </MapContainer>
 
-      <div className="mc-panel absolute bottom-8 left-3 z-20 p-3 text-[18px] leading-tight text-mc-ink">
+      <div className="mc-panel absolute bottom-8 left-3 z-20 p-3 text-[14px] leading-tight text-mc-ink">
         <p className="mc-label mb-2 text-mc-ink">Parroquias: % con infección activa</p>
         {PREVALENCE_LEVELS.map((l) => (
           <div key={l.label} className="flex items-center gap-2">

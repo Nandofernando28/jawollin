@@ -1,16 +1,10 @@
 /**
- * Presentación "El Ataque Nocturno". Solo interfaz: no toca la simulación.
+ * IntroScreen.tsx — Presentación cinematográfica "El Ataque Nocturno".
  *
- * Secuencia:
- *   1. Noche cerrada con estrellas y luna pixel. Los navegadores no permiten sonido
- *      hasta la primera interacción, así que se pide un clic o una tecla para entrar.
- *   2. Grillos y viento de fondo.
- *   3. De repente, un rayo (destello y trueno) y aparece el letrero de madera
- *      flotante: "La noche ha caído sobre Manta. Los aldeanos han sido mordidos".
- *   4. Barra de carga "Generando terreno... 0–100%".
- *   5. Al llegar al 100 %, sonido de comer una manzana y paso automático al sistema.
- *
- * Se puede saltar en cualquier momento con Esc o con el botón "Saltar".
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §6 Imagen y decoración: cielo nocturno en franjas, luna cuadrada pixel y suelo de hierba
+ * - §7 Animación y movimiento: eventos escalonados (rayo, letrero flotante, barra por pasos)
+ * - §8 Accesibilidad: detección de teclas (Esc / cualquier tecla), etiquetas ARIA de progreso
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSound } from '../audio/SoundProvider';
@@ -31,7 +25,7 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
   const { play, startAmbient, stopAmbient, muted, toggleMuted } = useSound();
   const [phase, setPhase] = useState<Phase>('gate');
   const [progress, setProgress] = useState(0);
-  const left = useRef(false); // evita salir dos veces (Saltar justo al terminar la carga)
+  const left = useRef(false);
 
   const leave = () => {
     if (left.current) return;
@@ -40,11 +34,10 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
     onStart();
   };
 
-  // Estrellas en posiciones fijas (siempre el mismo cielo)
+  // Estrellas en posiciones fijas deterministas
   const stars = useMemo(
     () =>
       Array.from({ length: 70 }, (_, i) => {
-        // Pseudoaleatorio con semilla fija (seno de un número grande): mismo cielo siempre
         const rand = (n: number) => {
           const x = Math.sin(n * 12.9898) * 43758.5453;
           return x - Math.floor(x);
@@ -105,10 +98,6 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
     return () => window.clearTimeout(t);
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Teclado: cualquier tecla entra; Esc salta la presentación.
-  // La escucha se registra UNA sola vez y lee el estado actual por una referencia: si se
-  // volviera a registrar en cada render, la primera tecla (que además desbloquea el
-  // sonido y provoca un render) se perdería en mitad del evento.
   const keyHandler = useRef<(e: KeyboardEvent) => void>(() => undefined);
   keyHandler.current = (e: KeyboardEvent) => {
     if (e.key === 'Escape') skip();
@@ -132,7 +121,7 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
         {stars.map((s, i) => (
           <span
             key={i}
-            className="absolute bg-[#f4f4f4]"
+            className="absolute bg-[#ffffff]"
             style={{ left: `${s.left}%`, top: `${s.top}%`, width: s.size, height: s.size, opacity: s.size === 4 ? 0.9 : 0.55 }}
           />
         ))}
@@ -145,7 +134,7 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
       {phase === 'attack' && <div className="mc-lightning pointer-events-none absolute inset-0" aria-hidden="true" />}
 
       {phase === 'gate' && (
-        <button type="button" onClick={enter} className="mc-blink-soft relative font-display text-[22px] text-[#d8d8d8] sm:text-[28px]">
+        <button type="button" onClick={enter} className="mc-blink-soft relative font-display text-[16px] text-[#ede5e2] sm:text-[28px]">
           Haz clic o pulsa una tecla para entrar al mundo
         </button>
       )}
@@ -155,7 +144,7 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
           {/* Letrero de madera flotante */}
           <div className="mc-float flex flex-col items-center">
             <div className="mc-sign px-6 py-5 sm:px-10">
-              <p role="alert" className="mc-blink-soft font-display text-[18px] leading-snug text-[#2b1a0a] sm:text-[22px]">
+              <p role="alert" className="mc-blink-soft font-display text-[14px] leading-snug text-[#2b1d0c] sm:text-[16px]">
                 La noche ha caído sobre Manta. Los aldeanos han sido mordidos
               </p>
             </div>
@@ -169,7 +158,7 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
                 Generando terreno... {progress}%
               </p>
               <div
-                className="h-5 border-2 border-white bg-[#1e1e1e] p-[2px]"
+                className="h-5 border-2 border-white bg-[#171615] p-[2px]"
                 role="progressbar"
                 aria-valuemin={0}
                 aria-valuemax={100}
@@ -177,7 +166,7 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
                 aria-label="Generando terreno"
               >
                 <div
-                  className="h-full bg-[#7cc24a]"
+                  className="h-full bg-mc-grass-light"
                   style={{
                     width: `${progress}%`,
                     backgroundImage: 'linear-gradient(90deg, rgba(0,0,0,0.3) 2px, transparent 2px)',

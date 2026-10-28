@@ -1,40 +1,38 @@
 /**
- * Iconos pixel art ORIGINALES de 8×8 píxeles, dibujados con texto.
+ * PixelIcon.tsx — Iconos pixel art vectoriales de 8×8 en SVG puro.
  *
- * Cada icono es una lista de 8 filas de 8 caracteres; cada carácter es un color
- * de la tabla PALETTE y "." es transparente. La letra "K" usa `currentColor`, así
- * que los iconos monocromos (play, pausa, cerrar...) toman el color del texto.
- *
- * `PixelIcon` dibuja el icono como SVG en React y `pixelIconHtml` devuelve el mismo
- * SVG como texto, para los marcadores `L.divIcon` de Leaflet.
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §1 Principios: cero redondeo, estética de bloque ortogonal
+ * - §2 Color: tokens exactos de Vanilla Green, Marketplace Gold, grises del núcleo y semánticos
+ * - §6 Decoración: glifos sobre cuadrícula pixel con renderizado nítido (shape-rendering="crispEdges")
  */
 import React from 'react';
 
 const PALETTE: Record<string, string> = {
-  K: 'currentColor', // contorno o color del texto
-  k: '#1b1b1b', // negro fijo
-  w: '#f4f4f4', // blanco
-  i: '#d8d8d8', // hierro
-  s: '#8b8b8b', // piedra
-  y: '#f8f800', // amarillo
-  o: '#f08a24', // naranja
-  r: '#c0281e', // rojo redstone
-  R: '#e8463a', // rojo claro
-  b: '#8b5a2b', // tierra o madera
-  B: '#5e3b1a', // madera oscura
-  g: '#4f8f2f', // pasto
-  G: '#7cc24a', // pasto claro
-  z: '#5aa04a', // piel verde
-  d: '#3a6e2c', // verde oscuro
-  c: '#2fb8c6', // diamante
-  C: '#b9f3f8', // brillo de diamante
-  D: '#0f6f78', // diamante oscuro
-  m: '#2a96a3', // diamante medio
-  L: '#2a4ea8', // lapislázuli
-  u: '#e2b32a', // oro
-  U: '#fff07a', // brillo de oro
-  n: '#a5781a', // oro oscuro
-  p: '#8a4fc3', // amatista
+  K: 'currentColor', // contorno dinámico
+  k: '#171615', // Rules/Desing_MC.md §2.1: --mc-core-off-black
+  w: '#ffffff', // Rules/Desing_MC.md §2.1: --mc-core-white
+  i: '#d0c5c0', // Rules/Desing_MC.md §2.1: --mc-core-grey-2 (hierro)
+  s: '#aba09c', // Rules/Desing_MC.md §2.1: --mc-core-grey-3 (piedra)
+  y: '#fff27a', // Rules/Desing_MC.md §2.3: gold-1
+  o: '#ffa41f', // Rules/Desing_MC.md §2.3: orange-4
+  r: '#ca3636', // Rules/Desing_MC.md §2.4: --mc-default-warning
+  R: '#ff605e', // Rules/Desing_MC.md §2.4: --mc-default-warning-2
+  b: '#805539', // Rules/Desing_MC.md §2.3: marrón Vanilla
+  B: '#492d1f', // Rules/Desing_MC.md §2.3: marrón ultra oscuro
+  g: '#3c8527', // Rules/Desing_MC.md §2.2: green-5
+  G: '#6cc349', // Rules/Desing_MC.md §2.2: green-3
+  z: '#52a535', // Rules/Desing_MC.md §2.2: green-4
+  d: '#2a641c', // Rules/Desing_MC.md §2.2: green-6
+  c: '#2fb8c6', // Rules/Desing_MC.md §2.3: cian Dungeons/Legends
+  C: '#acf2ff', // Rules/Desing_MC.md §2.3: cian claro Legends
+  D: '#013565', // Rules/Desing_MC.md §2.3: azul oscuro
+  m: '#146f95', // Rules/Desing_MC.md §2.3: azul medio
+  L: '#1157be', // Rules/Desing_MC.md §2.4: --mc-default-focus
+  u: '#ffc42b', // Rules/Desing_MC.md §2.3: marketplace gold-3
+  U: '#fff27a', // Rules/Desing_MC.md §2.3: gold-1
+  n: '#db9f21', // Rules/Desing_MC.md §2.3: gold-4
+  p: '#8d68e0', // Rules/Desing_MC.md §2.3: realms deep blue
 };
 
 const ICONS = {
@@ -58,6 +56,8 @@ const ICONS = {
   help: ['..KKKK..', '.KK..KK.', '.....KK.', '....KK..', '...KK...', '...KK...', '........', '...KK...'],
   check: ['........', '.......K', '......KK', 'K....KK.', 'KK..KK..', '.KKKK...', '..KK....', '........'],
   warning: ['...rr...', '...rr...', '...rr...', '...rr...', '...rr...', '........', '...rr...', '...rr...'],
+  expand: ['KKK..KKK', 'K......K', 'K......K', '........', '........', 'K......K', 'K......K', 'KKK..KKK'],
+  compress: ['..K..K..', '..K..K..', 'KKK..KKK', '........', '........', 'KKK..KKK', '..K..K..', '..K..K..'],
   close: ['KK....KK', '.KK..KK.', '..KKKK..', '...KK...', '..KKKK..', '.KK..KK.', 'KK....KK', '........'],
   download: ['...KK...', '...KK...', '...KK...', '.KKKKKK.', '..KKKK..', '...KK...', 'K......K', 'KKKKKKKK'],
   copy: ['KKKKK...', 'KwwwK...', 'KwKKKKK.', 'KwKwwwK.', 'KKKwwwK.', '..KwwwK.', '..KKKKK.', '........'],
@@ -120,7 +120,7 @@ export function PixelIcon({ name, size = 16, title, className }: PixelIconProps)
 }
 
 /** El mismo icono como texto SVG, para `L.divIcon({ html })` de Leaflet */
-export function pixelIconHtml(name: PixelIconName, size = 16, color = '#1b1b1b'): string {
+export function pixelIconHtml(name: PixelIconName, size = 16, color = '#171615'): string {
   const rects = iconRects(name)
     .map((r) => `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="1" fill="${r.fill}"/>`)
     .join('');

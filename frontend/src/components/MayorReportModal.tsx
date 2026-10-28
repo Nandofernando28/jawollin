@@ -1,3 +1,11 @@
+/**
+ * MayorReportModal.tsx — Diálogo modal del informe/decreto oficial del alcalde.
+ *
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §2.1 Núcleo: fondo cálido de pergamino (--mc-paper) y franjas en core-grey-6
+ * - §5.1 Paneles modales biselados y botones de acción
+ * - §8 Accesibilidad: trampa de foco para teclado, escape con tecla Esc y atributos ARIA
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { MayorReportResponse } from '../types/simulation';
@@ -98,7 +106,7 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
     },
     {
       icon: <PixelIcon name="zombie" size={24} />,
-      valueClass: 'text-[#ff6b5f]',
+      valueClass: 'text-[#ff605e]',
       label: 'Reducción del pico',
       value: `${fmt(m.peak_reduction_pct, 1)}%`,
       unit: 'zombies activos',
@@ -145,13 +153,13 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
                 <PixelIcon name="book" size={24} />
               </div>
               <div>
-                <p className="mc-label text-[#d8d8d8]">
+                <p className="mc-label text-[#ede5e2]">
                   COE Cantonal · Alcaldía de San Pablo de Manta
                 </p>
-                <h2 id="decree-title" className="mc-title mt-1 text-[18px]">
+                <h2 id="decree-title" className="mc-title mt-1 text-[14px]">
                   Propuesta de Decreto de Emergencia
                 </h2>
-                <p className="mt-1 text-[18px] leading-tight text-[#d8d8d8]">
+                <p className="mt-1 text-[14px] leading-tight text-[#ede5e2]">
                   SpookyThon 2026 · Track B ·{' '}
                   <span className="text-mc-grass-light">{engine}</span>
                 </p>
@@ -197,7 +205,7 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
             </div>
           </div>
           {pdfState === 'error' && (
-            <p role="alert" className="mt-3 flex items-center gap-2 border-2 border-black bg-mc-redstone px-3 py-2 text-[18px] leading-tight text-white">
+            <p role="alert" className="mt-3 flex items-center gap-2 border-2 border-black bg-mc-redstone px-3 py-2 text-[14px] leading-tight text-white">
               <PixelIcon name="warning" size={16} />
               No se pudo generar el PDF. Puedes copiar el texto o volver a intentarlo.
             </p>
@@ -209,10 +217,10 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
 
           {/* Titular del decreto */}
           <div className="border-b-2 border-dashed border-[#8b5a2b] px-5 py-4">
-            <h3 id="decree-headline" className="font-display text-[18px] leading-snug text-[#3a2a14]">
+            <h3 id="decree-headline" className="font-display text-[14px] leading-snug text-[#3a2a14]">
               {report.headline}
             </h3>
-            <p className="mt-1 text-[18px] text-[#6b4a2b]">
+            <p className="mt-1 text-[14px] text-[#6b4a2b]">
               Generado el {formatDate(report.created_at)}
             </p>
           </div>
@@ -223,14 +231,14 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
               <div key={stat.label} className="mc-slot-dark p-2">
                 <div className="flex items-center gap-2">
                   <span aria-hidden="true">{stat.icon}</span>
-                  <span className="mc-label text-[#d8d8d8]">
+                  <span className="mc-label text-[#ede5e2]">
                     {stat.label}
                   </span>
                 </div>
                 <p className={`mt-2 font-pixel text-[13px] leading-snug ${stat.valueClass}`} style={{ textShadow: '2px 2px 0 #000' }}>
                   {stat.value}
                 </p>
-                <p className="mt-1 text-[16px] leading-tight text-[#d8d8d8]">{stat.unit}</p>
+                <p className="mt-1 text-[14px] leading-tight text-[#ede5e2]">{stat.unit}</p>
               </div>
             ))}
           </div>
@@ -268,7 +276,7 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-display text-[15px] leading-tight text-[#3a2a14]">
+                            <span className="font-display text-[14px] leading-tight text-[#3a2a14]">
                               {action.title}
                             </span>
                             {/* Insignia de prioridad: bloque sólido */}
@@ -276,10 +284,10 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
                               Prioridad {PRIORITY_LABEL[action.priority]?.toLowerCase() ?? action.priority}
                             </span>
                           </div>
-                          <p className="mt-1 text-[18px] leading-tight text-[#3a2a14]">
+                          <p className="mt-1 text-[14px] leading-tight text-[#3a2a14]">
                             {action.description}
                           </p>
-                          <p className="mt-1 flex items-center gap-2 text-[16px] text-[#6b4a2b]">
+                          <p className="mt-1 flex items-center gap-2 text-[14px] text-[#6b4a2b]">
                             <PixelIcon name="pin" size={16} />
                             {action.parish_or_hub}
                           </p>
@@ -296,7 +304,7 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
         {/* ── Footer ──────────────────────────────────────────────────── */}
         <div className="shrink-0 border-t-4 border-black bg-mc-stone-mid px-4 py-2">
           <div className="flex items-center justify-between gap-3">
-            <p className="flex min-w-0 items-center gap-2 text-[18px] text-[#d8d8d8]">
+            <p className="flex min-w-0 items-center gap-2 text-[14px] text-[#ede5e2]">
               <PixelIcon name="database" size={16} />
               <span className="truncate">
                 Código de reproducibilidad:{' '}
@@ -340,12 +348,12 @@ function SectionHeader({
 
 function MarkdownBody({ children }: { children: string }) {
   return (
-    <div className="mt-3 text-[19px] leading-tight text-[#3a2a14]">
+    <div className="mt-3 text-[15px] leading-tight text-[#3a2a14]">
       <ReactMarkdown
         components={{
           p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
           strong: ({ children }) => (
-            <strong className="font-normal text-[#1b1b1b] underline decoration-2 decoration-[#c96a14] underline-offset-2">{children}</strong>
+            <strong className="font-normal text-[#171615] underline decoration-2 decoration-[#c96a14] underline-offset-2">{children}</strong>
           ),
           em: ({ children }) => <em className="italic text-[#6b4a2b]">{children}</em>,
           ul: ({ children }) => (
@@ -355,20 +363,20 @@ function MarkdownBody({ children }: { children: string }) {
             <ol className="my-2 list-decimal space-y-1 pl-5">{children}</ol>
           ),
           li: ({ children }) => (
-            <li className="text-[19px] leading-tight text-[#3a2a14]">{children}</li>
+            <li className="text-[15px] leading-tight text-[#3a2a14]">{children}</li>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="my-2 border-l-4 border-[#c96a14] pl-3 text-[18px] italic text-[#6b4a2b]">
+            <blockquote className="my-2 border-l-4 border-[#c96a14] pl-3 text-[14px] italic text-[#6b4a2b]">
               {children}
             </blockquote>
           ),
           code: ({ children }) => (
-            <code className="bg-[#3a2a14] px-1 text-[18px] text-mc-gold">
+            <code className="bg-[#3a2a14] px-1 text-[14px] text-mc-gold">
               {children}
             </code>
           ),
           h2: ({ children }) => (
-            <h2 className="mb-1 mt-3 font-display text-[15px] text-[#3a2a14]">{children}</h2>
+            <h2 className="mb-1 mt-3 font-display text-[14px] text-[#3a2a14]">{children}</h2>
           ),
           h3: ({ children }) => (
             <h3 className="mb-1 mt-2 font-display text-[14px] text-[#3a2a14]">{children}</h3>

@@ -1,7 +1,11 @@
 /**
- * Paso 2: la simulación en vivo. El mapa avanza solo día a día y un marcador
- * muestra cuántas personas hay en cada estado ese día. Solo presenta los datos
- * que ya calculó el backend (serie espacial de la estrategia elegida).
+ * LiveSimulation.tsx — Panel de simulación en vivo con mapa y marcador epidemiológico.
+ *
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §4.1 Espaciado base 4/8 px en paneles y controles
+ * - §4.2 Contenedor max-w-[1280px] (--grid-size)
+ * - §5.1 Botones de estrategia biselados en mayúsculas
+ * - §7.1 Transiciones y reproductor día a día
  */
 import React from 'react';
 import type { HubId, ParishId, SimulationResponse, SpatialDaySnapshot, StrategyType } from '../types/simulation';
@@ -57,7 +61,7 @@ export function LiveSimulation(props: LiveSimulationProps) {
           <div className="mc-panel w-full p-5">
             <div className="flex items-center justify-center gap-3">
               <PixelIcon name="warning" size={24} title="Error" />
-              <p className="text-[20px] leading-tight text-mc-ink">{error}</p>
+              <p className="text-[15px] leading-tight text-mc-ink">{error}</p>
             </div>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <button type="button" onClick={props.onRetry} className="mc-button mc-button-danger">Reintentar</button>
@@ -67,8 +71,8 @@ export function LiveSimulation(props: LiveSimulationProps) {
         ) : (
           <>
             <PixelIcon name="hourglass" size={48} className="mc-loading" />
-            <p className="mc-title text-[22px]">Generando el mundo de Manta…</p>
-            <p className="text-[20px] text-[#d8d8d8]">El motor Monte Carlo está simulando las tres estrategias.</p>
+            <p className="mc-title text-[16px]">Generando el mundo de Manta…</p>
+            <p className="text-[15px] text-[#ede5e2]">El motor Monte Carlo está simulando las tres estrategias.</p>
             <div className="mc-slot-dark h-6 w-full max-w-sm p-0.5">
               <div className="mc-loading h-full w-2/3 bg-mc-grass" />
             </div>
@@ -95,8 +99,8 @@ export function LiveSimulation(props: LiveSimulationProps) {
           <div className="flex items-center gap-3">
             <PixelIcon name="zombie" size={32} />
             <div>
-              <p className="mc-label text-[#d8d8d8]">Paso 2 · Simulación en vivo</p>
-              <h2 className="mc-title text-[20px]">Día {currentDay} de {days}</h2>
+              <p className="mc-label text-[#ede5e2]">Paso 2 · Simulación en vivo</p>
+              <h2 className="mc-title text-[15px]">Día {currentDay} de {days}</h2>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -120,7 +124,7 @@ export function LiveSimulation(props: LiveSimulationProps) {
             <span
               key={i}
               className="h-3 flex-1 border border-black"
-              style={{ background: i < currentDay ? '#4f8f2f' : '#1e1e1e' }}
+              style={{ background: i < currentDay ? '#3c8527' : '#171615' }}
             />
           ))}
         </div>
@@ -147,22 +151,22 @@ export function LiveSimulation(props: LiveSimulationProps) {
         {/* Marcador de estados del día */}
         <aside className="mc-panel space-y-3 p-3 lg:col-span-4" aria-live="off">
           <div className="mc-panel-dark px-3 py-2">
-            <p className="mc-label text-[#d8d8d8]">Población · día {currentDay}</p>
-            <h3 className="mc-title mt-1 text-[16px]">Estados de la plaga</h3>
+            <p className="mc-label text-[#ede5e2]">Población · día {currentDay}</p>
+            <h3 className="mc-title mt-1 text-[14px]">Estados de la plaga</h3>
           </div>
           {totals.map((t) => (
             <div key={t.key} className="mc-slot-dark p-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 text-[20px]">
+                <span className="flex items-center gap-2 text-[15px]">
                   <span className="h-4 w-4 border-2 border-black" style={{ background: t.color }} />
                   {t.label}
                 </span>
-                <span className="font-pixel text-[13px]" style={{ color: t.color === STATE_COLOR.sano ? '#7cc24a' : t.color, textShadow: '2px 2px 0 #000' }}>
+                <span className="font-pixel text-[13px]" style={{ color: t.color === STATE_COLOR.sano ? '#6cc349' : t.color, textShadow: '2px 2px 0 #000' }}>
                   {t.value.toLocaleString()}
                 </span>
               </div>
               {/* Barra proporcional en bloques */}
-              <div className="mt-2 h-3 bg-[#2b2b2b]">
+              <div className="mt-2 h-3 bg-[#262423]">
                 <div
                   className="h-full"
                   style={{

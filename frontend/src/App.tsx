@@ -1,8 +1,17 @@
+/**
+ * App.tsx — Vista principal de la consola epidemiológica Operación Cortafuegos Manta.
+ *
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §4.1 Espaciado base 4/8 px en márgenes y separaciones de secciones
+ * - §4.2 Layout y rejilla: contenedor central de 1280px (--grid-size)
+ * - §5.1 Paneles de estado, casillas de inventario y botones de control
+ * - §5.4 Estructura de cabecera y consola de mando
+ */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSimulation } from './hooks/useSimulation';
 import { useSound } from './audio/SoundProvider';
 import { IntroScreen } from './components/IntroScreen';
-import { BlockTransition } from './components/BlockTransition';
+import { DitherTransition } from './components/DitherTransition';
 import { LiveSimulation } from './components/LiveSimulation';
 import { ResultsScroll } from './components/ResultsScroll';
 import { ExpansionDetector } from './components/ExpansionDetector';
@@ -133,7 +142,7 @@ export default function App() {
   // Capas comunes a todas las pantallas: transición de bloques y decreto del alcalde
   const overlays = (
     <>
-      {pendingStage && <BlockTransition onCovered={onTransitionCovered} onDone={onTransitionDone} />}
+      {pendingStage && <DitherTransition onCovered={onTransitionCovered} onDone={onTransitionDone} />}
       {/* Modal del Decreto Oficial del Alcalde generado con Amazon Bedrock */}
       {showReport && report && (
         <MayorReportModal report={report} onClose={closeReport} />
@@ -220,13 +229,13 @@ export default function App() {
       {/* Header institucional conectado con AWS / Local */}
       {header}
 
-      <main className="mx-auto max-w-[1280px] space-x-0 space-y-6 px-4 py-6 sm:px-6">
+      <main className="mx-auto max-w-[1500px] space-x-0 space-y-6 px-4 py-6 sm:px-6">
         {/* Banner de alerta de error si ocurre */}
         {error && (
           <div className="mc-panel flex items-center justify-between gap-3 p-3">
             <div className="flex items-center gap-3">
               <PixelIcon name="warning" size={24} title="Error" />
-              <span className="text-[20px] leading-tight text-mc-ink">{error}</span>
+              <span className="text-[15px] leading-tight text-mc-ink">{error}</span>
             </div>
             <button
               onClick={() => execute()}
@@ -239,7 +248,7 @@ export default function App() {
 
         {/* Barra de metadatos de ejecución en vivo */}
         {result && (
-          <div className="mc-panel-dark flex flex-wrap items-center justify-between gap-3 px-4 py-2 text-[18px] text-[#d8d8d8]">
+          <div className="mc-panel-dark flex flex-wrap items-center justify-between gap-3 px-4 py-2 text-[14px] text-[#ede5e2]">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
               <span className="flex items-center gap-2 text-white">
                 <PixelIcon name="database" size={16} />
@@ -374,10 +383,10 @@ export default function App() {
                   <div className="flex items-center gap-3">
                     <PixelIcon name="map" size={24} />
                     <div>
-                      <h2 className="mc-title text-[18px]">
+                      <h2 className="mc-title text-[14px]">
                         Mapa Operativo de Contención · Manta
                       </h2>
-                      <p className="mt-1 text-[18px] leading-tight text-[#d8d8d8]">
+                      <p className="mt-1 text-[14px] leading-tight text-[#ede5e2]">
                         Visualización territorial de casos activos, cortafuegos y vacunación perimetral por parroquia.
                       </p>
                     </div>

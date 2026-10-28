@@ -1,10 +1,10 @@
 /**
- * TerritoryPanel — Territorio y recursos en el día seleccionado (datos reales del backend)
+ * TerritoryPanel.tsx — Panel de territorio y recursos en el día seleccionado.
  *
- * Fase 6 · tarea 5.3: tabla en vivo por parroquia y hub (casos activos, inmunizados y
- * defensas desplegadas) + consumo acumulado de recursos de la estrategia elegida.
- *
- * Estilo: cuadrícula de inventario del tema pixel (src/index.css).
+ * Referencia oficial de diseño: Rules/Desing_MC.md
+ * - §4.1 Espaciado base 4/8 px en paneles y casillas
+ * - §5.1 Casillas de inventario hundidas (mc-slot-dark y mc-slot-light)
+ * - §5.5 Tablas de datos con bordes rectos y filas alternas oscuras
  */
 import React from 'react';
 import type { SimulationResponse, SpatialDaySnapshot, StrategyType } from '../types/simulation';
@@ -24,8 +24,8 @@ function PanelTitle({ kicker, title, icon }: { kicker?: string; title: string; i
   return (
     <div className="mc-panel-dark mb-3 flex items-center justify-between gap-3 px-3 py-2">
       <div>
-        {kicker && <p className="mc-label text-[#d8d8d8]">{kicker}</p>}
-        <h2 className="mc-title mt-1 text-[16px]">{title}</h2>
+        {kicker && <p className="mc-label text-[#ede5e2]">{kicker}</p>}
+        <h2 className="mc-title mt-1 text-[14px]">{title}</h2>
       </div>
       <PixelIcon name={icon} size={24} />
     </div>
@@ -51,14 +51,14 @@ export function TerritoryPanel({ result, currentDay, strategy }: TerritoryPanelP
       <div className="mc-panel p-3">
         <PanelTitle kicker={`Control urbano · día ${currentDay}`} title="Hubs y cortafuegos de Manta" icon="torch" />
         <div className="space-y-2">
-          {hubs.length === 0 && <p className="text-[20px] text-mc-muted">Sin serie espacial para esta estrategia.</p>}
+          {hubs.length === 0 && <p className="text-[15px] text-mc-muted">Sin serie espacial para esta estrategia.</p>}
           {hubs.map((hub) => (
             <div
               key={hub.hub_id}
               className={`${hub.firewall_active ? 'mc-slot-dark' : 'mc-slot-light'} px-3 py-2`}
             >
               <div className="flex items-center justify-between gap-2">
-                <p className={`truncate text-[20px] leading-tight ${hub.firewall_active ? 'text-white' : 'text-mc-ink'}`}>{hub.hub_name}</p>
+                <p className={`truncate text-[15px] leading-tight ${hub.firewall_active ? 'text-white' : 'text-mc-ink'}`}>{hub.hub_name}</p>
                 <span
                   className={`mc-chip shrink-0 ${
                     hub.firewall_active ? 'bg-mc-lapis text-white' : 'bg-mc-stone-light text-white'
@@ -67,8 +67,8 @@ export function TerritoryPanel({ result, currentDay, strategy }: TerritoryPanelP
                   {hub.firewall_active ? 'Cortafuegos activo' : 'Abierto'}
                 </span>
               </div>
-              <p className={`mt-1 text-[18px] leading-tight ${hub.firewall_active ? 'text-[#d8d8d8]' : 'text-mc-muted'}`}>
-                Casos activos: <b className={`font-normal ${hub.firewall_active ? 'text-[#ff6b5f]' : 'text-mc-redstone-dark'}`}>{hub.active_cases}</b> · Vacunas en anillo hoy:{' '}
+              <p className={`mt-1 text-[14px] leading-tight ${hub.firewall_active ? 'text-[#ede5e2]' : 'text-mc-muted'}`}>
+                Casos activos: <b className={`font-normal ${hub.firewall_active ? 'text-[#ff605e]' : 'text-mc-redstone-dark'}`}>{hub.active_cases}</b> · Vacunas en anillo hoy:{' '}
                 <b className={`font-normal ${hub.firewall_active ? 'text-mc-diamond' : 'text-mc-lapis'}`}>{hub.vaccines_in_ring_today}</b>
               </p>
             </div>
@@ -79,7 +79,7 @@ export function TerritoryPanel({ result, currentDay, strategy }: TerritoryPanelP
       <div className="mc-panel p-3">
         <PanelTitle title="Parroquias" icon="map" />
         <div className="mc-slot-dark overflow-x-auto p-1">
-          <table className="w-full border-collapse text-left text-[20px]">
+          <table className="w-full border-collapse text-left text-[15px]">
             <thead>
               <tr className="bg-mc-stone-mid">
                 <th className="mc-label px-2 py-2 font-normal text-mc-gold">Parroquia</th>
@@ -90,9 +90,9 @@ export function TerritoryPanel({ result, currentDay, strategy }: TerritoryPanelP
             </thead>
             <tbody className="text-white">
               {parishes.map((p, i) => (
-                <tr key={p.parish_id} className={`border-t-2 border-black ${i % 2 ? 'bg-[#262626]' : 'bg-[#1e1e1e]'}`}>
+                <tr key={p.parish_id} className={`border-t-2 border-black ${i % 2 ? 'bg-[#262423]' : 'bg-[#171615]'}`}>
                   <td className="px-2 py-1">{p.parish_name}</td>
-                  <td className="px-2 text-[#ff6b5f]">{p.zombies}</td>
+                  <td className="px-2 text-[#ff605e]">{p.zombies}</td>
                   <td className="px-2 text-mc-diamond">{p.inmunes}</td>
                   <td className="px-2 text-mc-gold">{p.prevalence_pct}%</td>
                 </tr>
@@ -104,7 +104,7 @@ export function TerritoryPanel({ result, currentDay, strategy }: TerritoryPanelP
 
       <div className="mc-panel p-3">
         <PanelTitle title="Recursos acumulados" icon="coin" />
-        <div className="mb-2 flex items-center justify-between text-[20px] text-mc-ink">
+        <div className="mb-2 flex items-center justify-between text-[15px] text-mc-ink">
           <span>Gasto municipal</span>
           <span className="font-pixel text-[10px]">
             ${Math.round(spent).toLocaleString()} / ${result.params.total_budget.toLocaleString()}
