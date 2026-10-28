@@ -279,6 +279,8 @@ Todo modelo simplifica la realidad. Estas son las simplificaciones conocidas del
 - La comparación con la COVID-19 se basa en el R₀, que depende de cuántos contactos tiene cada persona en nuestra red. Es una referencia de orden de magnitud, no una calibración exacta.
 - No modelamos el dengue, aunque es frecuente en Manabí, porque se transmite por mosquito y nuestro modelo es de contacto directo entre personas.
 - El mapa animado muestra una sola repetición (la primera), no el promedio de todas. Las gráficas y los indicadores sí usan las 30 repeticiones.
+- Los **límites de las parroquias en el mapa son aproximados**: los dibujamos a mano conservando la disposición real (San Mateo al oeste, Manta Centro en el puerto, Tarqui en el centro-este, Los Esteros al noreste y Eloy Alfaro al sur), pero no son los límites oficiales del INEC. Algunos bordes quedan sobre el mar. Las coordenadas de los hubs sí son las de cada lugar.
+- El fondo del mapa (tiles de CARTO) necesita internet. Sin conexión, el mapa sigue mostrando las parroquias y los hubs, pero sin calles.
 - Con muchas personas y repeticiones el cálculo local se vuelve lento (5 000 personas, 100 repeticiones y 60 días tardan unos 20 s en un portátil). En AWS se reparte en paralelo.
 
 ## Arquitectura en AWS
@@ -287,7 +289,40 @@ _Pendiente (Integrante 2)._
 
 ## Interfaz
 
-_Pendiente (Integrante 3)._
+Consola web en React 19 + Vite + TypeScript ([`frontend/`](frontend/)). Todos los números que muestra vienen del backend: si AWS no responde se usa el servidor local, y si ninguno responde aparece un aviso de error con **Reintentar** (no hay datos simulados en el navegador).
+
+**Cabecera.** Selector **AWS / Local** (qué backend usar) con su estado (*Conectado* o *Sin conexión*), y los botones **Parámetros**, **Restaurar** (vuelve al escenario base, semilla 2026), **Boletín COE** y **Simular**. Debajo, una barra con el identificador de la simulación (`sim_hash`), si se calculó ahora o vino **desde caché**, el tiempo de cómputo, la población, las repeticiones y la semilla.
+
+**Indicadores.** Cuatro tarjetas con la media de las repeticiones y su rango P10–P90:
+
+| Tarjeta | Qué dice |
+|---|---|
+| Contagios evitados | Frente a no hacer nada, escalado a los 271 000 habitantes de Manta (y la cifra de la muestra). |
+| Frente a actuar al azar | Lo que aporta elegir bien con el mismo presupuesto. |
+| Pico de zombies | Cuánto baja el máximo de casos simultáneos, y el pico de cada estrategia. |
+| Gasto ejecutado | Gasto, dosis, brigadas, días de cierre, costo por contagio evitado y dosis desperdiciadas (siempre 0). |
+
+**Estrategia en el visor y Brotes Sorpresa.** Se elige qué estrategia muestra el mapa (*Cortafuegos Manta*, *Al Azar* o *Sin Intervención*). Los botones de **Brote Sorpresa** aplican y simulan los escenarios del reto: *Contagio ×2*, *Mitad de vacunas*, *Brote en Mercado Central* y *Vacuna a medias* (los valores están en [`frontend/src/data/surprisePresets.ts`](frontend/src/data/surprisePresets.ts) y coinciden con [docs/calibracion.md](docs/calibracion.md)). Se pueden combinar.
+
+**Mapa de Manta.** Reproducción día a día (play, pausa, velocidad ×1/×2/×5 y slider). Cada parroquia se colorea por el porcentaje de su población con infección activa (menos de 2%, de 2% a 10%, más de 10%). Cada hub se marca en azul si tiene el cortafuegos activo ese día, en verde si hay vacunación en anillo alrededor y en naranja si está abierto; al hacer clic muestra sus casos activos. Debajo del mapa, una tabla con cada hub y cada parroquia en el día elegido y el gasto acumulado.
+
+**Gráficas.** (1) Zombies activos o contagiados acumulados por día de las tres estrategias, con la zona P10–P90 sombreada; (2) cómo se reparte la población entre los 5 estados con el Escudo; (3) gasto diario del Escudo en vacunas, brigadas y cierres. Una línea vertical marca el día del mapa.
+
+**Parámetros.** Pantalla con sliders y campos numéricos libres para la semilla, el punto de inicio, la población, los casos iniciales, los días, las repeticiones, el contagio de día y de noche, la incubación, los días contagiando, la eficacia de la vacuna, el presupuesto y los costos. Cada campo muestra su valor, su unidad y qué representa; el valor escrito se aplica al salir del campo o al pulsar Enter.
+
+**Boletín COE.** Abre la propuesta de decreto para el alcalde (ver [Informe para el alcalde](#informe-para-el-alcalde)), con botones para copiar, descargar en Markdown o imprimir.
+
+**Cómo arrancarla en local:**
+
+```bash
+python src/local_server.py
+```
+
+```bash
+npm --prefix frontend run dev
+```
+
+Luego abrir `http://localhost:5173` y elegir **Local** en la cabecera. Para usar AWS, poner la URL del API Gateway en `VITE_API_URL` (ver [`frontend/.env.example`](frontend/.env.example)).
 
 ## Cómo desplegarlo
 

@@ -12,7 +12,8 @@ import {
   Clock,
   Database,
 } from 'lucide-react';
-import { useSimulation, type SurprisePreset } from './hooks/useSimulation';
+import { useSimulation } from './hooks/useSimulation';
+import { SURPRISE_PRESETS } from './data/surprisePresets';
 import { Header } from './components/Header';
 import { SetupScreen } from './components/SetupScreen';
 import { KpiCards } from './components/KpiCards';
@@ -20,7 +21,7 @@ import { MantaMap } from './components/MantaMap';
 import { TerritoryPanel } from './components/TerritoryPanel';
 import { EpidemicCharts } from './components/EpidemicCharts';
 import { MayorReportModal } from './components/MayorReportModal';
-import type { StrategyType } from './types/simulation';
+import type { HubId, ParishId, StrategyType } from './types/simulation';
 
 export default function App() {
   const {
@@ -64,21 +65,24 @@ export default function App() {
       ? timeline[Math.min(currentDay, timeline.length - 1)]
       : undefined;
 
-  const zombiesPerParroquia: Record<string, number> = useMemo(() => {
-    if (!snap) return {};
-    const map: Record<string, number> = {};
-    Object.values(snap.parishes).forEach((p) => {
-      map[p.parish_id] = p.zombies;
-      map[p.parish_name] = p.zombies;
+  // % de la parroquia con infección activa (Mordidos + Zombies), calculado por el backend
+  const prevalenceByParish = useMemo(() => {
+    const map: Partial<Record<ParishId, number>> = {};
+    Object.values(snap?.parishes ?? {}).forEach((p) => {
+      map[p.parish_id] = p.prevalence_pct;
     });
     return map;
   }, [snap]);
 
-  const intervenedHubs: string[] = useMemo(() => {
-    if (!snap) return [];
-    return Object.values(snap.hubs)
-      .filter((h) => h.firewall_active || h.vaccines_in_ring_today > 0)
-      .map((h) => h.hub_id);
+  // Un hub está "intervenido" solo si el Escudo lo cerró ese día; la vacunación en
+  // anillo alrededor del hub se muestra aparte.
+  const hubsToday = useMemo(() => {
+    const hubs = Object.values(snap?.hubs ?? {});
+    return {
+      firewall: hubs.filter((h) => h.firewall_active).map((h) => h.hub_id),
+      ringVaccination: hubs.filter((h) => h.vaccines_in_ring_today > 0).map((h) => h.hub_id),
+      cases: Object.fromEntries(hubs.map((h) => [h.hub_id, h.active_cases])) as Partial<Record<HubId, number>>,
+    };
   }, [snap]);
 
   // Si el usuario abrió la pantalla de configuración libre / presets
@@ -139,6 +143,16 @@ export default function App() {
               <span className="flex items-center gap-1.5 font-medium text-[#111a4a]">
                 <Database className="h-3.5 w-3.5 text-[#167e6c]" />
                 Simulación: <code className="font-mono text-[#167e6c]">{result.sim_hash}</code>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                    result.cache_hit ? 'bg-[#eef2fb] text-[#1e4199]' : 'bg-[#f6f6f8] text-[#3b3e47]'
+                  }`}
+                  title={result.cache_hit
+                    ? 'Misma configuración y semilla que una simulación anterior: se devuelve el resultado guardado, idéntico.'
+                    : 'Resultado recién calculado por el motor Monte Carlo.'}
+                >
+                  {result.cache_hit ? 'Desde caché' : 'Calculado'}
+                </span>
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" />
@@ -225,21 +239,14 @@ export default function App() {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#7c7f88]">
                 Brotes Sorpresa:
               </span>
-              {(
-                [
-                  { id: 'double_beta', label: '⚡ Contagio ×2', desc: 'El doble de contagiosa: β día 0,10 y β noche 0,14' },
-                  { id: 'half_vaccines', label: '💉 Mitad de vacunas', desc: 'Cada dosis cuesta el doble (30 $): con el mismo dinero alcanza la mitad' },
-                  { id: 'market_outbreak', label: '📍 Brote en Mercado Central', desc: 'El brote empieza en el Mercado Central de Manta' },
-                  { id: 'weak_vaccine', label: '🧬 Vacuna a medias', desc: 'Variante que la vacuna cubre a medias: eficacia 50%' },
-                ] as const
-              ).map((p) => (
+              {SURPRISE_PRESETS.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => applyPreset(p.id)}
-                  title={p.desc}
+                  title={p.description}
                   className="rounded-lg border border-[#e3e4e8] bg-[#f6f6f8] px-2.5 py-1 text-xs font-medium text-[#3b3e47] transition hover:border-[#111a4a] hover:bg-white"
                 >
-                  {p.label}
+                  {p.icon} {p.label}
                 </button>
               ))}
             </div>
@@ -271,8 +278,10 @@ export default function App() {
                   currentDay={currentDay}
                   playing={playing}
                   playbackSpeed={playbackSpeed}
-                  intervenedHubs={intervenedHubs}
-                  zombiesPerParroquia={zombiesPerParroquia}
+                  firewallHubs={hubsToday.firewall}
+                  ringVaccinationHubs={hubsToday.ringVaccination}
+                  hubCases={hubsToday.cases}
+                  prevalenceByParish={prevalenceByParish}
                   onDayChange={setCurrentDay}
                   onTogglePlay={togglePlay}
                   onResetDay={resetDay}
@@ -290,7 +299,7 @@ export default function App() {
 
             {/* Columna Derecha: Curvas Epidemiológicas Reales con bandas P10-P90 */}
             <div className="space-y-5 lg:col-span-5">
-              <EpidemicCharts result={result} />
+              <EpidemicCharts result={result} currentDay={currentDay} />
             </div>
           </div>
         )}

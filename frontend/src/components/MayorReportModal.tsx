@@ -2,20 +2,30 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { X, Copy, Check, Printer, FileDown } from 'lucide-react';
 import type { MayorReportResponse } from '../types/simulation';
+import { fmt } from '../utils/format';
 
 interface MayorReportModalProps {
   report: MayorReportResponse;
   onClose: () => void;
 }
 
+// Nombre legible del motor que redactó el boletín
+const ENGINE_LABEL: Record<MayorReportResponse['generated_by'], string> = {
+  'heuristic-coe-fallback': 'Motor analítico del COE',
+  'amazon-bedrock-nova-micro': 'Amazon Bedrock · Nova Micro',
+  'amazon-bedrock-claude-haiku': 'Amazon Bedrock · Claude Haiku',
+};
+
 export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
   const [copied, setCopied] = useState(false);
+  const engine = ENGINE_LABEL[report.generated_by] ?? report.generated_by;
+  const m = report.metrics_snapshot;
 
   // Armar el documento Markdown completo
   const fullMarkdown = [
     `# ${report.headline}`,
     '',
-    `> Generado por: \`${report.generated_by}\` · ${new Date(report.created_at).toLocaleString('es-EC')}`,
+    `> Generado por: ${engine} · ${new Date(report.created_at).toLocaleString('es-EC')}`,
     '',
     report.situacion_critica,
     '',
@@ -23,15 +33,14 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
     '',
     report.balance_recursos,
     '',
-    '## Indicadores Clave del Decreto',
+    // Lista y no tabla: react-markdown sin remark-gfm no dibuja tablas
+    '## Indicadores clave (muestra de la simulación)',
     '',
-    `| Métrica | Valor |`,
-    `|---|---|`,
-    `| Vidas salvadas vs. Al Azar | ${report.metrics_snapshot.lives_saved_vs_random} nodos |`,
-    `| Reducción del pico (%) | ${report.metrics_snapshot.peak_reduction_pct}% |`,
-    `| Presupuesto ejecutado | $${report.metrics_snapshot.budget_spent_usd.toLocaleString()} |`,
-    `| Costo por nodo salvado | $${report.metrics_snapshot.cost_per_life_saved_usd} |`,
-    `| Parroquia más crítica | ${report.metrics_snapshot.most_critical_parish} |`,
+    `- **Contagios evitados frente al azar:** ${fmt(m.lives_saved_vs_random)} personas`,
+    `- **Reducción del pico de zombies:** ${fmt(m.peak_reduction_pct, 1)}%`,
+    `- **Presupuesto ejecutado:** $${fmt(m.budget_spent_usd)}`,
+    `- **Costo por contagio evitado frente al azar:** $${fmt(m.cost_per_life_saved_usd)} por persona`,
+    `- **Parroquia con más contagios:** ${m.most_critical_parish}`,
     '',
     '## Acciones Prioritarias del COE',
     '',
@@ -53,7 +62,7 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Decreto_COE_Manta_${report.sim_hash}.md`;
+    a.download = `Propuesta_Decreto_COE_Manta_${report.sim_hash}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -63,7 +72,7 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Boletín Oficial para el Alcalde"
+      aria-label="Propuesta de decreto para el alcalde"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black/70 print:shadow-none">
@@ -72,11 +81,11 @@ export function MayorReportModal({ report, onClose }: MayorReportModalProps) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 shrink-0">
           <div>
             <h2 className="text-sm font-extrabold text-white tracking-wide">
-              📄 DECRETO DE CONTENCIÓN EPIDEMIOLÓGICA
+              📄 PROPUESTA DE DECRETO DEL COE
             </h2>
             <p className="text-[11px] text-slate-500 mt-0.5">
               COE Cantonal de Manta · SpookyThon 2026 ·{' '}
-              <span className="font-mono text-slate-400">{report.generated_by}</span>
+              <span className="text-slate-400">{engine}</span>
             </p>
           </div>
           <div className="flex items-center gap-2">

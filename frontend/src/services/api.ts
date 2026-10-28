@@ -122,6 +122,7 @@ export async function checkHealth(mode: BackendMode): Promise<HealthCheckRespons
     return {
       status: 'degraded',
       backend_mode: mode,
+      execution_mode: mode === 'aws' ? 'aws-serverless' : 'local-hybrid',
       dynamodb_connected: false,
       s3_connected: false,
       step_functions_connected: false,

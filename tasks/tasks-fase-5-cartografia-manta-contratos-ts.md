@@ -24,6 +24,15 @@
   - *Hub 4 — Empacadoras (Los Esteros):* `-0.9410, -80.7010`
   - *Hub 5 — Terminal Terrestre:* `-0.9630, -80.6890`
 
+## Estado tras la revisión (27/10/2026)
+
+La cartografía **no se implementó con trazados SVG** como propone este plan: el mapa usa **Leaflet + GeoJSON en coordenadas reales (WGS84)** sobre tiles de CARTO, que se ve mejor y permite zoom. Las correcciones están en [tasks-correccion-fases-5-6-mapa-interfaz.md](./tasks-correccion-fases-5-6-mapa-interfaz.md) (tarea 1.0). Resumen de las desviaciones:
+
+- **Sin script de extracción:** `scripts/extract_manta_geojson.py` tenía IDs de OSM de relleno, nunca consultaba Overpass y sus datos no coincidían con el mapa; se eliminó. Los polígonos se definen a mano en `mantaGeo.ts`.
+- **Límites aproximados:** los polígonos de las 5 parroquias no son los oficiales del INEC; conservan la disposición real, comparten bordes y no se solapan. Las coordenadas de los hubs son las de las Notas de este plan.
+- **Sin dependencia de internet nula:** los tiles de CARTO necesitan conexión; si fallan, los polígonos y los hubs se siguen dibujando.
+- **Garantías por test:** `tests/test_frontend_contract.py` comprueba que los identificadores y nombres de hubs y parroquias coinciden con `src/engine/graph_manta.py`, que cada hub cae dentro de su parroquia, que las parroquias no se solapan y que las interfaces de `simulation.ts` tienen los mismos campos que las respuestas reales del backend.
+
 ## Instructions for Completing Tasks
 
 **IMPORTANT:** As you complete each task, you must check it off in this markdown file by changing `- [ ]` to `- [x]`. This helps track progress and ensures you don't skip any steps.
@@ -35,19 +44,19 @@ Update the file after completing each sub-task, not just after completing an ent
 
 ## Tasks
 
-- [ ] 0.0 Create feature branch
-  - [ ] 0.1 Ubicarse en la rama de implementación (`git checkout -b feature/fase-5-cartografia-manta-contratos-ts` o continuar en `feature/operacion-cortafuegos-manta`).
+- [x] 0.0 Create feature branch
+  - [x] 0.1 Ubicarse en la rama de implementación (`git checkout -b feature/fase-5-cartografia-manta-contratos-ts` o continuar en `feature/operacion-cortafuegos-manta`).
 
-- [ ] 1.0 Construir el procesador cartográfico de Manta (`scripts/extract_manta_geojson.py`)
-  - [ ] 1.1 Implementar en `scripts/extract_manta_geojson.py` la función de proyección cartográfica Equirectangular / Mercator local `latlon_to_svg(lat: float, lon: float) -> Tuple[float, float]` calibrada al bounding box costero de Manta (`lon_min=-80.785`, `lon_max=-80.665`, `lat_min=-0.998`, `lat_max=-0.922`) sobre un lienzo `800 x 560`.
-  - [ ] 1.2 Incluir en el script la consulta a Overpass API (`relation["boundary"="administrative"]["name"~"Manta|Tarqui|Eloy Alfaro|Los Esteros|San Mateo"]`) junto con las poligonales geodésicas de alta precisión de las 5 parroquias urbanas de Manta (basadas en la División Político-Administrativa del INEC y el perfil real de la Bahía de Manta, el espigón portuario, Playa Murciélago, Playa de Tarqui y cabo San Mateo).
-  - [ ] 1.3 Generar y validar los strings `path` SVG (`M x y L ... Z`) sin huecos topológicos entre parroquias colindantes (`San Mateo` al suroeste costero, `Manta Centro` en el puerto y Playa Murciélago, `Tarqui` en el centro-este costero, `Los Esteros` al noreste costero, y `Eloy Alfaro` al sur-este interior).
+- [x] 1.0 Construir el procesador cartográfico de Manta (`scripts/extract_manta_geojson.py`) *(sustituida: sin script; ver "Estado tras la revisión")*
+  - [x] 1.1 *(Sustituida: Leaflet proyecta las coordenadas WGS84; no hace falta `latlon_to_svg`.)* Implementar en `scripts/extract_manta_geojson.py` la función de proyección cartográfica Equirectangular / Mercator local `latlon_to_svg(lat: float, lon: float) -> Tuple[float, float]` calibrada al bounding box costero de Manta (`lon_min=-80.785`, `lon_max=-80.665`, `lat_min=-0.998`, `lat_max=-0.922`) sobre un lienzo `800 x 560`.
+  - [x] 1.2 *(Sustituida: no se consulta Overpass; polígonos aproximados a mano en `mantaGeo.ts`.)* Incluir en el script la consulta a Overpass API (`relation["boundary"="administrative"]["name"~"Manta|Tarqui|Eloy Alfaro|Los Esteros|San Mateo"]`) junto con las poligonales geodésicas de alta precisión de las 5 parroquias urbanas de Manta (basadas en la División Político-Administrativa del INEC y el perfil real de la Bahía de Manta, el espigón portuario, Playa Murciélago, Playa de Tarqui y cabo San Mateo).
+  - [x] 1.3 *(Hecha sobre GeoJSON: sin solapes entre parroquias y con la disposición indicada, comprobado por test.)* Generar y validar los strings `path` SVG (`M x y L ... Z`) sin huecos topológicos entre parroquias colindantes (`San Mateo` al suroeste costero, `Manta Centro` en el puerto y Playa Murciélago, `Tarqui` en el centro-este costero, `Los Esteros` al noreste costero, y `Eloy Alfaro` al sur-este interior).
 
-- [ ] 2.0 Crear el módulo de datos geográficos del Frontend (`frontend/src/data/mantaGeo.ts`)
-  - [ ] 2.1 Exportar en `frontend/src/data/mantaGeo.ts` la constante `MANTA_MAP_VIEWBOX = "0 0 800 560"` y el trazado del Océano Pacífico / Bahía de Manta y rompeolas del Puerto de Manta.
-  - [ ] 2.2 Exportar `MANTA_PARISH_PATHS`: arreglo tipado con las 5 parroquias (`id`, `name`, `inecWeight`, `populationRef`, `svgPath`, `labelX`, `labelY`, `description`).
-  - [ ] 2.3 Exportar `MANTA_HUB_LOCATIONS`: arreglo tipado con los 5 Hubs críticos (`id`, `name`, `shortName`, `parishId`, `lat`, `lon`, `svgX`, `svgY`, `category`, `typicalConcurrency`).
-  - [ ] 2.4 Exportar `MANTA_TRANSIT_CORRIDORS`: rutas vectoriales SVG que representan las arterias viales reales que conectan los Hubs (Ruta del Spondylus San Mateo–ULEAM–Centro, Av. 4 de Noviembre, Vía Puerto–Aeropuerto por Tarqui y Los Esteros, y corredor hacia Terminal Terrestre en Eloy Alfaro) para animar el flujo diurno de buses y nodos puente.
+- [x] 2.0 Crear el módulo de datos geográficos del Frontend (`frontend/src/data/mantaGeo.ts`)
+  - [x] 2.1 *(Sustituida por `MANTA_COORDINATES` (centro y zoom de Leaflet); el océano y el puerto los dibujan los tiles.)* Exportar en `frontend/src/data/mantaGeo.ts` la constante `MANTA_MAP_VIEWBOX = "0 0 800 560"` y el trazado del Océano Pacífico / Bahía de Manta y rompeolas del Puerto de Manta.
+  - [x] 2.2 *(Hecha como `MANTA_PARROQUIAS_GEO`, GeoJSON con `parish_id`, `name` y `weight`.)* Exportar `MANTA_PARISH_PATHS`: arreglo tipado con las 5 parroquias (`id`, `name`, `inecWeight`, `populationRef`, `svgPath`, `labelX`, `labelY`, `description`).
+  - [x] 2.3 *(Hecha como `MANTA_HUBS` con `id`, `name`, `parishId`, `coords` y `description`.)* Exportar `MANTA_HUB_LOCATIONS`: arreglo tipado con los 5 Hubs críticos (`id`, `name`, `shortName`, `parishId`, `lat`, `lon`, `svgX`, `svgY`, `category`, `typicalConcurrency`).
+  - [ ] 2.4 *(No implementada: fuera de alcance para la entrega; el mapa no dibuja corredores de bus.)* Exportar `MANTA_TRANSIT_CORRIDORS`: rutas vectoriales SVG que representan las arterias viales reales que conectan los Hubs (Ruta del Spondylus San Mateo–ULEAM–Centro, Av. 4 de Noviembre, Vía Puerto–Aeropuerto por Tarqui y Los Esteros, y corredor hacia Terminal Terrestre en Eloy Alfaro) para animar el flujo diurno de buses y nodos puente.
 
 - [ ] 3.0 Definir los Contratos e Interfaces TypeScript en `frontend/src/types/simulation.ts`
   - [x] 3.1 Definir la interfaz `SimulationParams` con todos los parámetros configurables por el usuario y el jurado:

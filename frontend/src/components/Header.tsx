@@ -42,7 +42,7 @@ export function Header({
 }: HeaderProps) {
   const healthDot =
     backendHealthy === null ? 'bg-[#c6c9cf]' : backendHealthy ? 'bg-[#167e6c] animate-pulse' : 'bg-[#ec652b]';
-  const healthLabel = backendHealthy === null ? 'Verificando' : backendHealthy ? 'Conectado' : 'Modo local';
+  const healthLabel = backendHealthy === null ? 'Verificando' : backendHealthy ? 'Conectado' : 'Sin conexión';
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#e3e4e8] bg-white/80 backdrop-blur-md">
@@ -51,8 +51,8 @@ export function Header({
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#dfe6ea] bg-[#f6f6f8] text-[#111a4a]">
             <ShieldCheck className="h-4 w-4" />
           </div>
-          <div className="hidden min-w-0 sm:block">
-            <h1 className="text-[13px] font-semibold tracking-tight text-[#111a4a] leading-tight">
+          <div className="hidden min-w-0 lg:block">
+            <h1 className="whitespace-nowrap text-[13px] font-semibold tracking-tight text-[#111a4a] leading-tight">
               OPERACIÓN CORTAFUEGOS MANTA
             </h1>
             <p className="text-[11px] leading-tight text-[#7c7f88]">
@@ -62,11 +62,14 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-2 rounded-full border border-[#e3e4e8] bg-[#f6f6f8] px-3 py-1.5 md:flex">
+          {/* Estado del backend del modo elegido (el selector ya dice cuál). Solo en xl: por
+              debajo no cabe junto al resto de la cabecera (ancho máximo 1200 px). */}
+          <div
+            className="hidden items-center gap-2 rounded-full border border-[#e3e4e8] bg-[#f6f6f8] px-3 py-1.5 xl:flex"
+            title={backendMode === 'aws' ? 'AWS us-east-1' : 'Servidor local :8000'}
+          >
             <span className={`h-1.5 w-1.5 rounded-full ${healthDot}`} />
-            <span className="font-mono text-[11px] text-[#7c7f88]">
-              {backendMode === 'aws' ? 'AWS us-east-1' : 'Local :8000'} · {healthLabel}
-            </span>
+            <span className="whitespace-nowrap text-[11px] text-[#7c7f88]">{healthLabel}</span>
           </div>
 
           <div className="flex overflow-hidden rounded-lg border border-[#e3e4e8] bg-[#f6f6f8]">

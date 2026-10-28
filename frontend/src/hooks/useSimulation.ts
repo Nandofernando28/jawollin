@@ -12,8 +12,7 @@ import type {
 } from '../types/simulation';
 import { DEFAULT_SIMULATION_PARAMS } from '../types/simulation';
 import { runSimulation, generateMayorReport, checkHealth, errorMessage } from '../services/api';
-
-export type SurprisePreset = 'double_beta' | 'half_vaccines' | 'market_outbreak' | 'weak_vaccine';
+import { surprisePresetChanges, type SurprisePreset } from '../data/surprisePresets';
 
 export interface UseSimulationReturn {
   // Parámetros
@@ -92,18 +91,10 @@ export function useSimulation(): UseSimulationReturn {
     [params, backendMode],
   );
 
-  // Brotes Sorpresa del reto, iguales a los escenarios documentados en el README y
-  // docs/calibracion.md. Se aplican sobre los parámetros actuales, así que se pueden combinar.
+  // Aplica un Brote Sorpresa (data/surprisePresets.ts) sobre los parámetros actuales y simula.
   const applyPreset = useCallback(
     (preset: SurprisePreset) => {
-      const D = DEFAULT_SIMULATION_PARAMS;
-      const changes: Record<SurprisePreset, Partial<SimulationParams>> = {
-        double_beta: { beta_day: D.beta_day * 2, beta_night: D.beta_night * 2 },
-        half_vaccines: { vaccine_cost: D.vaccine_cost * 2 },
-        market_outbreak: { start_hub: 'mercado_central' },
-        weak_vaccine: { vaccine_efficacy: 0.5 },
-      };
-      const next = { ...params, ...changes[preset] };
+      const next = { ...params, ...surprisePresetChanges(preset) };
       setParams(next);
       execute(next);
     },

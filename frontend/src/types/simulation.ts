@@ -258,14 +258,19 @@ export interface MayorReportResponse {
 
   action_items: MayorActionItem[];
 
-  metrics_snapshot: {
-    lives_saved_vs_random: number;
-    peak_reduction_pct: number;
-    budget_spent_usd: number;
-    cost_per_life_saved_usd: number;
-    most_critical_parish: string;
-    critical_hubs_intervened: string[];
-  };
+  metrics_snapshot: MayorMetricsSnapshot;
+  /** Copia de metrics_snapshot (nombre que pedía el plan de la Fase 4) */
+  metrics_summary: MayorMetricsSnapshot;
+}
+
+export interface MayorMetricsSnapshot {
+  lives_saved_vs_random: number;
+  peak_reduction_pct: number;
+  budget_spent_usd: number;
+  cost_per_life_saved_usd: number;
+  most_critical_parish: string;
+  /** Nombres de los hubs que el Escudo cerró de verdad en la réplica 0 (puede estar vacío) */
+  critical_hubs_intervened: string[];
 }
 
 // ============================================================================
@@ -275,6 +280,7 @@ export interface MayorReportResponse {
 export interface HealthCheckResponse {
   status: 'ok' | 'degraded';
   backend_mode: BackendMode;
+  execution_mode: 'aws-serverless' | 'local-hybrid';
   region?: string;
   dynamodb_connected: boolean;
   s3_connected: boolean;

@@ -7,9 +7,10 @@
  * se envían tal cual al backend (SimulationParams); no hay datos simulados aquí.
  */
 import React from 'react';
-import { Biohazard, Hash, Loader2, MapPin, Play, RotateCcw, ShieldCheck, Syringe, Zap } from 'lucide-react';
+import { Biohazard, Hash, Loader2, MapPin, Play, RotateCcw, ShieldCheck } from 'lucide-react';
 import type { SimulationParams, StartHubOption } from '../types/simulation';
 import { DEFAULT_SIMULATION_PARAMS } from '../types/simulation';
+import { SURPRISE_PRESETS } from '../data/surprisePresets';
 
 interface FieldProps {
   label: string;
@@ -25,6 +26,15 @@ interface FieldProps {
 
 function Field({ label, hint, unit, value, min, max, step, format, onChange }: FieldProps) {
   const pct = ((value - min) / (max - min)) * 100;
+  // Borrador del input numérico: se puede escribir libremente ("2", "25", "2500") y el
+  // valor se aplica (ajustado a min–max) solo al salir del campo o al pulsar Enter.
+  const [draft, setDraft] = React.useState<string | null>(null);
+  const commit = () => {
+    if (draft === null) return;
+    const n = Number(draft.replace(',', '.'));
+    if (draft.trim() !== '' && !Number.isNaN(n)) onChange(Math.min(max, Math.max(min, n)));
+    setDraft(null);
+  };
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between gap-2 text-[11px]">
@@ -52,10 +62,12 @@ function Field({ label, hint, unit, value, min, max, step, format, onChange }: F
           min={min}
           max={max}
           step={step}
-          value={value}
-          onChange={(e) => {
-            const n = Number(e.target.value);
-            if (!Number.isNaN(n)) onChange(Math.min(max, Math.max(min, n)));
+          value={draft ?? String(value)}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') setDraft(null);
           }}
           className="w-20 shrink-0 rounded-md border border-[#e3e4e8] bg-white px-2 py-1 text-right font-mono text-[11px] text-[#111a4a] outline-none focus:border-[#111a4a]"
           aria-label={`${label} (valor exacto)`}
@@ -112,7 +124,7 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
           Todos los valores son libres y se envían al motor Monte Carlo (AWS o servidor local). Con la misma semilla el resultado es idéntico.
         </p>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mt-5 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setParams({ ...DEFAULT_SIMULATION_PARAMS })}
@@ -121,24 +133,19 @@ export function SetupScreen({ params, setParams, loading, error, hasResult, onLa
             <ShieldCheck className="h-4 w-4 text-[#167e6c]" />
             Escenario base (semilla 2026)
           </button>
-          <button
-            type="button"
-            onClick={() =>
-              setParams((p) => ({ ...p, beta_day: +(p.beta_day * 2).toFixed(3), beta_night: +(p.beta_night * 2).toFixed(3) }))
-            }
-            className="flex items-center justify-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-4 py-2.5 text-[11px] font-medium shadow-sm transition hover:bg-[#f6f6f8]"
-          >
-            <Zap className="h-4 w-4 text-[#ec652b]" />
-            Brote Sorpresa: contagio ×2
-          </button>
-          <button
-            type="button"
-            onClick={() => set({ vaccine_efficacy: 0.4 })}
-            className="flex items-center justify-center gap-2 rounded-lg border border-[#e3e4e8] bg-white px-4 py-2.5 text-[11px] font-medium shadow-sm transition hover:bg-[#f6f6f8]"
-          >
-            <Syringe className="h-4 w-4 text-[#1e4199]" />
-            Brote Sorpresa: vacuna 40%
-          </button>
+          <span className="ml-1 text-[11px] font-semibold uppercase tracking-wider text-[#7c7f88]">Brotes Sorpresa:</span>
+          {/* Solo cambian los parámetros (sin simular), para poder combinarlos antes de lanzar */}
+          {SURPRISE_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => set(p.changes)}
+              title={p.description}
+              className="rounded-lg border border-[#e3e4e8] bg-white px-3 py-2.5 text-[11px] font-medium shadow-sm transition hover:bg-[#f6f6f8]"
+            >
+              {p.icon} {p.label}
+            </button>
+          ))}
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-2">
